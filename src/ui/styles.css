@@ -1,0 +1,421 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --white: #fff;
+  --black: #000;
+
+  --grey-1: #f5f5f5;
+  --grey-2: #ccc;
+  --grey-3: #808080;
+  --grey-4: #4d4d4d;
+  --grey-5: #111;
+
+  --blue: #1a85ff;
+  --blue-muted: #0f3960;
+  --green: #3ac054;
+  --green-muted: #1f492d;
+  --red: #e73434;
+  --red-muted: #531a1a;
+
+  --bg: #13151c;
+  --bg-raised: #1e1f26;
+  --bg-overlay: #0f1117;
+
+  --max-width: 768px;
+  --font: Inter, sans-serif;
+
+  --z-drawer: 200;
+}
+
+.blue {
+  --main: var(--blue);
+  --main-muted: var(--blue-muted);
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--white);
+  max-width: var(--max-width);
+  margin: 0 auto;
+  font-family: var(--font);
+}
+
+/* ============================================================
+   ⚔️  HERE LIES THE OLD WORLD  ⚔️
+   ============================================================
+   LEGACY — SHALL BE PURGED
+   these tokens, aliases, and utilities have lived long enough.
+   they exist only to keep the codebase breathing while we migrate.
+   every line below is borrowed time.
+   do not add to this block. do not love this block.
+   when the last consumer is gone, delete it without mercy.
+   ============================================================ */
+
+:root {
+  /* Palette */
+  --token-white: #fff;
+  --token-black: #000;
+  --token-grey-100: #f5f5f5;
+  --token-grey-200: #eee;
+  --token-grey-300: #ccc;
+  --token-grey-400: #999;
+  --token-grey-500: #808080;
+  --token-grey-600: #666;
+  --token-grey-700: #4d4d4d;
+  --token-grey-800: #333;
+  --token-grey-900: #111;
+  --token-blue: #1a85ff;
+  --token-purple: #6933ff;
+  --token-green: #13c636;
+  --token-cyan: #c5edf8;
+  --token-teal: #0f766e;
+  --token-red: #f00505;
+  --token-orange: #ffa500;
+
+  /* === DEFAULT: Blue + Dark === */
+  --token-primary: var(--token-blue);
+  --token-secondary: var(--token-blue);
+  --token-gradient: var(--token-blue);
+
+  /* Semantic */
+  --token-error: #f00505;
+  --token-warning: var(--token-orange);
+  --token-success: var(--token-green);
+  --token-info: var(--token-primary);
+  --token-muted: var(--token-grey-700);
+
+  /* Text (dark mode) */
+  --token-text: var(--token-white);
+  --token-text-soft: var(--token-grey-300);
+  --token-text-muted: var(--token-grey-500);
+  --token-text-dim: var(--token-grey-700);
+
+  --token-bg: var(--token-black);
+  --token-bg-raised: var(--token-grey-900);
+  --token-bg-input: var(--token-grey-800);
+  --token-bg-overlay: rgba(0, 0, 0, 0.8);
+
+  /* Borders (dark mode) */
+  --token-border: var(--token-grey-700);
+  --token-border-light: var(--token-grey-600);
+  --token-border-width: 2px;
+  --token-border-width-thin: 1px;
+
+  /* Spacing (4px base) */
+  --token-space-2xs: 4px;
+  --token-space-xs: 8px;
+  --token-space-sm: 12px;
+  --token-space-md: 16px;
+  --token-space-lg: 24px;
+  --token-space-xl: 32px;
+  --token-space-2xl: 48px;
+
+  /* Dimension sizes (for width/height) */
+  --token-size-2xs: 50px;
+  --token-size-xs: 100px;
+  --token-size-sm: 150px;
+  --token-size-md: 200px;
+  --token-size-lg: 300px;
+  --token-size-xl: 400px;
+  --token-size-2xl: 600px;
+
+  /* Icon sizes */
+  --token-icon-2xs: 12px;
+  --token-icon-xs: 16px;
+  --token-icon-sm: 20px;
+  --token-icon-md: 24px;
+  --token-icon-lg: 32px;
+  --token-icon-xl: 48px;
+  --token-icon-2xl: 64px;
+
+  /* Radius */
+  --token-radius-sm: 4px;
+  --token-radius-md: 8px;
+  --token-radius-lg: 16px;
+  --token-radius-xl: 24px;
+  --token-radius-full: 9999px;
+
+  /* Typography */
+  --token-font: system-ui, -apple-system, sans-serif;
+  --token-font-mono: ui-monospace, monospace;
+  --token-text-xs: 11px;
+  --token-text-sm: 13px;
+  --token-text-md: 15px;
+  --token-text-lg: 17px;
+  --token-text-xl: 20px;
+  --token-text-2xl: 24px;
+  --token-text-3xl: 32px;
+  --token-weight-normal: 400;
+  --token-weight-medium: 500;
+  --token-weight-semibold: 600;
+  --token-weight-bold: 700;
+  --token-leading: 1.5;
+  --token-leading-tight: 1.25;
+
+  /* Motion */
+  --token-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --token-ease-out: cubic-bezier(0.215, 0.61, 0.355, 1);
+  --token-duration-fast: 150ms;
+  --token-duration-base: 300ms;
+  --token-duration-slow: 500ms;
+  --token-anim-fast: 1s;
+  --token-anim-base: 1.5s;
+  --token-anim-slow: 2.5s;
+
+  /* Z-index */
+  --token-z-base: 0;
+  --token-z-raised: 10;
+  --token-z-dropdown: 50;
+  --token-z-sticky: 100;
+  --token-z-modal: 200;
+  --token-z-toast: 300;
+
+  /* Shadows (dark mode) */
+  --token-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --token-shadow-md: 0 4px 8px rgba(0, 0, 0, 0.4);
+  --token-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+
+  /* Glow */
+  --token-glow-gradient: var(--token-blue);
+  --token-glow-primary: var(--token-blue);
+  --token-glow-secondary: var(--token-blue);
+  --token-glow-success: var(--token-green);
+  --token-glow-error: var(--token-red);
+  --token-glow-warning: var(--token-orange);
+  --token-glow-info: var(--token-blue);
+  --token-glow-muted: var(--token-grey-700);
+
+  /* Effects */
+  --token-shimmer: rgba(255, 255, 255, 0.2);
+  --token-disabled-opacity: 0.4;
+
+  /* Muted brand colors (theme-aware) */
+  --token-primary-muted: rgba(26, 133, 255, 0.3);
+  --token-green-muted: rgba(19, 198, 54, 0.3);
+
+  /* Feedback muted (for tinted backgrounds/borders) */
+  --token-error-muted: rgba(240, 5, 5, 0.15);
+  --token-success-muted: rgba(19, 198, 54, 0.15);
+
+  /* Layout */
+  --token-max-content-width: 768px;
+
+  /* ===== Backward-compatible aliases (old names → token names) ===== */
+
+  /* Palette */
+  --palette-blue: var(--token-blue);
+  --palette-purple: var(--token-purple);
+  --palette-green: var(--token-green);
+  --palette-cyan: var(--token-cyan);
+  --palette-teal: var(--token-teal);
+  --palette-red: var(--token-red);
+  --palette-orange: var(--token-orange);
+  --palette-white: var(--token-white);
+  --palette-black: var(--token-black);
+  --palette-blue-muted: var(--token-primary-muted);
+  --palette-green-muted: var(--token-green-muted);
+  --palette-grey-100: var(--token-grey-200);
+  --palette-grey-300: var(--token-grey-300);
+  --palette-grey-500: var(--token-grey-500);
+  --palette-grey-700: var(--token-grey-700);
+  --palette-grey-800: var(--token-grey-800);
+  --palette-grey-900: var(--token-grey-900);
+
+  /* Brand */
+  --brand-primary: var(--token-primary);
+  --brand-secondary: var(--token-secondary);
+  --brand-primary-muted: var(--token-primary-muted);
+  --brand-gradient: var(--token-gradient);
+  --brand-color: var(--token-primary);
+
+  /* Feedback */
+  --color-error: var(--token-error);
+  --color-warning: var(--token-warning);
+  --color-success: var(--token-success);
+  --color-info: var(--token-info);
+
+  /* Text */
+  --text-main: var(--token-text);
+  --text-soft: var(--token-text-soft);
+  --text-secondary: var(--token-text-muted);
+  --text-tertiary: var(--token-text-dim);
+
+  /* Backgrounds */
+  --bg-base: var(--token-bg);
+  --bg-surface: var(--token-bg-raised);
+
+  /* Borders */
+  --border-light: var(--token-grey-300);
+  --border-dark: var(--token-border);
+
+  /* Spacing */
+  --space-2xs: var(--token-space-2xs);
+  --space-xs: var(--token-space-xs);
+  --space-sm: var(--token-space-sm);
+  --space-md: var(--token-space-md);
+  --space-lg: var(--token-space-lg);
+  --space-xl: var(--token-space-xl);
+  --space-2xl: var(--token-space-2xl);
+
+  /* Radius */
+  --radius-sm: var(--token-radius-sm);
+  --radius-md: var(--token-radius-md);
+  --radius-lg: var(--token-radius-lg);
+  --radius-xl: var(--token-radius-xl);
+  --radius-full: var(--token-radius-full);
+
+  /* Shadows */
+  --shadow-sm: var(--token-shadow-sm);
+  --shadow-card: var(--token-shadow-md);
+  --shadow-glow: var(--token-glow-primary);
+
+  /* Previously undefined but used in the codebase */
+  --color-dark-grey: var(--token-grey-700);
+  --color-gray-400: var(--token-grey-400);
+  --color-gray-600: var(--token-grey-600);
+  --color-gray-100: var(--token-grey-100);
+  --color-primary: var(--token-primary);
+  --color-red: var(--token-red);
+
+  /* Layout */
+  --max-content-width: var(--token-max-content-width);
+
+  --container-width: 430px;
+  --header-height: 56px;
+  --footer-padding: 140px;
+}
+
+/* === BLUE THEME === */
+.theme-blue {
+  --token-green: var(--green);
+  --token-green-muted: var(--green-muted);
+  --token-red: var(--red);
+  --token-red-muted: var(--red-muted);
+
+  --token-primary: var(--token-blue);
+  --token-secondary: var(--token-blue);
+  --token-primary-muted: var(--blue-muted);
+  --token-success: var(--token-blue);
+  --token-success-muted: var(--token-green-muted);
+  --token-error: var(--token-red);
+  --token-error-muted: var(--token-red-muted);
+  --token-gradient: var(--token-blue);
+  --token-glow-gradient: var(--token-blue);
+  --token-glow-primary: var(--token-blue);
+  --token-glow-error: var(--token-red);
+
+  --brand-primary: var(--token-blue);
+  --brand-secondary: var(--token-blue);
+  --brand-primary-muted: var(--token-primary-muted);
+  --brand-color: var(--token-blue);
+  --brand-gradient: var(--token-gradient);
+  --color-primary: var(--token-blue);
+  --color-success: var(--token-success);
+  --color-error: var(--token-error);
+  --color-info: var(--token-blue);
+  --shadow-glow: var(--token-glow-primary);
+
+  --token-bg: #13151c;
+  --token-bg-raised: #1e1f26;
+  --token-bg-input: var(--token-grey-800);
+  --token-bg-overlay: rgba(19, 21, 28, 0.8);
+
+  --token-solid-text: #13151c;
+  --main: var(--blue);
+  --main-muted: var(--blue-muted);
+}
+
+/* ===== Base Styles ===== */
+
+h1 {
+  font-size: 1.875rem;
+  font-weight: 600;
+}
+h2 {
+  font-size: 1.5rem;
+}
+h3 {
+  font-size: 1.25rem;
+  color: var(--token-text);
+}
+h4 {
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+h5 {
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+h6 {
+  font-size: 0.75rem;
+  color: var(--token-text-muted);
+}
+p {
+  font-size: 15px;
+}
+
+/* ===== Utilities ===== */
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.stick-to-parent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+}
+.flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.gradient-background {
+  background: var(--token-gradient);
+  padding: 1px;
+}
+
+.text-gradient-color {
+  background: var(--token-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  display: inline-block;
+}
+
+/* Legacy class mappings */
+.bg-dark-1 {
+  background-color: var(--token-bg-raised);
+}
+.bg-blue-1 {
+  background-color: var(--token-primary);
+}
+.bg-gray-2 {
+  background-color: var(--token-grey-300);
+}
+.bg-gray-5 {
+  background-color: var(--token-grey-500);
+}
+.bg-gray-8 {
+  background-color: var(--token-grey-800);
+}
+
+.divide-gray-2 > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--token-grey-800);
+}
+
+/* ============================================================
+   END OF LEGACY — the new world starts above
+   ============================================================ */

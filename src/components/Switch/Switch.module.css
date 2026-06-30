@@ -1,0 +1,50 @@
+.switchContainer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.switchWrapper {
+  width: 56px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  padding: 2px;
+  border-radius: 16px;
+  transition: background 0.2s;
+  cursor: pointer;
+}
+
+.switchWrapperOn,
+.switchWrapperOnDisabled {
+  background: var(--brand-gradient);
+}
+
+.switchWrapperOff {
+  background-color: var(--border-dark);
+}
+
+.switchWrapperOffDisabled {
+  background-color: var(--text-secondary);
+}
+
+.switchWrapperOnDisabled {
+  opacity: 0.5;
+}
+
+.switchWrapperOffDisabled,
+.switchWrapperOnDisabled {
+  cursor: not-allowed;
+}
+
+.switchKnob {
+  width: 28px;
+  height: 28px;
+  background-color: var(--text-main);
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+
+.switchKnobOn {
+  transform: translateX(24px);
+}

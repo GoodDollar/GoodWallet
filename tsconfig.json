@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "allowImportingTsExtensions": true,
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+      "@/config": [
+        "./config"
+      ],
+      "@/configServerless": [
+        "./configServerless"
+      ],
+      "translations": [
+        "./src/translations"
+      ],
+      "ethers-utils": [
+        "./src/ethers-utils"
+      ],
+      "ethers-utils/*": [
+        "./src/ethers-utils/*"
+      ],
+      "gooddollar": [
+        "./src/gooddollar"
+      ],
+      "gooddollar/*": [
+        "./src/gooddollar/*"
+      ],
+      "ui": [
+        "./src/ui"
+      ]
+    },
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "composite": false,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "inlineSources": false,
+    "isolatedModules": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "preserveWatchOutput": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "es6",
+    "jsx": "react-jsx",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "declaration": false,
+    "declarationMap": false,
+    "incremental": true,
+    "noEmit": true
+  },
+  "include": [
+    "next-env.d.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    ".next/types/**/*.ts",
+    "config.ts",
+    "configServerless.ts",
+    "src/__tests__/utils/lifiUtils.test.js",
+    "drizzle.config.ts",
+    ".next/dev/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

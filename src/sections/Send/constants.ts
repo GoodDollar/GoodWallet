@@ -1,0 +1,1 @@
+export const DECIMALS_FOR_FIAT_DISPLAY = 6

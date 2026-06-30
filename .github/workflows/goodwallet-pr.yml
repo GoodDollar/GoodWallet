@@ -1,0 +1,47 @@
+name: Check build
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build workspace
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Run install
+        uses: borales/actions-yarn@v5
+        with:
+          cmd: install
+
+      - name: Run Biome Check
+        uses: borales/actions-yarn@v5
+        with:
+          cmd: biome:verify:all
+
+      - name: Run Build
+        env:
+          NODE_OPTIONS: --max_old_space_size=4096
+        run: yarn build
+
+      - name: Run Tests
+        uses: borales/actions-yarn@v5
+        with:
+          cmd: test

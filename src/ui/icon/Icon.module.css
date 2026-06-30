@@ -1,0 +1,59 @@
+/* ── base ────────────────────────────────────────────────────────── */
+
+.icon,
+.round {
+  all: initial;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  overflow: visible;
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  min-height: 16px;
+  color: inherit;
+  cursor: inherit;
+  pointer-events: inherit;
+  transform-origin: center;
+
+  /* size */
+  &.small  { width: 12px; height: 12px; min-width: 12px; min-height: 12px; }
+  &.big    { width: 24px; height: 24px; min-width: 24px; min-height: 24px; }
+  &.larger { width: 35px; height: 35px; min-width: 35px; min-height: 35px; }
+
+  /* color */
+  &.main    { color: var(--main); }
+  &.white   { color: var(--white); }
+  &.red     { color: var(--red); }
+  &.inherit { color: inherit; }
+
+  /* opacity */
+  &.dim { opacity: 0.8; }
+
+  /* spin */
+  &.spin { animation: iconSpin 1s linear infinite; }
+}
+
+.round {
+  border-radius: 9999px;
+  overflow: hidden;
+  & img { border-radius: 9999px; }
+}
+
+/* ── internal ───────────────────────────────────────────────────── */
+
+.maskedIcon {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-color: currentColor;
+  mask: center / contain no-repeat;
+  -webkit-mask: center / contain no-repeat;
+}
+
+@keyframes iconSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

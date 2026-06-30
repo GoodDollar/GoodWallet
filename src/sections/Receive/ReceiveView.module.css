@@ -1,0 +1,30 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.selectContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background-color: rgba(33, 33, 33, 1);
+  padding: 6px 12px;
+  border-radius: 16px;
+  cursor: pointer;
+}
+
+.dropdownLine {
+  display: flex;
+  width: 100%;
+  justify-content: flex-start;
+  height: 68px;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}

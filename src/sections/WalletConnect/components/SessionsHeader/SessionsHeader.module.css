@@ -1,0 +1,12 @@
+.sessionHeaderContainer {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  margin-bottom: 24px;
+}
+
+.sessionHeaderImage {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+}

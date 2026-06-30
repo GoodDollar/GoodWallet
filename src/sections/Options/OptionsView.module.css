@@ -1,0 +1,73 @@
+.viewContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  width: 100%;
+}
+
+.dropdownLine {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(33, 33, 33, 1);
+
+  width: 100%;
+  padding: 16px;
+  border-radius: 16px;
+  justify-content: space-between;
+  height: 70px;
+}
+
+.dropdownAddrContainer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 4px;
+}
+
+.dropdownButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  line-height: 0;
+  background-color: rgba(255, 255, 255, 0.14);
+  border-radius: 4px;
+}
+
+.dropdownButton > * {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toolbarContainer {
+  display: flex;
+  flex-direction: column;
+  background-color: rgba(33, 33, 33, 1);
+  width: 100%;
+  border-radius: 16px;
+}
+
+.gradientBorder {
+  background: var(--brand-gradient);
+  border-radius: 16px;
+  padding: 1px;
+  width: 100%;
+}
+
+.addrDropdown {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: rgba(33, 33, 33, 1);
+  border-radius: 16px;
+  flex-direction: column;
+  transition: height 0.3s;
+  width: 100%;
+  height: 100%;
+  will-change: height;
+}

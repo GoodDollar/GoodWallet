@@ -1,0 +1,105 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow: hidden;
+  padding: 24px;
+  border: 1px solid #4d4d4d;
+  border-radius: 16px;
+  cursor: pointer;
+  width: 100%;
+}
+
+.symbolContainer {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  justify-content: flex-start;
+}
+
+.symbolBox {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  transform: translateY(8px);
+}
+
+.maxBtnBox {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  cursor: pointer;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.closeBtn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+  color: #627eea;
+  width: 50px;
+}
+
+.maxBtn {
+  display: flex;
+  height: 24px;
+  padding: 0px 8px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 20px;
+  background: var(--brand-primary-muted);
+}
+
+.swapIcon {
+  font-size: 24px;
+  color: #627eea;
+  position: absolute;
+  background-color: var(--gradient);
+  z-index: 1;
+  border-radius: 50%;
+  border: 1px solid var(--white);
+  padding: 4px;
+}
+
+.chainsList {
+  display: flex;
+  gap: 16px;
+  width: fit-content;
+  overflow: auto;
+}
+
+.input {
+  color: white;
+  font-size: 24px;
+  width: 100%;
+  background-color: var(--token-bg);
+  font-weight: 600;
+  appearance: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: 20px;
+}
+
+.input:focus {
+  outline: none;
+  border: none;
+}
+
+.input[type="number"]::-webkit-inner-spin-button,
+.input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}

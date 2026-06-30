@@ -1,0 +1,123 @@
+.wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  gap: 16px;
+  position: relative;
+}
+
+.symbolSelectBox {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 50%;
+  max-width: 50%;
+  overflow: hidden;
+  padding-block: 24px;
+  padding-inline: 16px;
+  border: 1px solid #4d4d4d;
+  border-radius: 16px;
+  cursor: pointer;
+  min-height: 120px;
+}
+
+.symbolSelectBoxFull {
+  width: 100%;
+  max-width: 100%;
+}
+
+.symbolSelectBoxLocked {
+  cursor: default;
+  opacity: 0.95;
+}
+
+.symbolContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-start;
+}
+
+.symbolBox {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.chainBox {
+  padding: 10px;
+  min-width: 80px;
+  height: 80px;
+  align-items: center;
+  border: 1px solid #4d4d4d;
+  border-radius: 16px;
+  display: flex;
+  gap: 8px;
+  flex-direction: column;
+  justify-content: center;
+  margin-block: 16px;
+  cursor: pointer;
+}
+
+.chainBox.selected {
+  border-color: blue;
+}
+
+.chainList {
+  display: flex;
+  gap: 16px;
+  position: sticky;
+  min-height: 70px;
+  top: 0;
+  left: 0;
+  justify-content: flex-start;
+  overflow: visible;
+  scrollbar-width: none;
+  flex-wrap: nowrap;
+  width: 100%;
+  overflow: auto;
+}
+
+.tokenList {
+  display: flex;
+  flex-direction: column;
+  width: fit-content;
+  overflow: auto;
+  position: sticky;
+  overflow: hidden;
+  top: 0;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: auto;
+  width: auto;
+  height: 60vh;
+}
+
+.tokenBox {
+  display: flex;
+  align-items: center;
+  padding-block: 16px;
+  gap: 16px;
+  cursor: pointer;
+}
+
+.tokenBox:not(:last-child) {
+  border-bottom: 1px solid #4d4d4d;
+}
+
+.tokenValues {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  width: max-content;
+}
+
+.tokenSymbolContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+}

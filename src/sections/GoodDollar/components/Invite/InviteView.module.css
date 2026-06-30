@@ -1,0 +1,123 @@
+.pageContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+  width: 100%;
+  padding: 24px;
+  scrollbar-width: none;
+}
+
+.pageContainer::-webkit-scrollbar {
+  display: none;
+}
+
+.gradientStepBtn {
+  border-radius: 50%;
+  min-width: 36px;
+  height: 36px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  background-image: var(--brand-gradient);
+}
+
+/* InvCodeBox */
+.inputContainer {
+  position: relative;
+  width: 100%;
+}
+
+.inputField {
+  padding-block: 16px;
+  width: 100%;
+}
+
+.inputFieldWithValidation {
+  padding-right: 40px;
+}
+
+.inputFieldStandard {
+  padding-right: 16px;
+}
+
+.input {
+  background-color: transparent;
+  outline: none;
+  border: none;
+  color: white;
+}
+
+.input::placeholder {
+  font-size: 14px;
+  font-weight: 400;
+  color: #4d4d4d;
+}
+
+.validationIconContainer {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  gap: 8px;
+  height: 35px;
+  width: fit-content;
+  background: var(--brand-primary-muted);
+  border-radius: 100px;
+}
+
+/* ChainInviteBox component styles */
+.chainInviteBox {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 16px;
+}
+
+.chainInviteBoxHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.chainInviteBoxActions {
+  display: flex;
+  gap: 8px;
+  height: 36px;
+}
+
+.chainInviteBoxesContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.chainInviteBoxesRow {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .chainInviteBoxesRow {
+    flex-direction: column;
+  }
+}
+
+.chainInviteBoxWrapper {
+  flex: 1;
+  min-width: 0;
+}

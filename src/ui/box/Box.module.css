@@ -1,0 +1,78 @@
+.box {
+  --unit: 8px;
+  all: initial;
+  box-sizing: border-box;
+  display: flex;
+  position: relative;
+  padding: 0;
+  gap: calc(var(--unit) * 2);
+  border-radius: 0;
+  border: 1px solid transparent;
+  font: inherit;
+  color: inherit;
+
+  &.elevation-high, &.elevation-higher {
+    padding: calc(var(--unit) * 3);
+    border-radius: calc(var(--unit) * 4);
+  }
+
+  &.horizontal { flex-direction: row; justify-content: space-between; }
+  &.vertical { flex-direction: column; justify-content: flex-start; }
+
+  &.center { align-items: center; }
+  &.start { align-items: flex-start; }
+  &.end { align-items: flex-end; }
+
+  &.space-between { justify-content: space-between; }
+  &.space-around { justify-content: space-around; }
+
+  &.elevation-none { background: none; }
+  &.elevation-high { background: var(--bg-raised); }
+  &.elevation-higher { background: var(--bg-overlay); }
+
+  &.padding-default { padding: calc(var(--unit) * 3); }
+  &.padding-none { padding: 0; }
+  &.padding-small { padding: calc(var(--unit) * 1); }
+  &.padding-large { padding: calc(var(--unit) * 4); }
+
+  &.gap-default { gap: calc(var(--unit) * 2); }
+  &.gap-none { gap: 0; }
+  &.gap-small { gap: calc(var(--unit) * 1); }
+  &.gap-large { gap: calc(var(--unit) * 3); }
+
+  &.radius-default { border-radius: calc(var(--unit) * 4); }
+  &.radius-none { border-radius: 0; }
+  &.radius-small { border-radius: calc(var(--unit) * 2); }
+  &.radius-large { border-radius: calc(var(--unit) * 5); }
+
+  &.border-none { border-color: transparent; }
+  &.border-default { border-color: var(--grey-4); }
+  &.border-main { border-color: var(--main); }
+
+  &.full { width: 100%; }
+  &.vertical.full { min-height: 0; }
+  &.width-content { width: fit-content; }
+  &.width-small { width: 80px; flex-shrink: 0; }
+  &.width-large { width: 120px; flex-shrink: 0; }
+
+  &.height-content { height: fit-content; }
+  &.height-small { height: 80px; }
+  &.height-large { height: 120px; }
+
+  &.disabled { pointer-events: none; opacity: 0.4; }
+  &.clickable { cursor: pointer; }
+
+  &.scroll-y, &.scroll-x { cursor: grab; scrollbar-width: none; }
+  &.scroll-y {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  &.scroll-x {
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  &.dragging { cursor: grabbing; user-select: none; & * { cursor: grabbing; user-select: none; } }
+  &.selected { border-color: var(--main); }
+}

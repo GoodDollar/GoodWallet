@@ -1,0 +1,19 @@
+.gasBox {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+  padding: 16px;
+  border-radius: 20px;
+  background-color: rgba(209, 134, 30, 0.2);
+  padding-inline: 16px;
+}
+
+.gasRow {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+}

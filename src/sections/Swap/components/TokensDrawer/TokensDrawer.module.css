@@ -1,0 +1,48 @@
+.searchInput {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: inherit;
+  font: inherit;
+}
+
+.tokenList {
+  display: flex;
+  flex-direction: column;
+  max-width: 100%;
+}
+
+.tokenBox {
+  display: flex;
+  align-items: center;
+  padding-block: 16px;
+  gap: 16px;
+  cursor: pointer;
+}
+
+.tokenBox:not(:last-child) {
+  border-bottom: 1px solid #4d4d4d;
+}
+
+.tokenBoxSelected {
+  border-bottom: 1px solid transparent;
+  border-image: var(--brand-gradient) 1;
+}
+
+.tokenBalanceContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin-left: auto;
+  flex-shrink: 0;
+  gap: 4px;
+}
+
+.tokenSymbolContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  flex: 1;
+}

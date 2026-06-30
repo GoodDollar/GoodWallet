@@ -1,0 +1,87 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-drawer);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  background: rgba(19, 21, 28, 0.8);
+  backdrop-filter: blur(2px);
+  cursor: pointer;
+  overscroll-behavior: none;
+  touch-action: none;
+}
+
+.backdrop[closing] {
+  pointer-events: none;
+  animation: backdrop-out 280ms cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+.panel {
+  --drag: 0px;
+
+  cursor: grab;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 768px;
+  max-height: 80dvh;
+  overflow: hidden;
+  padding: 0 24px max(16px, env(safe-area-inset-bottom));
+  border-radius: 32px 32px 0 0;
+  background: var(--bg-raised);
+
+  transform: translateY(var(--drag));
+  transition: transform 400ms cubic-bezier(0.34, 1.2, 0.64, 1);
+  will-change: transform;
+  animation: slide-up 400ms cubic-bezier(0.34, 1.2, 0.64, 1);
+
+  &[dragging] { transition: none; }
+  &:active { cursor: grabbing; }
+}
+
+.panel.height-half { height: 50dvh; }
+.panel.height-full { height: 80dvh; }
+
+.panel[closing] {
+  animation: slide-down 280ms cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+.grabHandle {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  padding: 16px 0;
+
+  &::after {
+    content: "";
+    width: 48px;
+    height: 4px;
+    border-radius: 9999px;
+    background: var(--grey-3);
+  }
+}
+
+.inner {
+  cursor: default;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+}
+
+@keyframes slide-down {
+  to { transform: translateY(120%); }
+}
+
+@keyframes backdrop-out {
+  0%, 70% { opacity: 1; }
+  100% { opacity: 0; }
+}

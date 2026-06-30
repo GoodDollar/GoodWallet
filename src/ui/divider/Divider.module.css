@@ -1,0 +1,48 @@
+.divider {
+  /* Reset everything from external CSS */
+  all: initial;
+  box-sizing: border-box;
+
+  /* Re-establish base styles */
+  display: block;
+  flex-shrink: 0;
+  width: 100%;
+  height: var(--divider-size);
+}
+
+.vertical {
+  width: var(--divider-size);
+  height: 100%;
+}
+
+/* Sizes */
+.size-xs {
+  --divider-size: 1px;
+}
+.size-sm {
+  --divider-size: 1px;
+}
+.size-md {
+  --divider-size: 2px;
+}
+.size-lg {
+  --divider-size: 4px;
+}
+.size-xl {
+  --divider-size: 8px;
+}
+
+/* Colors */
+.color-border {
+  background: var(--token-border);
+}
+.color-muted {
+  background: var(--token-text-dim);
+  opacity: 0.3;
+}
+.color-primary {
+  background: var(--token-primary);
+}
+.color-gradient {
+  background: var(--token-gradient);
+}

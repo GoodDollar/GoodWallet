@@ -1,0 +1,133 @@
+.dialogOverlay {
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--token-bg-overlay);
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 768px;
+}
+
+.dialogContainer {
+  background-color: var(--token-bg-raised);
+  color: var(--token-text);
+  padding: 32px 24px;
+  border-radius: 16px;
+  width: 345px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  animation: entering 0.2s forwards;
+}
+
+.dialogContainerExiting {
+  animation: exiting 0.2s forwards;
+}
+
+.closeBtn {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  width: 20px;
+  height: 20px;
+  fill: darkgrey;
+}
+
+.dialogTitle {
+  font-style: normal;
+  font-weight: 600;
+  font-size: 20px;
+  line-height: 24px;
+  max-width: 90%;
+  text-align: center;
+}
+
+.dialogBodyText {
+  font-style: normal;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 20px;
+  text-align: center;
+}
+
+.imageContainer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.imageContainer img {
+  border: 1px solid var(--brand-color);
+  border-radius: 14px;
+}
+
+.btnBox {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+}
+
+.rejectBtnContainer {
+  width: 100%;
+  border-radius: 20px;
+  padding: 1px;
+  display: flex;
+  justify-content: center;
+  align-self: center;
+  background: var(--brand-gradient);
+}
+.rejectBtn {
+  background-color: var(--token-bg-raised);
+  padding: 10px;
+  border-radius: 20px;
+  width: 100%;
+}
+
+.acceptBtn {
+  width: 100%;
+  padding: 10px;
+  border-radius: 20px;
+  font-weight: 600;
+  background: var(--brand-gradient);
+}
+
+.message {
+  width: 100%;
+  height: min-content;
+  overflow: hidden;
+  max-height: 20vh;
+  overflow: auto;
+  font-size: 12px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+@keyframes entering {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes exiting {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}

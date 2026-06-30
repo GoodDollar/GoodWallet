@@ -1,0 +1,8 @@
+.versionTagContainer {
+  position: fixed;
+  bottom: 10px;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  left: 0;
+}

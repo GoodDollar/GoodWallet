@@ -1,0 +1,87 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-inline: 24px;
+  gap: 16px;
+  padding-bottom: 24px;
+  user-select: none;
+}
+
+.sendAmountTokenSelector {
+  display: flex;
+  justify-content: flex-start;
+  gap: 10px;
+  align-items: center;
+  cursor: pointer;
+}
+
+.sendAmountTokenInfo {
+  width: fit-content;
+}
+
+.sendAmountInputWrapper {
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+  margin-bottom: -8px;
+}
+
+.sendAmountInput {
+  width: 100%;
+  background-color: transparent;
+  outline: 0;
+  text-align: right;
+  height: 60px;
+}
+
+.sendAmountHiddenSpan {
+  visibility: hidden;
+  position: absolute;
+  white-space: pre;
+}
+
+.sendAmountTokenSymbol {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-dark-grey);
+}
+
+.sendRecipientInput {
+  width: 100%;
+  background-color: transparent;
+  font-size: 14px;
+  font-weight: 600;
+  height: 24px;
+  outline: 0;
+  text-align: left;
+}
+
+.validationMarksContainer {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.sendReviewInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.sendReviewInfoLine {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 4px;
+  width: 100%;
+}
+
+.sendReviewDisclaimer {
+  display: flex;
+  min-height: 40px;
+}
+

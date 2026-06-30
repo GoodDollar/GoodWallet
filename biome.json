@@ -1,0 +1,116 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "ignoreUnknown": true,
+    "includes": [
+      "**/*.{js,jsx,ts,tsx,md,html}",
+      "!node_modules",
+      "!.next",
+      "!dist",
+      "!jest.setup.js",
+      "!build"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "useEditorconfig": true
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended",
+      "suspicious": {
+        "noUnknownAtRules": "off",
+        "useIterableCallbackReturn": "off",
+        "noArrayIndexKey": "off",
+        "noConstEnum": "off",
+        "noGlobalIsNan": "off",
+        "noShadowRestrictedNames": "off",
+        "noDuplicateProperties": "off",
+        "noDoubleEquals": "off",
+        "noAssignInExpressions": "off",
+        "noRedeclare": "off",
+        "noImplicitAnyLet": "off"
+      },
+      "complexity": {
+        "useDateNow": "off",
+        "useOptionalChain": "off",
+        "noUselessTernary": "off",
+        "noUselessFragments": "off"
+      },
+      "correctness": {
+        "useExhaustiveDependencies": "off",
+        "useParseIntRadix": "off"
+      },
+      "a11y": {
+        "useKeyWithClickEvents": "off",
+        "useButtonType": "off",
+        "useSemanticElements": "off",
+        "noStaticElementInteractions": "off",
+        "noAutofocus": "off",
+        "noSvgWithoutTitle": "off",
+        "useHeadingContent": "off",
+        "useFocusableInteractive": "off",
+        "noPositiveTabindex": "off",
+        "useHtmlLang": "off"
+      },
+      "style": {
+        "useTemplate": "off",
+        "useImportType": "on"
+      }
+    },
+    "domains": {
+      "next": "recommended",
+      "react": "recommended"
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "trailingCommas": "all",
+      "semicolons": "asNeeded"
+    }
+  },
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": {
+          "level": "on",
+          "options": {
+            "groups": [
+              ["react", "react/**"],
+              ["next", "next/**"],
+              [
+                ":PACKAGE:",
+                ":NODE:",
+                "!translations",
+                "!translations/**",
+                "!ethers-utils",
+                "!ethers-utils/**",
+                "!gooddollar",
+                "!gooddollar/**"
+              ],
+              ":BLANK_LINE:",
+              [
+                "translations",
+                "translations/**",
+                "ethers-utils",
+                "ethers-utils/**",
+                "gooddollar",
+                "gooddollar/**"
+              ],
+              [":ALIAS:"],
+              ":BLANK_LINE:",
+              ":PATH:",
+              ":BLANK_LINE:"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

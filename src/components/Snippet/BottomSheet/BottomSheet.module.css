@@ -1,0 +1,95 @@
+.bottomSheet {
+  position: fixed;
+  width: 100%;
+  left: 0;
+  bottom: 0;
+  height: 100%;
+  transition: transform ease-out 400ms;
+  z-index: 10;
+  will-change: transform;
+}
+
+.bottomSheetOpen {
+  transform: translateY(0);
+  animation: slideUp 400ms ease-out forwards;
+}
+
+.bottomSheetClosed {
+  transform: translateY(100%);
+  animation: slideDown 400ms ease-in forwards;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+
+.bottomSheetBackground {
+  height: 100%;
+  background-color: var(--token-bg);
+}
+
+.bottomSheetContent {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-width: 768px;
+  margin: 0 auto;
+}
+
+.bottomSheetHeader {
+  display: flex;
+  height: 4rem;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+.bottomSheetBackButton {
+  position: absolute;
+  left: 1rem;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.bottomSheetCloseButton {
+  position: absolute;
+  right: 1rem;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.bottomSheetBody {
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.scrollbarHide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbarHide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.titleContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}

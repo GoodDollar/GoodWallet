@@ -1,0 +1,37 @@
+.listContainer {
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  align-self: stretch;
+  height: calc(100% - 64px);
+  border-radius: 20px;
+}
+
+.listElement {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  border: 1px solid #313030;
+  border-radius: 20px;
+  padding: 48px 32px;
+  width: 100%;
+}
+
+.disconnectButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 20px;
+  border: 1px solid var(--color-gray-600);
+  color: var(--color-red);
+  background-color: rgba(240, 22, 47, 0.3);
+  padding-inline: 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}

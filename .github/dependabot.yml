@@ -1,0 +1,54 @@
+# To get started with Dependabot version updates, you'll need to specify which
+# package ecosystems to update and where the package manifests are located.
+# Please see the documentation for all configuration options:
+# https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
+
+version: 2
+updates:
+  - package-ecosystem: "npm" # See documentation for possible values
+    directory: "/" # Location of package manifests
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    groups: 
+      lifi-depts:
+        patterns:
+          - "@lifi/*"
+          - "@bigmi/client"
+      react-next-deps:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react"
+          - "@types/react-dom"
+          - "next"
+          - "@next/*"
+      typescript-deps:
+        patterns:
+          - "typescript"
+      valtio-deps:
+        patterns:
+          - "valtio"
+      walletconnect-deps:
+        patterns:
+          - "@walletconnect/*"
+          - "@reown/walletkit"
+          - "@json-rpc-tools/utils"
+      bitcoin-deps:
+        patterns:
+          - "bitcoinjs-lib"
+          - "@bitcoin-js/tiny-secp256k1-asmjs"
+          - "ecpair"
+      solana-deps: 
+        patterns:
+          - "gill"
+          - "ed25519-hd-key"
+          - "@solana/*"
+          - "@solana-name-service/sns-sdk-kit"
+      tracking-deps:
+        patterns: 
+          - "@amplitude/*"
+          - "@sentry/nextjs"      
+
+    
+

@@ -1,0 +1,94 @@
+.notificationsContainer {
+  position: fixed;
+  width: 100%;
+  max-width: 768px;
+  margin: auto;
+  margin-bottom: 42px;
+  z-index: 50;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-inline: 14px;
+  background: transparent;
+  z-index: 1000;
+}
+
+.notificationItem {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--token-bg-raised);
+  border-radius: 5px;
+  margin-bottom: 16px;
+  width: 100%;
+  padding: 0.5rem;
+  position: relative;
+  overflow: hidden;
+  animation: entering 0.5s forwards;
+}
+
+.notificationIcon {
+  width: 24px;
+  height: 24px;
+}
+
+.notificationMessage {
+  width: 100%;
+  padding: 10px;
+}
+
+.notificationProgressBar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 5px;
+  background: var(--brand-gradient);
+  animation: progressing 3s linear;
+}
+
+.notificationItemExiting {
+  animation: exiting 0.5s forwards;
+}
+
+@keyframes progressing {
+  0% {
+    width: 0%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+@keyframes entering {
+  0% {
+    opacity: 0;
+    max-height: 0px;
+    padding: 0px;
+    margin-bottom: 0px;
+  }
+  100% {
+    opacity: 1;
+    max-height: 70px;
+    padding: 10px;
+    margin-bottom: 16px;
+  }
+}
+
+@keyframes exiting {
+  0% {
+    opacity: 1;
+    max-height: 70px;
+    padding: 10px;
+    margin-bottom: 16px;
+  }
+  100% {
+    opacity: 0;
+    max-height: 0px;
+    padding: 0px;
+    margin-bottom: 0px;
+  }
+}

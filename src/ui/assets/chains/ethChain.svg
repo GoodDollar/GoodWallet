@@ -1,0 +1,13 @@
+<svg viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="eth">
+<circle id="Oval" cx="10.2983" cy="10.7981" r="10" fill="#627EEA"/>
+<g id="Group">
+<path id="Shape" d="M10.6096 3.2981V8.84185L15.2952 10.9356L10.6096 3.2981Z" fill="white" fill-opacity="0.602"/>
+<path id="Shape_2" d="M10.6096 3.2981L5.92334 10.9356L10.6096 8.84185V3.2981Z" fill="white"/>
+<path id="Shape_3" d="M10.6096 14.5281V18.295L15.2984 11.8081L10.6096 14.5281Z" fill="white" fill-opacity="0.602"/>
+<path id="Shape_4" d="M10.6096 18.295V14.5275L5.92334 11.8081L10.6096 18.295Z" fill="white"/>
+<path id="Shape_5" d="M10.6096 13.6562L15.2952 10.9356L10.6096 8.84308V13.6562Z" fill="white" fill-opacity="0.2"/>
+<path id="Shape_6" d="M5.92334 10.9356L10.6096 13.6562V8.84308L5.92334 10.9356Z" fill="white" fill-opacity="0.602"/>
+</g>
+</g>
+</svg>
