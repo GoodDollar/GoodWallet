@@ -45,7 +45,7 @@
     "drizzle-orm": "^0.45.2",
     "ecpair": "^v3.0.1",
     "ed25519-hd-key": "^2.0.0",
-    "ethers": "^6.16.0",
+    "ethers": "^6.17.0",
     "ethers-multicall-provider": "patch:ethers-multicall-provider@npm%3A6.5.0#~/.yarn/patches/ethers-multicall-provider-npm-6.5.0-6b7fbf3b70.patch",
     "gill": "^0.14.0",
     "hdkey": "^2.1.0",
