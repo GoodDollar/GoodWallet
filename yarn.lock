@@ -1873,19 +1873,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@reown/walletkit@npm:^1.5.5":
-  version: 1.5.5
-  resolution: "@reown/walletkit@npm:1.5.5"
+"@reown/walletkit@npm:^1.5.6":
+  version: 1.5.6
+  resolution: "@reown/walletkit@npm:1.5.6"
   dependencies:
-    "@walletconnect/core": "npm:2.23.9"
+    "@walletconnect/core": "npm:2.23.10"
     "@walletconnect/jsonrpc-provider": "npm:1.0.14"
     "@walletconnect/jsonrpc-utils": "npm:1.0.8"
     "@walletconnect/logger": "npm:3.0.2"
-    "@walletconnect/pay": "npm:1.0.8"
-    "@walletconnect/sign-client": "npm:2.23.9"
-    "@walletconnect/types": "npm:2.23.9"
-    "@walletconnect/utils": "npm:2.23.9"
-  checksum: 10c0/212cc79b13aa31b91ab20a7725e24033484ac5cccdfab4cb91f2ac98e4beb3bdd5c0261948f3930b65c5890f2203e1f9a059cf2d2d4e5bafe05a3508481228f1
+    "@walletconnect/pay": "npm:1.0.9"
+    "@walletconnect/sign-client": "npm:2.23.10"
+    "@walletconnect/types": "npm:2.23.10"
+    "@walletconnect/utils": "npm:2.23.10"
+  checksum: 10c0/aff2e74d8d6ef65e635f6c4a2990336a047e5805ed19b6a7763d3681ed1b0fb6452f86f9055d0293b8e1fcea24643c5acf813c0e7e4faeba6a9b98a394f042fe
   languageName: node
   linkType: hard
 
@@ -5334,9 +5334,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@walletconnect/core@npm:2.23.9":
-  version: 2.23.9
-  resolution: "@walletconnect/core@npm:2.23.9"
+"@walletconnect/core@npm:2.23.10":
+  version: 2.23.10
+  resolution: "@walletconnect/core@npm:2.23.10"
   dependencies:
     "@walletconnect/heartbeat": "npm:1.2.2"
     "@walletconnect/jsonrpc-provider": "npm:1.0.14"
@@ -5349,13 +5349,13 @@ __metadata:
     "@walletconnect/relay-auth": "npm:1.1.0"
     "@walletconnect/safe-json": "npm:1.0.2"
     "@walletconnect/time": "npm:1.0.2"
-    "@walletconnect/types": "npm:2.23.9"
-    "@walletconnect/utils": "npm:2.23.9"
+    "@walletconnect/types": "npm:2.23.10"
+    "@walletconnect/utils": "npm:2.23.10"
     "@walletconnect/window-getters": "npm:1.0.1"
-    es-toolkit: "npm:1.44.0"
+    es-toolkit: "npm:1.45.1"
     events: "npm:3.3.0"
     uint8arrays: "npm:3.1.1"
-  checksum: 10c0/5ff0b7c1678b970a9c5da1e4bf61b84bb43a11de0fad646552c556c93251a09bcb7ac299dfdd48867a04b752ea9aff6982813ee9276c4f57e92e6b3596d6d4bd
+  checksum: 10c0/06e77806b68f8fb8aa7bdc76d683996f5d48fd3787b72dbbe79e98195cab573ed4eff143a51af6d4b624509e5ebddfe1860c0c3b22ff0fbb0d2a00ceaaa470fe
   languageName: node
   linkType: hard
 
@@ -5459,20 +5459,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@walletconnect/pay@npm:1.0.8":
-  version: 1.0.8
-  resolution: "@walletconnect/pay@npm:1.0.8"
+"@walletconnect/pay@npm:1.0.9":
+  version: 1.0.9
+  resolution: "@walletconnect/pay@npm:1.0.9"
   dependencies:
     "@walletconnect/logger": "npm:3.0.2"
-    "@walletconnect/types": "npm:2.23.9"
-    "@walletconnect/utils": "npm:2.23.9"
-    brotli: "npm:^1.3.3"
+    "@walletconnect/types": "npm:2.23.10"
+    "@walletconnect/utils": "npm:2.23.10"
+    brotli: "npm:1.3.3"
   peerDependencies:
     react-native: ">=0.64.0"
   peerDependenciesMeta:
     react-native:
       optional: true
-  checksum: 10c0/f6df294c669a5befd80c38ffe779caa3cd3fac43bf64a774f3dd7d009d200bacbd97bd0895f5bd087e18561b14ba6d61eb64cca041cc04fed7b782ec2838cc82
+  checksum: 10c0/4a5a6c28232d575377fe9de1a6704974edf5ca27cb15461b3d35493797c5159b628103015fa023523617ca956affb85eb7f31622ee45e5e69e6be29c06a153f0
   languageName: node
   linkType: hard
 
@@ -5507,20 +5507,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@walletconnect/sign-client@npm:2.23.9":
-  version: 2.23.9
-  resolution: "@walletconnect/sign-client@npm:2.23.9"
+"@walletconnect/sign-client@npm:2.23.10":
+  version: 2.23.10
+  resolution: "@walletconnect/sign-client@npm:2.23.10"
   dependencies:
-    "@walletconnect/core": "npm:2.23.9"
-    "@walletconnect/events": "npm:1.0.1"
-    "@walletconnect/heartbeat": "npm:1.2.2"
+    "@walletconnect/core": "npm:2.23.10"
     "@walletconnect/jsonrpc-utils": "npm:1.0.8"
     "@walletconnect/logger": "npm:3.0.2"
     "@walletconnect/time": "npm:1.0.2"
-    "@walletconnect/types": "npm:2.23.9"
-    "@walletconnect/utils": "npm:2.23.9"
+    "@walletconnect/types": "npm:2.23.10"
+    "@walletconnect/utils": "npm:2.23.10"
     events: "npm:3.3.0"
-  checksum: 10c0/324506e0bc77b1ebe928afb8c2cda7027d42a9b2c1359cf5b19a6dc6bac0175d372f774e44fd099896d4299b598ce38592d68c661bc39a08a7fbea8516dd9ffa
+  checksum: 10c0/852b0cc0503ce587414f4e3278d792318ae36a7a8e0111dce991186dcf0130828da8da764ae4a2046165a3d7d1ad3b5f82a5206759f0def85bf31a6622169fd9
   languageName: node
   linkType: hard
 
@@ -5533,9 +5531,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@walletconnect/types@npm:2.23.9":
-  version: 2.23.9
-  resolution: "@walletconnect/types@npm:2.23.9"
+"@walletconnect/types@npm:2.23.10":
+  version: 2.23.10
+  resolution: "@walletconnect/types@npm:2.23.10"
   dependencies:
     "@walletconnect/events": "npm:1.0.1"
     "@walletconnect/heartbeat": "npm:1.2.2"
@@ -5543,13 +5541,13 @@ __metadata:
     "@walletconnect/keyvaluestorage": "npm:1.1.1"
     "@walletconnect/logger": "npm:3.0.2"
     events: "npm:3.3.0"
-  checksum: 10c0/c1fb716d358932a58f57a9ea0590e236e8bf4b3292cefa3a31ce95dba90fd88db33724eb0652a149bf8d682024752221d8dd9bbabe7e6a71dc6ff5fa46f8ca55
+  checksum: 10c0/cbfa450bc260c1994af88a101d5ac9daccd88597c4daf3daa728cff260b354f4cb81a19ecc7e68ca81597ca9cf71eb13c08df16d9549d21774f9d093b7b773ef
   languageName: node
   linkType: hard
 
-"@walletconnect/utils@npm:2.23.9, @walletconnect/utils@npm:^2.23.9":
-  version: 2.23.9
-  resolution: "@walletconnect/utils@npm:2.23.9"
+"@walletconnect/utils@npm:2.23.10, @walletconnect/utils@npm:^2.23.10":
+  version: 2.23.10
+  resolution: "@walletconnect/utils@npm:2.23.10"
   dependencies:
     "@msgpack/msgpack": "npm:3.1.3"
     "@noble/ciphers": "npm:1.3.0"
@@ -5563,14 +5561,14 @@ __metadata:
     "@walletconnect/relay-auth": "npm:1.1.0"
     "@walletconnect/safe-json": "npm:1.0.2"
     "@walletconnect/time": "npm:1.0.2"
-    "@walletconnect/types": "npm:2.23.9"
+    "@walletconnect/types": "npm:2.23.10"
     "@walletconnect/window-getters": "npm:1.0.1"
     "@walletconnect/window-metadata": "npm:1.0.1"
     blakejs: "npm:1.2.1"
     detect-browser: "npm:5.3.0"
     ox: "npm:0.9.3"
     uint8arrays: "npm:3.1.1"
-  checksum: 10c0/d23e3dab463a42baeff28009eca33766f7d32b563fb731ad5d8d125eb83905b7e50ad7a8d2b3ba891aafc28ef085a129cb259299d1b478e56567a2060c5b8ee3
+  checksum: 10c0/d553a04adfe2bc4c100dfb890f6d91b5aab58b77503f02643dd3efa7fdeab759fa3d2ce80c5a720bb64ae2765494ec608a73cc86c3da63f6e4a4cb0cd8031d64
   languageName: node
   linkType: hard
 
@@ -6001,7 +5999,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"brotli@npm:^1.3.3":
+"brotli@npm:1.3.3":
   version: 1.3.3
   resolution: "brotli@npm:1.3.3"
   dependencies:
@@ -6677,15 +6675,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"es-toolkit@npm:1.44.0":
-  version: 1.44.0
-  resolution: "es-toolkit@npm:1.44.0"
+"es-toolkit@npm:1.45.1":
+  version: 1.45.1
+  resolution: "es-toolkit@npm:1.45.1"
   dependenciesMeta:
     "@trivago/prettier-plugin-sort-imports@4.3.0":
       unplugged: true
     prettier-plugin-sort-re-exports@0.0.1:
       unplugged: true
-  checksum: 10c0/b80ff52ddc85ba26914cda57c9d4e46379ccc38c60dc097ef0d065cc0b20f95a16cf8d537969eea600b51c6687b5900a6cce67489db16d5ccc14d47597a29c34
+  checksum: 10c0/b19180c778af8fe2fb450e8e05a5793166c91e0aa66b87d9fcfcc5618bd33e6ceec9c103e074458d32b2044972dc4fc63631b3b615834fde261917e9561f6f59
   languageName: node
   linkType: hard
 
@@ -7192,7 +7190,7 @@ __metadata:
     "@polymarket/builder-relayer-client": "npm:^0.0.10"
     "@polymarket/clob-client": "npm:^5.8.1"
     "@react-hookz/web": "npm:^25.2.0"
-    "@reown/walletkit": "npm:^1.5.5"
+    "@reown/walletkit": "npm:^1.5.6"
     "@sentry/nextjs": "npm:^10.56.0"
     "@solana-name-service/sns-sdk-kit": "npm:^0.10.0"
     "@solana/webcrypto-ed25519-polyfill": "npm:^6.9.0"
@@ -7203,7 +7201,7 @@ __metadata:
     "@types/react": "npm:^19.2.17"
     "@types/react-dom": "npm:^19.2.3"
     "@vitest/coverage-v8": "npm:4.1.9"
-    "@walletconnect/utils": "npm:^2.23.9"
+    "@walletconnect/utils": "npm:^2.23.10"
     async-await-mutex-lock: "npm:^1.0.12"
     async-retry: "npm:^1.3.3"
     autoprefixer: "npm:^10.5.0"
