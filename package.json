@@ -71,7 +71,7 @@
     "@biomejs/biome": "^2.5.1",
     "@types/async-retry": "^1.4.9",
     "@types/hdkey": "^2.1.0",
-    "@types/node": "25.9.3",
+    "@types/node": "26.1.1",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitest/coverage-v8": "4.1.9",
