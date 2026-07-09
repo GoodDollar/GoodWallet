@@ -79,7 +79,7 @@
     "babel-plugin-react-compiler": "^1.0.0",
     "drizzle-kit": "^0.31.10",
     "lefthook": "^2.1.9",
-    "postcss": "^8.5.15",
+    "postcss": "^8.5.16",
     "tailwindcss": "^3.4.17",
     "type-fest": "^5.7.0",
     "typescript": "^6.0.3",
