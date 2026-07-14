@@ -47,7 +47,7 @@ const nextConfig = {
         headers: [
           {
             key: "Content-Security-Policy",
-            value: "frame-ancestors 'self' https://*.delta.app",
+            value: "frame-ancestors 'self' https://delta.app https://*.delta.app;", 
           },
         ],
       },
