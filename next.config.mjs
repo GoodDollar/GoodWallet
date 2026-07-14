@@ -41,6 +41,17 @@ const nextConfig = {
   headers: async () => {
     const headers = [
       {
+        // Anti-clickjacking: only GoodWallet itself and delta may iframe us.
+        // The delta mobile app uses a native WebView (top-level document), which frame-ancestors does not affect.
+        source: "/:path*",
+        headers: [
+          {
+            key: "Content-Security-Policy",
+            value: "frame-ancestors 'self' https://*.delta.app",
+          },
+        ],
+      },
+      {
         //Allow browsers to cache content from public folder for one week, to cut down on the number of edge requests
         source: "/:all*(.png|.jpg|.jpeg|.gif|.svg|.ico|.webp|.webmanifest)",
         headers: [
