@@ -77,6 +77,7 @@ const en: TypedTranslations = {
     activity: "Activity",
     allTokens: "All",
     predictions: "Predictions",
+    more: "More",
     noTokens: {
       title: "No Tokens Yet",
       description:

@@ -18,6 +18,7 @@ export const enum RoundButtonType {
   Swap,
   WalletConnect,
   Predictions,
+  More,
 }
 
 const buttonIcons: Record<RoundButtonType, IconName> = {
@@ -28,6 +29,7 @@ const buttonIcons: Record<RoundButtonType, IconName> = {
   [RoundButtonType.Swap]: "Swap",
   [RoundButtonType.WalletConnect]: "walletConnectLogo",
   [RoundButtonType.Predictions]: "Predictions",
+  [RoundButtonType.More]: "BsThreeDots",
 }
 
 export const RoundButton = ({
