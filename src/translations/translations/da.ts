@@ -76,6 +76,7 @@ const da: TypedTranslations = {
     allTokens: "Alle",
     gooddollar: "GoodDollar",
     predictions: "Prediktioner",
+    more: "Mere",
     noTokens: {
       title: "Ingen Tokens Endnu",
       description:
