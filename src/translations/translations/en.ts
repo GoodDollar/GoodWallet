@@ -49,7 +49,7 @@ const en: TypedTranslations = {
     failedNotification: "Failed to login. Please try again",
     google: "Continue with Google",
     facebook: "Continue with Facebook",
-    pwdless: "Continue via OTP code",
+    pwdless: "Continue via SMS code",
     legalText: {
       preText: "By signing in and entering, you're accepting our",
       terms: "Terms of use",
