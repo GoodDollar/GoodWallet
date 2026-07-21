@@ -1644,7 +1644,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@noble/ed25519@npm:3.1.0, @noble/ed25519@npm:^3.0.0":
+"@noble/ed25519@npm:3.1.0, @noble/ed25519@npm:^3.1.0":
   version: 3.1.0
   resolution: "@noble/ed25519@npm:3.1.0"
   checksum: 10c0/6317722130649cf5884eff57d540b36ec1006cf68145b09ff427d88df359a3b12baaaf420aad87b747f49d30c5ae56065bf31e5ebde1a6d59c3ce9d0b6a68fdb
@@ -2605,9 +2605,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@solana-name-service/sns-sdk-kit@npm:^0.10.0":
-  version: 0.10.0
-  resolution: "@solana-name-service/sns-sdk-kit@npm:0.10.0"
+"@solana-name-service/sns-sdk-kit@npm:^0.10.1":
+  version: 0.10.1
+  resolution: "@solana-name-service/sns-sdk-kit@npm:0.10.1"
   dependencies:
     "@scure/base": "npm:^1.2.4"
     "@solana-program/token": "npm:^0.13.0"
@@ -2618,7 +2618,7 @@ __metadata:
   peerDependencies:
     "@solana-program/token": ^0.13.0
     "@solana/kit": ^6.9.0
-  checksum: 10c0/85d469d363ef927143d623174273428d8beae303880974a873234d15f70d4778b87b7fbf6122715f9bdbda67e15711eaa4c4e6e8fac32cc87b4d8ec21e62b092
+  checksum: 10c0/d1d1d5e252dc168936cdb30777fabf4860e6a5810cd7b2c3648e10051a365727a3baf9ce0786cef5e9eab855f3a94283df103e97539eff2501f815c3e23fef75
   languageName: node
   linkType: hard
 
@@ -4897,17 +4897,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@solana/webcrypto-ed25519-polyfill@npm:^6.9.0":
-  version: 6.9.0
-  resolution: "@solana/webcrypto-ed25519-polyfill@npm:6.9.0"
+"@solana/webcrypto-ed25519-polyfill@npm:^7.0.0":
+  version: 7.0.0
+  resolution: "@solana/webcrypto-ed25519-polyfill@npm:7.0.0"
   dependencies:
-    "@noble/ed25519": "npm:^3.0.0"
+    "@noble/ed25519": "npm:^3.1.0"
   peerDependencies:
     typescript: ">=5.4.0"
   peerDependenciesMeta:
     typescript:
       optional: true
-  checksum: 10c0/86dc05a958775de414cfa5b1b3e97d961bf274b5e97993818ff3bd410422615e803f26b3639a19cefb8aa584dbc9724a654565c4b3b3428771fb6340574a177b
+  checksum: 10c0/da666e8b6f201751eb6983228f79989e63712e1d449ff2c7c9a7ed275ca69a5140c9ae805563b5f8aedea0e8086973289fe9dcdd39af6615c4b400ea9264c1b3
   languageName: node
   linkType: hard
 
@@ -7194,8 +7194,8 @@ __metadata:
     "@react-hookz/web": "npm:^25.2.0"
     "@reown/walletkit": "npm:^1.5.6"
     "@sentry/nextjs": "npm:^10.56.0"
-    "@solana-name-service/sns-sdk-kit": "npm:^0.10.0"
-    "@solana/webcrypto-ed25519-polyfill": "npm:^6.9.0"
+    "@solana-name-service/sns-sdk-kit": "npm:^0.10.1"
+    "@solana/webcrypto-ed25519-polyfill": "npm:^7.0.0"
     "@toruslabs/customauth": "npm:^20.4.0"
     "@types/async-retry": "npm:^1.4.9"
     "@types/hdkey": "npm:^2.1.0"
