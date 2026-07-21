@@ -16,8 +16,8 @@
     "drizzle:neon:generate:migrations": "yarn drizzle-kit generate --config ./drizzle.neon.config.ts"
   },
   "dependencies": {
-    "@amplitude/analytics-browser": "^2.43.0",
-    "@amplitude/analytics-node": "^1.5.59",
+    "@amplitude/analytics-browser": "^2.45.3",
+    "@amplitude/analytics-node": "^1.5.67",
     "@bigmi/client": "^0.9.0",
     "@bitcoinerlab/secp256k1": "^1.2.0",
     "@electric-sql/pglite": "^0.5.3",
@@ -34,7 +34,7 @@
     "@polymarket/clob-client": "^5.8.1",
     "@react-hookz/web": "^25.2.0",
     "@reown/walletkit": "^1.5.6",
-    "@sentry/nextjs": "^10.56.0",
+    "@sentry/nextjs": "^10.67.0",
     "@solana-name-service/sns-sdk-kit": "^0.10.0",
     "@solana/webcrypto-ed25519-polyfill": "^6.9.0",
     "@toruslabs/customauth": "^20.4.0",
