@@ -23,6 +23,7 @@ import { getChainName } from "@/chain/chains"
 import { setBottomSheetProps } from "@/components/Snippet/BottomSheet/bottomSheetStore"
 import { LoadingSpinner } from "@/components/Snippet/LoadingSpinner"
 import { formatTokenAmount } from "@/components/Utils/tokenFormat"
+import { config } from "@/config"
 import { topWallet } from "@/gooddollar/methods/faucet"
 import { collectBountyStore } from "@/gooddollar/stores/collectBountyStore"
 import {
@@ -395,6 +396,10 @@ export default function ClaimView() {
 
   const goHome = useRouteTransition(`/${locale}`)
   const addPropagatingTx = useSnapshot(activityHistoryStore).addPropagatingTx
+
+  if (config.playwrightTestMode) {
+    return <RequireWhitelist onWhitelist={() => undefined} />
+  }
 
   const onClaim = () => {
     const ongoingClaims = new Map<ChainId, Promise<void>>()
