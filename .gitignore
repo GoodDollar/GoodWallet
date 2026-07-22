@@ -7,8 +7,16 @@ node_modules
 
 # testing
 coverage
-/tests-playwright/*.png
+# Per-flow Playwright directories hold intentional approved baselines.
+# Each baseline is named `screenshot-<state>-<viewport>.png`. Anything that
+# doesn't match that pattern under a flow directory is a run artifact and
+# must stay untracked. See CONTRIBUTING.md#playwright-baselines.
+/tests-playwright/**/screenshot-*.png
+!/tests-playwright/**/screenshot-*-desktop.png
+!/tests-playwright/**/screenshot-*-mobile.png
 /tests-playwright/artifacts/
+/playwright-report/
+/test-results/
 
 # next.js
 .next/

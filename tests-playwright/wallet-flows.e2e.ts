@@ -1,7 +1,22 @@
 import { expect, type Page, test } from "@playwright/test"
 
-const screenshotPath = (name: string, project: string) =>
-  `tests-playwright/${name}-${project}.png`
+// Screenshots are nested under `tests-playwright/<page-or-flow>/` per the
+// automated Playwright plan in issue #38 and the contributor scope in #40.
+// Using semantic state names (e.g. `screenshot-onboarding-da-desktop.png`)
+// keeps baseline diffs and CI artifacts meaningful.
+const screenshotPath = (
+  flow: string,
+  state: string,
+  project: string,
+  extension: "png" = "png",
+) => `tests-playwright/${flow}/${state}-${project}.${extension}`
+
+// `useLocalStorageValue` from `@react-hookz/web` round-trips values through
+// `JSON.parse` / `JSON.stringify`. Setting a bare string here produced
+// repeated `SyntaxError: Unexpected token 'e'` browser errors during the
+// passing E2E run. Storing the JSON-encoded form restores the expected
+// serialization without touching the hook itself.
+const JSON_STRING_VALUE = JSON.stringify("testlogin")
 
 const preparePage = async (page: Page, showOnboarding: boolean) => {
   await page.context().route("**/*", (route) => {
@@ -15,15 +30,15 @@ const preparePage = async (page: Page, showOnboarding: boolean) => {
     return hostname === "localhost" ? route.continue() : route.abort()
   })
   await page.addInitScript(
-    ({ showOnboarding }) => {
+    ({ showOnboarding, defaultLoginMethod }) => {
       localStorage.setItem("ShowWelcomeDialog", String(showOnboarding))
-      localStorage.setItem("defaultLoginMethod", "testlogin")
+      localStorage.setItem("defaultLoginMethod", defaultLoginMethod)
       localStorage.setItem("Tracking_Sentry", "denied")
       localStorage.setItem("Tracking_Amplitude", "denied")
       sessionStorage.setItem("gd-claim-view-seen", "true")
       sessionStorage.removeItem("deep_link_url")
     },
-    { showOnboarding },
+    { showOnboarding, defaultLoginMethod: JSON_STRING_VALUE },
   )
 }
 
@@ -43,7 +58,11 @@ test("captures the locale-aware onboarding and login entry", async ({
     page.getByText("Velkommen til din nye og forbedrede GoodWallet!"),
   ).toBeVisible()
   await page.screenshot({
-    path: screenshotPath("login-onboarding-da", testInfo.project.name),
+    path: screenshotPath(
+      "login-onboarding",
+      "screenshot-onboarding-da",
+      testInfo.project.name,
+    ),
     fullPage: true,
   })
 
@@ -74,7 +93,11 @@ test("captures the authenticated home balance and mobile action overflow", async
   }
 
   await page.screenshot({
-    path: screenshotPath("home-balances-overflow-en", testInfo.project.name),
+    path: screenshotPath(
+      "home",
+      "screenshot-home-balances-overflow-en",
+      testInfo.project.name,
+    ),
     fullPage: true,
   })
 })
@@ -94,7 +117,8 @@ test("captures the claim verification requirement", async ({
   await expect(page.getByRole("button", { name: "Verify" })).toBeVisible()
   await page.screenshot({
     path: screenshotPath(
-      "claim-requires-verification-en",
+      "claim",
+      "screenshot-claim-requires-verification-en",
       testInfo.project.name,
     ),
     fullPage: true,
