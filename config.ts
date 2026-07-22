@@ -77,6 +77,10 @@ const enabledLoginOptions: EnabledLoginOptions = {
 const includeTestnetTokens =
   process.env.NEXT_PUBLIC_INCLUDE_TESTNET_TOKENS === "true"
 
+// Enables deterministic UI states exclusively for the Playwright test server.
+const playwrightTestMode =
+  process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE === "true"
+
 const lifiConfig = {
   apiUrl: "https://li.quest/v1",
   chainTypes: ["EVM", "UTXO", "SVM"],
@@ -215,6 +219,7 @@ export const config = Object.freeze({
   vercelConfig,
   env,
   includeTestnetTokens,
+  playwrightTestMode,
   enabledLoginOptions,
   lifiConfig,
   alchemyConfig,

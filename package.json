@@ -8,6 +8,8 @@
     "start": "next start -p 80",
     "lint": "next lint",
     "test": "vitest run",
+    "test:e2e": "playwright test",
+    "test:e2e:screenshots": "playwright test --update-snapshots",
     "biome:verify:all": "biome check",
     "biome:fix:staged": "biome check --write --no-errors-on-unmatched --staged",
     "biome:fix:all": "biome check --write --no-errors-on-unmatched",
@@ -69,6 +71,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.3",
+    "@playwright/test": "1.61.1",
     "@types/async-retry": "^1.4.9",
     "@types/hdkey": "^2.1.0",
     "@types/node": "26.1.1",

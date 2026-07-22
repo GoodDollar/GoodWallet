@@ -225,10 +225,14 @@ export default function WalletSection({
           <ProfileCard
             userName={userName}
             profileImage={profileImage}
-            aggregatedUsdValue={balances?.aggregatedUsdValue}
-            isLoadingValue={isValidating}
+            aggregatedUsdValue={
+              config.playwrightTestMode
+                ? "124.68"
+                : balances?.aggregatedUsdValue
+            }
+            isLoadingValue={config.playwrightTestMode ? false : isValidating}
           />
-          <div className={styles.buttonsContainer}>
+          <div className={styles.buttonsContainer} data-testid="wallet-actions">
             {goodDollarLink}
             {sendLink}
             {receiveLink}
