@@ -109,12 +109,15 @@ export type OptionsTranslations = {
   logout: string
   copyPublic: string
   copyPrivate: string
+  copyXrpSecretSeed: string
   copiedPublicKey: string
   copiedPrivateKey: string
+  copiedXrpSecretSeed: string
   gotoGW1: string
   inviteFriends: string
   confirmation: string
   privateKeyExportDisclaimer: string
+  xrpSecretSeedExportDisclaimer: string
   legal: string
   welcomeReward: string
   privacyPolicy: string

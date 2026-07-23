@@ -142,12 +142,16 @@ const da: TypedTranslations = {
     logout: "Log ud",
     copyPublic: "Kopier offentlig adresse",
     copyPrivate: "Kopier privat adresse",
+    copyXrpSecretSeed: "Kopiér XRPL hemmelig seed (Ed25519)",
     copiedPublicKey: "Offentlig adresse kopieret",
     copiedPrivateKey: "Privat adresse kopieret",
+    copiedXrpSecretSeed: "XRPL Ed25519 hemmelig seed kopieret",
     inviteFriends: "Inviter Venner",
     confirmation: "Bekræftelse",
     privateKeyExportDisclaimer:
       "Du er ved at eksportere din private nøgle, som giver fuld adgang til din wallet og alle dine aktiver. Du er ansvarlig for at holde den sikker.",
+    xrpSecretSeedExportDisclaimer:
+      "Du er ved at eksportere din XRPL Ed25519 hemmelige seed, som giver fuld adgang til din XRP-wallet og alle dens aktiver. Du er ansvarlig for at holde den sikker.",
     legal: "Juridisk",
     welcomeReward: "Velkomstbelønning",
     gotoGW1: "Gammel GoodWallet",
