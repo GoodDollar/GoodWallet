@@ -1,5 +1,4 @@
 import { useCallback } from "react"
-import { isAddress } from "ethers/address"
 import { parseUnits } from "ethers/utils"
 import type { SWRConfiguration, SWRResponse } from "swr"
 import { default as useSWRImmutable } from "swr/immutable"
@@ -12,6 +11,8 @@ import {
   estimateGasLimit,
   estimateTypeAndFees,
   isAmountSafe,
+  isValidEvmAddress,
+  normalizeEvmAddress,
   parseAmount,
   sendTx,
   ZERO_ADDRESS,
@@ -46,7 +47,7 @@ const useBroadcastRequest = () => {
     ([_to, _amountUnits, selectedToken, isSelectedTokenERC20]) => {
       const chainId = selectedToken.chainId
       const amountUnits = _amountUnits ?? BigInt(0)
-      const to = _to ?? ZERO_ADDRESS
+      const to = normalizeEvmAddress(_to ?? ZERO_ADDRESS, chainId)
 
       const callData: BroadcastRequest["data"] = isSelectedTokenERC20
         ? craftERC20TransferCalldata(to, amountUnits)
@@ -207,7 +208,7 @@ export const useIsTransactionValid = (): boolean => {
     return false
   }
 
-  if (isAddress(toAddress) === false) {
+  if (isValidEvmAddress(toAddress, selectedToken.chainId) === false) {
     console.debug("Transaction is not valid: `to` is not a valid address")
     return false
   }
