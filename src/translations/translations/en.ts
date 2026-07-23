@@ -141,12 +141,16 @@ const en: TypedTranslations = {
     logout: "Logout",
     copyPublic: "Copy Public Address",
     copyPrivate: "Copy Private Key",
+    copyXrpSecretSeed: "Copy XRPL Secret Seed (Ed25519)",
     copiedPublicKey: "Public address copied",
     copiedPrivateKey: "Private key copied",
+    copiedXrpSecretSeed: "XRPL Ed25519 secret seed copied",
     inviteFriends: "Invite Friends",
     confirmation: "Confirmation",
     privateKeyExportDisclaimer:
       "You are about to export your private key which grants full access to your wallet and any held assets. You are responsible for keeping this secure.",
+    xrpSecretSeedExportDisclaimer:
+      "You are about to export your XRPL Ed25519 secret seed which grants full access to your XRP wallet and any held assets. You are responsible for keeping this secure.",
     legal: "Legal",
     welcomeReward: "Welcome Reward",
     gotoGW1: "Legacy GoodWallet",
