@@ -22,7 +22,9 @@ export default function TotalEarnedBox(props: { user: User }) {
   return (
     <Box vertical elevation="high" align="start">
       <Text style="16-400">{inviteTranslations.totalRewards}</Text>
-      <Text style="24-600">{getTotalEarned()}</Text>
+      <Text style="24-600" translate="no">
+        {getTotalEarned()}
+      </Text>
     </Box>
   )
 }

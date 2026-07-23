@@ -118,7 +118,7 @@ export const EVMDialogDetails = ({
           <Text style="14-600" color="text-secondary" align="left">
             {sendTranslations.to}
           </Text>
-          <Text style="14-400" align="right" color="white">
+          <Text style="14-400" align="right" color="white" translate="no">
             {toEns
               ? `(${toEns}) ${truncateString(toAddress, 6, 6)}`
               : truncateString(toAddress, 8, 8)}
@@ -129,7 +129,7 @@ export const EVMDialogDetails = ({
           <Text style="14-600" color="text-secondary" align="left">
             {sendTranslations.maxGasFee}
           </Text>
-          <Text style="14-400" align="right" color="white">
+          <Text style="14-400" align="right" color="white" translate="no">
             {maxGasFee}
           </Text>
         </div>
@@ -138,7 +138,7 @@ export const EVMDialogDetails = ({
           <Text style="14-600" color="text-secondary" align="left">
             {sendTranslations.maxFeePerGas}
           </Text>
-          <Text style="14-400" align="right" color="white">
+          <Text style="14-400" align="right" color="white" translate="no">
             {maxFeePerGas}
           </Text>
         </div>
@@ -147,7 +147,7 @@ export const EVMDialogDetails = ({
           <Text style="14-600" color="text-secondary" align="left">
             {sendTranslations.totalCost}
           </Text>
-          <Text style="14-400" align="right" color="white">
+          <Text style="14-400" align="right" color="white" translate="no">
             {totalCost}
           </Text>
         </div>

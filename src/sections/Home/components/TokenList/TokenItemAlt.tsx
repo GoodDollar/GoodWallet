@@ -35,12 +35,12 @@ export const TokenItemViewAlt = ({
 
           <div className="flex flex-col justify-items-end">
             <div className="flex flex-row items-center gap-2">
-              <h4>
+              <h4 translate="no">
                 {symbol} <span className="text-xs font-light">{name}</span>
               </h4>
             </div>
 
-            <div className="font-normal text-xs text-gray-3">
+            <div className="font-normal text-xs text-gray-3" translate="no">
               {amount && symbol && <>{formatTokenAmount(amount, symbol)}</>}{" "}
               {usdValue
                 ? `(${formatTokenValue(usdValue, selectedCurrency)})`

@@ -152,7 +152,7 @@ export const XRPDialogDetails = ({
         <Text style="14-600" color="--color-grey" align="left">
           {sendTranslations.to}
         </Text>
-        <Text style="14-400" align="right">
+        <Text style="14-400" align="right" translate="no">
           {truncateString(toAddress, 8, 8)}
         </Text>
       </div>
@@ -161,7 +161,7 @@ export const XRPDialogDetails = ({
         <Text style="14-600" color="--color-grey" align="left">
           {"Base Fee XRP"}
         </Text>
-        <Text style="14-400" align="right">
+        <Text style="14-400" align="right" translate="no">
           {baseFeeFormatted ?? "Calculating..."}
         </Text>
       </div>
@@ -169,7 +169,7 @@ export const XRPDialogDetails = ({
         <Text style="14-600" color="--color-grey" align="left">
           {"Load factor"}
         </Text>
-        <Text style="14-400" align="right">
+        <Text style="14-400" align="right" translate="no">
           {loadFactor ?? "Calculating..."}
         </Text>
       </div>

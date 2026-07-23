@@ -87,6 +87,7 @@ export default function AmountInputBox() {
               pattern={"d*"}
               min={0}
               value={uiAmount}
+              translate="no"
               onChange={(e) => {
                 try {
                   const valueAsBigint = parseUnits(
@@ -101,7 +102,12 @@ export default function AmountInputBox() {
               }}
             />
 
-            <Text style="14-400" color="text-secondary" truncate={true}>
+            <Text
+              style="14-400"
+              color="text-secondary"
+              truncate={true}
+              translate="no"
+            >
               {formatTokenValue(totalValue, selectedCurrency)}
             </Text>
           </div>

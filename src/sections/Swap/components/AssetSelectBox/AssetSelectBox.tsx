@@ -87,7 +87,7 @@ export default function AssetSelectBox({
 
           {swapSnap.origin ? (
             <div className={styles.symbolBox}>
-              <Text style="16-600" truncate={true}>
+              <Text style="16-600" truncate={true} translate="no">
                 {swapSnap.origin?.symbol}
               </Text>
               <Text style="14-400" color="text-secondary">
@@ -136,7 +136,7 @@ export default function AssetSelectBox({
 
             {swapSnap.target ? (
               <div className={styles.symbolBox}>
-                <Text style="16-600" truncate={true}>
+                <Text style="16-600" truncate={true} translate="no">
                   {swapSnap.target.symbol}
                 </Text>
                 <Text style="14-400" color="text-secondary">
