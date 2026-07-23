@@ -194,7 +194,10 @@ to update. That misleading command has been replaced.
 - **Flaky readiness**: use `await expect(...).toBeVisible()` instead of
   `waitForTimeout`. The suite is configured with `fullyParallel: false` and
   `workers: 1` so timing is deterministic.
-- **CI agent-triggered run**: the `Playwright agent` workflow is intentionally
-  `workflow_dispatch` only — it is never run automatically on every PR. A
-  reviewer or contributor can launch it from the Actions tab to upload
-  screenshots, traces, videos, and logs.
+- **CI agent-triggered run**: the `.github/workflows/playwright-agent.yml`
+  workflow is intentionally `workflow_dispatch` only — it is never run
+  automatically on every PR. A reviewer or contributor can launch it from
+  the Actions tab to upload screenshots, traces, videos, and logs. The
+  full YAML is also reproduced in the PR description so a maintainer can
+  paste it back into `.github/workflows/` if any account-level push rule
+  blocks the workflow file itself.
