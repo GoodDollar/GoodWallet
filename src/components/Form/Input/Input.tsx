@@ -8,6 +8,7 @@ export type InputProps = {
   isValid?: boolean
   isLoadingValidation?: boolean
   defaultIconButton?: React.ReactNode
+  translate?: "no"
 } & (
   | {
       type: "input"
@@ -28,6 +29,7 @@ export function Input({
   isValid,
   isLoadingValidation,
   defaultIconButton,
+  translate,
 }: InputProps) {
   const isDisabled = onChange ? false : true
   const [isFocused, setIsFocused] = useState(false)
@@ -83,6 +85,7 @@ export function Input({
               placeholder={placeholder}
               onBlur={handleBlur}
               disabled={isDisabled}
+              translate={translate}
             />
           ) : (
             <textarea
@@ -96,6 +99,7 @@ export function Input({
               placeholder={placeholder}
               onBlur={handleBlur}
               disabled={isDisabled}
+              translate={translate}
             />
           )}
 

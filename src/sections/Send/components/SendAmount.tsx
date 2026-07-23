@@ -84,7 +84,7 @@ export const SendAmount = (props: { inert?: boolean }) => {
       />
 
       <div className={styles.sendAmountTokenInfo}>
-        <Text style="16-600">
+        <Text style="16-600" translate="no">
           {selectedToken?.symbol ?? sendTranslations.selectToken}
           <Icon name="BsCaretDownFill" />
         </Text>
@@ -249,6 +249,7 @@ export const SendAmount = (props: { inert?: boolean }) => {
               ""
             }
             placeholder="0"
+            translate="no"
             autoFocus={!!selectedToken}
             onChange={handleInputChange}
             style={{
@@ -263,6 +264,7 @@ export const SendAmount = (props: { inert?: boolean }) => {
             ref={spanRef}
             className={styles.sendAmountHiddenSpan}
             style={{ fontSize: varInputFontSize }}
+            translate="no"
           >
             {(show === "crypto" ? amountInCrypto : amountInSelectedCurrency) ||
               "0"}
@@ -271,6 +273,7 @@ export const SendAmount = (props: { inert?: boolean }) => {
           <span
             className={styles.sendAmountTokenSymbol}
             style={{ fontSize: varInputFontSize }}
+            translate="no"
           >
             {show === "crypto"
               ? selectedToken?.symbol
@@ -310,12 +313,16 @@ export const SendAmount = (props: { inert?: boolean }) => {
           <Box width="content" gap="small">
             <Icon name="BsWallet2" />
             <Text style="12-400" color="text-soft" align="center">
-              {show === "crypto" && maxAmount
-                ? formatTokenAmount(maxAmount, selectedToken.symbol)
-                : null}
-              {show === "selectedCurrency"
-                ? `${maxAmountSelectedCurrency} ${selectedCurrency.symbol}`
-                : null}{" "}
+              {show === "crypto" && maxAmount ? (
+                <span translate="no">
+                  {formatTokenAmount(maxAmount, selectedToken.symbol)}
+                </span>
+              ) : null}
+              {show === "selectedCurrency" ? (
+                <span translate="no">
+                  {`${maxAmountSelectedCurrency} ${selectedCurrency.symbol}`}
+                </span>
+              ) : null}{" "}
               {sendTranslations.availableFunds}
             </Text>
           </Box>

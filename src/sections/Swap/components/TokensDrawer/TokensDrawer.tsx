@@ -381,11 +381,11 @@ const TokenRow = memo(function TokenRow({
 
       {/* Symbol + price column */}
       <div className={styles.tokenSymbolContainer}>
-        <Text style="16-600" truncate>
+        <Text style="16-600" truncate translate="no">
           {token.symbol}
         </Text>
         {price && (
-          <Text style="12-400" color="text-secondary">
+          <Text style="12-400" color="text-secondary" translate="no">
             {formatTokenPrice(price, selectedCurrency)}
           </Text>
         )}
@@ -394,10 +394,15 @@ const TokenRow = memo(function TokenRow({
       {/* Balance column (only if user has this token) */}
       {balance && (
         <div className={styles.tokenBalanceContainer}>
-          <Text style="14-600" align="right">
+          <Text style="14-600" align="right" translate="no">
             {balance.amount && formatTokenAmount(balance.amount, token.symbol)}
           </Text>
-          <Text style="12-400" color="text-secondary" align="right">
+          <Text
+            style="12-400"
+            color="text-secondary"
+            align="right"
+            translate="no"
+          >
             {balance.hasValue &&
               formatTokenValue(balance.usdValue, selectedCurrency)}
           </Text>

@@ -87,7 +87,7 @@ export const RouteBox = (props: {
         />
 
         <div className={styles.symbolBox}>
-          <Text style="24-600">
+          <Text style="24-600" translate="no">
             {formatTokenAmount(
               formatUnits(route.toAmount, route.toToken.decimals),
               route.toToken.symbol,
@@ -95,11 +95,12 @@ export const RouteBox = (props: {
           </Text>
 
           <div style={{ display: "flex", gap: 4 }}>
-            <Text style="12-400" color="text-secondary">
+            <Text style="12-400" color="text-secondary" translate="no">
               {formatTokenValue(route.toAmountUSD, selectedCurrency)}
             </Text>
             <Text style="12-400" color="text-secondary">
-              {route.toToken.symbol} on {getChainName(route.toToken.chainId)}
+              <span translate="no">{route.toToken.symbol}</span> on{" "}
+              {getChainName(route.toToken.chainId)}
             </Text>
           </div>
         </div>
@@ -124,7 +125,7 @@ export const RouteBox = (props: {
                 )}
               </div>
               <div className={styles.hopDescription}>
-                <Text style="12-400" color="text-secondary">
+                <Text style="12-400" color="text-secondary" translate="no">
                   {getChainName(step.action.fromChainId)} via{" "}
                   {route.steps[0].toolDetails.name}
                 </Text>
@@ -154,13 +155,13 @@ export const RouteBox = (props: {
       <div className={styles.boxFooter}>
         <div className={styles.footerItem}>
           <Icon name="BsFuelPump" color="white" />
-          <Text style="14-600">
+          <Text style="14-600" translate="no">
             {formatTokenValue(Number(route.gasCostUSD), selectedCurrency)}
           </Text>
         </div>
         <div className={styles.footerItem}>
           <Icon name="BsCashStack" color="white" />
-          <Text style="14-600">
+          <Text style="14-600" translate="no">
             {formatTokenValue(totalFee, selectedCurrency)}
           </Text>
         </div>

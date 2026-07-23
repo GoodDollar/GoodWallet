@@ -82,7 +82,7 @@ export const SessionProposalDialog = ({ sessionProposal }: Props) => {
 
           {listOfChainIds.map((chainId) => (
             <div className={styles.accountsRow} key={chainId}>
-              <Text style="14-400">
+              <Text style="14-400" translate="no">
                 {getTruncatedAddressForChainId(chainId, addresses)}
               </Text>
               <Text style="14-400">

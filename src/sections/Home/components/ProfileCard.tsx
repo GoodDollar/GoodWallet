@@ -127,7 +127,7 @@ export const ProfileCard = ({
               onClick={() => setIsCurrencySliderOpen(true)}
             >
               <div className="text-4xl text-gradient-color">
-                <span className="font-semibold">
+                <span className="font-semibold" translate="no">
                   {formatTokenValue(aggregatedUsdValue ?? 0, selectedCurrency)}
                 </span>
               </div>

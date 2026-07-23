@@ -158,7 +158,7 @@ export const BTCDialogDetails = ({
         <Text style="14-600" color="text-secondary" align="left">
           {sendTranslations.to}
         </Text>
-        <Text style="14-400" align="right">
+        <Text style="14-400" align="right" translate="no">
           {truncateString(toAddress, 8, 8)}
         </Text>
       </div>
@@ -167,7 +167,7 @@ export const BTCDialogDetails = ({
         <Text style="14-600" color="text-secondary" align="left">
           {"Fee Rate"}
         </Text>
-        <Text style="14-400" align="right">
+        <Text style="14-400" align="right" translate="no">
           {feePerByteSats ? formatTokenAmount(feePerByteSats, "Sats/B") : "N/A"}
         </Text>
       </div>
@@ -176,7 +176,7 @@ export const BTCDialogDetails = ({
         <Text style="14-600" color="text-secondary" align="left">
           {"Network Fee"}
         </Text>
-        <Text style="14-400" align="right">
+        <Text style="14-400" align="right" translate="no">
           {totalFeeNative
             ? formatTokenAmount(totalFeeNative, selectedToken?.symbol ?? "")
             : "N/A"}

@@ -42,7 +42,11 @@ export const ReadyToClaim = ({ claimableAmounts }: ReadyToClaimProps) => {
             : "Unable to claim"}
         </Text>
 
-        <Text style="48-600" color={hasReadyClaim ? "white" : "text-secondary"}>
+        <Text
+          style="48-600"
+          color={hasReadyClaim ? "white" : "text-secondary"}
+          translate="no"
+        >
           {claimableAmountSum > 0
             ? formatTokenAmount(claimableAmountSum, "G$")
             : claimableInviteJoinAmounts.some((c) => c.sufficientGas)
@@ -58,6 +62,7 @@ export const ReadyToClaim = ({ claimableAmounts }: ReadyToClaimProps) => {
                   style="14-400"
                   color={item.sufficientGas ? "text-soft" : "text-secondary"}
                   className={!item.sufficientGas ? styles.strikethrough : ""}
+                  translate="no"
                 >
                   {formatTokenAmount(item.amount, "G$")}
                 </Text>
@@ -97,6 +102,7 @@ export const ReadyToClaim = ({ claimableAmounts }: ReadyToClaimProps) => {
                     style="14-400"
                     color={item.sufficientGas ? "text-soft" : "text-secondary"}
                     className={!item.sufficientGas ? styles.strikethrough : ""}
+                    translate="no"
                   >
                     {formatTokenAmount(item.amount, "G$")}
                   </Text>

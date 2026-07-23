@@ -225,7 +225,7 @@ export const SVMDialogDetails = ({
         <Text style="14-600" color="text-secondary" align="left">
           {sendTranslations.to}
         </Text>
-        <Text style="14-400" align="right">
+        <Text style="14-400" align="right" translate="no">
           {truncateString(toAddress, 8, 8)}
         </Text>
       </div>
@@ -234,7 +234,7 @@ export const SVMDialogDetails = ({
         <Text style="14-600" color="text-secondary" align="left">
           {"Base Fee"}
         </Text>
-        <Text style="14-400" align="right">
+        <Text style="14-400" align="right" translate="no">
           {baseFeeFormatted ?? "Calculating..."}
         </Text>
       </div>
@@ -242,7 +242,7 @@ export const SVMDialogDetails = ({
         <Text style="14-600" color="text-secondary" align="left">
           {"Prioritization Fee"}
         </Text>
-        <Text style="14-400" align="right">
+        <Text style="14-400" align="right" translate="no">
           {prioritizationFeeFormatted ?? "Calculating..."}
         </Text>
       </div>
@@ -251,7 +251,7 @@ export const SVMDialogDetails = ({
           <Text style="14-600" color="text-secondary" align="left">
             {"ATA Creation Fee"}
           </Text>
-          <Text style="14-400" align="right">
+          <Text style="14-400" align="right" translate="no">
             {ataFeeFormatted ?? "Calculating..."}
           </Text>
         </div>
@@ -261,7 +261,7 @@ export const SVMDialogDetails = ({
         <Text style="14-600" color="text-secondary" align="left">
           {"Total Fee"}
         </Text>
-        <Text style="14-400" align="right">
+        <Text style="14-400" align="right" translate="no">
           {`${totalFeeSolFormatted ?? "Calculating..."} ${amountInUSDConverted ? `(${amountInUSDConverted})` : ""}`}
         </Text>
       </div>
