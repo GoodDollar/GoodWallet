@@ -26,10 +26,14 @@ export const validator = (
   signature: Uint8Array,
 ): boolean => ECPair.fromPublicKey(pubkey).verify(msghash, signature)
 
-export const getPrivateKeyHex = (
+export const getPrivateKeyHex = async (
   chainType: keyof ISigner,
   masterSeed: string,
-): string => {
+): Promise<string> => {
+  if (chainType === "XRP" || chainType === "XRP_TESTNET") {
+    return getXrpSecretSeed(chainType, masterSeed)
+  }
+
   return getPrivateKey(chainType, masterSeed).toString("hex")
 }
 

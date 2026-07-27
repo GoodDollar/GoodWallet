@@ -10,7 +10,7 @@ import { setBottomSheetProps } from "@/components/Snippet/BottomSheet/bottomShee
 import { truncateString } from "@/components/Utils/format"
 import VersionTag from "@/components/VersionTag/VersionTag"
 import { type ISigner, useSessionContext } from "@/login"
-import { getPrivateKeyHex, getXrpSecretSeed } from "@/login/adapters/privatekey"
+import { getPrivateKeyHex } from "@/login/adapters/privatekey"
 import { getSessionFromLocalStorage } from "@/login/context/SessionContext/storage"
 
 import OptionsMenu from "./components/OptionsMenu"
@@ -25,9 +25,6 @@ export default function OptionsView() {
   const { captureEvent } = useAnalytics()
   const [expanded, setExpanded] = useState(false)
   const [selectedChainType, setSelectedChainType] = useState<keyof ISigner>()
-  const isXrp =
-    selectedChainType === "XRP" || selectedChainType === "XRP_TESTNET"
-
   const handleCopyPrivateKey = async () => {
     if (!selectedChainType) return
     const session = await getSessionFromLocalStorage()
@@ -35,24 +32,21 @@ export default function OptionsView() {
 
     const status = await openDialog({
       title: optionsTranslations.confirmation,
-      bodyText: isXrp
-        ? optionsTranslations.xrpSecretSeedExportDisclaimer
-        : optionsTranslations.privateKeyExportDisclaimer,
+      bodyText: optionsTranslations.privateKeyExportDisclaimer,
       acceptBtnText: "OK",
       rejectBtnText: "Cancel",
     })
 
     if (status === "accepted") {
-      const privateKey = isXrp
-        ? await getXrpSecretSeed(selectedChainType, session.masterSeed)
-        : getPrivateKeyHex(selectedChainType, session.masterSeed)
+      const privateKey = await getPrivateKeyHex(
+        selectedChainType,
+        session.masterSeed,
+      )
       navigator.clipboard.writeText(privateKey)
       captureEvent({ type: AnalyticsEventTypes.PrivateKeyCopied })
       setSelectedChainType(undefined)
       createToast({
-        message: isXrp
-          ? optionsTranslations.copiedXrpSecretSeed
-          : optionsTranslations.copiedPrivateKey,
+        message: optionsTranslations.copiedPrivateKey,
         status: "success",
         autoClose: true,
       })
@@ -153,11 +147,7 @@ export default function OptionsView() {
             <Button
               variant="list"
               icon="BsExclamationTriangle"
-              text={
-                isXrp
-                  ? optionsTranslations.copyXrpSecretSeed
-                  : optionsTranslations.copyPrivate
-              }
+              text={optionsTranslations.copyPrivate}
               onClick={handleCopyPrivateKey}
             />
           </>
