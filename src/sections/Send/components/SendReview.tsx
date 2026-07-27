@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { Button, createToast, updateToast } from "ui"
 
-import { isValidEvmAddress } from "ethers-utils"
+import { normalizeEvmAddress } from "ethers-utils"
 import { AnalyticsEventTypes } from "@/analytics/types"
 import { captureEvent } from "@/analytics/useAnalytics"
 import { getChainProvider } from "@/chain/provider/provider"
@@ -141,9 +141,9 @@ export function SendReview() {
   const isAddressValid =
     chainProvider &&
     toAddress &&
-    (chainProvider.family === EVM_FAMILY
-      ? isValidEvmAddress(toAddress, selectedToken.chainId)
-      : chainProvider.isValidAddress(toAddress))
+    chainProvider.isValidAddress(
+      normalizeEvmAddress(toAddress, selectedToken.chainId),
+    )
   const isAmountValid = amountInCrypto && Number(amountInCrypto) > 0
 
   return (

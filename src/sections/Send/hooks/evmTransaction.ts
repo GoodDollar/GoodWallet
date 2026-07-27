@@ -11,12 +11,12 @@ import {
   estimateGasLimit,
   estimateTypeAndFees,
   isAmountSafe,
-  isValidEvmAddress,
   normalizeEvmAddress,
   parseAmount,
   sendTx,
   ZERO_ADDRESS,
 } from "ethers-utils"
+import { getChainProvider } from "@/chain/provider/provider"
 import { TxDirection } from "@/hooks/useLedger/types"
 import { useSessionContext } from "@/login"
 import { activityHistoryStore } from "@/stores/transactionHistoryStore"
@@ -208,7 +208,12 @@ export const useIsTransactionValid = (): boolean => {
     return false
   }
 
-  if (isValidEvmAddress(toAddress, selectedToken.chainId) === false) {
+  const chainProvider = getChainProvider(selectedToken.chainId)
+  if (
+    chainProvider.isValidAddress(
+      normalizeEvmAddress(toAddress, selectedToken.chainId),
+    ) === false
+  ) {
     console.debug("Transaction is not valid: `to` is not a valid address")
     return false
   }
