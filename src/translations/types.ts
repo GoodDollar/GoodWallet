@@ -49,7 +49,6 @@ export type HomeTranslations = {
   activity: string
   allTokens: string
   gooddollar: string
-  more: string
   pwaConfirmAlert: string
   predictions: string
   noTokens: {

@@ -1,24 +1,16 @@
 .buttonsContainer {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 8px;
-  justify-items: center;
+  justify-content: space-around;
   padding-bottom: 8px;
   width: 100%;
 }
 
-.moreButtonsContainer {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
-  justify-items: center;
-  padding: 8px 24px 24px;
-}
-
-.buttonsContainer > *,
-.moreButtonsContainer > * {
+.buttonsContainer > * {
   display: flex;
   justify-content: center;
+  min-width: 75px;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -34,7 +26,5 @@
   100% { background-color: var(--token-bg); }
 }
 
-.buttonsContainer > *:active,
-.moreButtonsContainer > *:active { animation: btn-press 0.25s ease-out; }
-.buttonsContainer > *:active :global(.btn-circle),
-.moreButtonsContainer > *:active :global(.btn-circle) { animation: btn-flash 0.25s ease-out; }
+.buttonsContainer > *:active { animation: btn-press 0.25s ease-out; }
+.buttonsContainer > *:active :global(.btn-circle) { animation: btn-flash 0.25s ease-out; }

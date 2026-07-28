@@ -1,6 +1,6 @@
 "use client"
 
-import { Fragment, type RefObject, useEffect, useRef, useState } from "react"
+import { type RefObject, useEffect, useRef } from "react"
 import Link from "next/link"
 import { useSelectedLayoutSegment } from "next/navigation"
 import { useDebouncedEffect } from "@react-hookz/web"
@@ -31,7 +31,6 @@ import { isDeltaMobile, isPasskeyEnabled } from "@/utils/getClientEnvironment"
 import { postMessageToReactNative } from "@/utils/messageReactNative"
 import { isPwa } from "@/utils/pwa"
 
-import { partitionAppButtons } from "./appButtons"
 import { Menu } from "./Menu"
 import { ProfileCard } from "./ProfileCard"
 import styles from "./WalletSection.module.css"
@@ -42,7 +41,6 @@ export default function WalletSection({
   children: React.ReactNode
 }) {
   const { locale, translations } = useTranslation()
-  const [isMoreAppsOpen, setIsMoreAppsOpen] = useState(false)
 
   const homeTranslations = translations.home
   const {
@@ -211,16 +209,6 @@ export default function WalletSection({
       />
     </Link>
   )
-  const appButtons = [
-    { id: "gooddollar", button: goodDollarLink },
-    { id: "send", button: sendLink },
-    { id: "receive", button: receiveLink },
-    { id: "swap", button: swapLink },
-    { id: "predictions", button: predictionsLink },
-    { id: "wallet-connect", button: walletConnectLink },
-  ]
-  const { visible: visibleAppButtons, overflow: overflowAppButtons } =
-    partitionAppButtons(appButtons)
 
   return (
     <>
@@ -241,16 +229,12 @@ export default function WalletSection({
             isLoadingValue={isValidating}
           />
           <div className={styles.buttonsContainer}>
-            {visibleAppButtons.map(({ id, button }) => (
-              <Fragment key={id}>{button}</Fragment>
-            ))}
-            {overflowAppButtons.length > 0 ? (
-              <RoundButton
-                buttonType={RoundButtonType.More}
-                text={`${homeTranslations.more}...`}
-                onClick={() => setIsMoreAppsOpen(true)}
-              />
-            ) : null}
+            {goodDollarLink}
+            {sendLink}
+            {receiveLink}
+            {swapLink}
+            {predictionsLink}
+            {walletConnectLink}
           </div>
           {/* ref scoll point where sticky menu appears */}
           <div ref={menuScrollRef} />
@@ -267,17 +251,6 @@ export default function WalletSection({
         className="z-[2]"
       >
         {children}
-      </BottomSheet>
-      <BottomSheet
-        title={homeTranslations.more}
-        isOpen={isMoreAppsOpen}
-        onClose={() => setIsMoreAppsOpen(false)}
-      >
-        <div className={styles.moreButtonsContainer}>
-          {overflowAppButtons.map(({ id, button }) => (
-            <Fragment key={id}>{button}</Fragment>
-          ))}
-        </div>
       </BottomSheet>
     </>
   )
