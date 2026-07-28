@@ -2,9 +2,16 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  justify-content: space-around;
+  justify-content: flex-start;
+  overflow: hidden;
   padding-bottom: 8px;
   width: 100%;
+}
+
+.actionsToggle {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -16px;
 }
 
 .buttonsContainer > * {
