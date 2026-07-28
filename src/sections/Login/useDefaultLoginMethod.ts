@@ -30,6 +30,12 @@ export const useDefaultLoginMethod = () => {
     if (transformedValue === "master_seed") {
       transformedValue = "testlogin"
     }
+    if (
+      transformedValue === "existing_wallet" ||
+      transformedValue === "existing-wallet"
+    ) {
+      transformedValue = "existingwallet"
+    }
     if (transformedValue && acceptableLoginMethods.includes(transformedValue)) {
       defaultLoginMethod.set(transformedValue)
     }

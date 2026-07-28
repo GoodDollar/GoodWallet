@@ -50,6 +50,7 @@ const en: TypedTranslations = {
     google: "Continue with Google",
     facebook: "Continue with Facebook",
     pwdless: "Continue via SMS code",
+    existingWallet: "Connect Wallet",
     legalText: {
       preText: "By signing in and entering, you're accepting our",
       terms: "Terms of use",

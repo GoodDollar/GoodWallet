@@ -5,6 +5,7 @@ import type {
 } from "@toruslabs/customauth"
 
 import { getPrivateKeySession } from "../adapters/privatekey"
+import { getReownSession } from "../reown"
 import {
   getTorusSession,
   type TorusNetwork,
@@ -53,6 +54,9 @@ export const useTorusLogin = (
   network: TorusNetwork,
   web3authClientId: string,
 ) => useLogin(async () => getTorusSession(network, web3authClientId))
+
+export const useReownLogin = () =>
+  useLogin(async () => getReownSession("direct", "existing_wallet"))
 
 const useLogin = (
   connectSession: () => Promise<ISignerSession>,

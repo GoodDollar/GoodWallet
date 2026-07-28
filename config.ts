@@ -54,6 +54,7 @@ type EnabledLoginOptions = {
   google: boolean
   facebook: boolean
   pwless: boolean
+  existingWallet: boolean
   testLogin: {
     enabled: boolean
     masterSeed: string
@@ -66,6 +67,8 @@ const enabledLoginOptions: EnabledLoginOptions = {
   google: process.env.NEXT_PUBLIC_LOGIN_GOOGLE_ENABLED === "true",
   facebook: process.env.NEXT_PUBLIC_LOGIN_FACEBOOK_ENABLED === "true",
   pwless: process.env.NEXT_PUBLIC_LOGIN_PWLESS_ENABLED === "true",
+  existingWallet:
+    process.env.NEXT_PUBLIC_LOGIN_EXISTING_WALLET_ENABLED === "true",
   testLogin: {
     masterSeed: process.env.NEXT_PUBLIC_TEST_LOGIN_MASTER_SEED as string,
     userName: process.env.NEXT_PUBLIC_TEST_LOGIN_USER_NAME as string,

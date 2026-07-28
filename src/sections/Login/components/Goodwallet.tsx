@@ -12,6 +12,7 @@ import { postMessageToReactNative } from "@/utils/messageReactNative"
 
 import { useDefaultLoginMethod } from "../useDefaultLoginMethod"
 import {
+  ExistingWalletLoginButton,
   FacebookLoginButton,
   GoogleLoginButton,
   PrivateKeyLoginButton,
@@ -29,11 +30,14 @@ export default function LoginDefault() {
   const loginTranslations = translations.login
 
   const btns = useMemo(() => {
-    const { google, facebook, pwless, testLogin } = config.enabledLoginOptions
+    const { google, facebook, pwless, existingWallet, testLogin } =
+      config.enabledLoginOptions
 
     const isFacebookDefault = defaultLoginMethod.value === "facebook"
     const isGoogleDefault = defaultLoginMethod.value === "google"
     const isPwlessDefault = defaultLoginMethod.value === "pwless"
+    const isExistingWalletDefault =
+      defaultLoginMethod.value === "existingwallet"
     const isTestLoginDefault = defaultLoginMethod.value === "testlogin"
 
     return [
@@ -54,6 +58,14 @@ export default function LoginDefault() {
         element: <PwdlessLoginButton isDefault={isPwlessDefault} />,
         isDefault: isPwlessDefault,
         isEnabled: pwless,
+      },
+      {
+        method: "existingWallet",
+        element: (
+          <ExistingWalletLoginButton isDefault={isExistingWalletDefault} />
+        ),
+        isDefault: isExistingWalletDefault,
+        isEnabled: existingWallet,
       },
       {
         method: "testLogin",

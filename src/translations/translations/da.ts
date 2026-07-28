@@ -49,6 +49,7 @@ const da: TypedTranslations = {
     google: "Fortsæt ved Google",
     facebook: "Fortsæt ved Facebook",
     pwdless: "Fortsæt via SMS-kode",
+    existingWallet: "Connect Wallet",
     legalText: {
       preText: "Ved at logge ind og fortsætte, accepterer du vores",
       terms: "Vilkår for brug",
