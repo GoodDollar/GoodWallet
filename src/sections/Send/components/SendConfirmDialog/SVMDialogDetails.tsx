@@ -234,16 +234,24 @@ export const SVMDialogDetails = ({
         <Text style="14-600" color="text-secondary" align="left">
           {"Base Fee"}
         </Text>
-        <Text style="14-400" align="right" translate="no">
-          {baseFeeFormatted ?? "Calculating..."}
+        <Text style="14-400" align="right">
+          {baseFeeFormatted ? (
+            <span translate="no">{baseFeeFormatted}</span>
+          ) : (
+            "Calculating..."
+          )}
         </Text>
       </div>
       <div className={style.sendReviewInfoLine}>
         <Text style="14-600" color="text-secondary" align="left">
           {"Prioritization Fee"}
         </Text>
-        <Text style="14-400" align="right" translate="no">
-          {prioritizationFeeFormatted ?? "Calculating..."}
+        <Text style="14-400" align="right">
+          {prioritizationFeeFormatted ? (
+            <span translate="no">{prioritizationFeeFormatted}</span>
+          ) : (
+            "Calculating..."
+          )}
         </Text>
       </div>
       {ataFeeLamports ? (
@@ -251,8 +259,12 @@ export const SVMDialogDetails = ({
           <Text style="14-600" color="text-secondary" align="left">
             {"ATA Creation Fee"}
           </Text>
-          <Text style="14-400" align="right" translate="no">
-            {ataFeeFormatted ?? "Calculating..."}
+          <Text style="14-400" align="right">
+            {ataFeeFormatted ? (
+              <span translate="no">{ataFeeFormatted}</span>
+            ) : (
+              "Calculating..."
+            )}
           </Text>
         </div>
       ) : null}
@@ -261,8 +273,14 @@ export const SVMDialogDetails = ({
         <Text style="14-600" color="text-secondary" align="left">
           {"Total Fee"}
         </Text>
-        <Text style="14-400" align="right" translate="no">
-          {`${totalFeeSolFormatted ?? "Calculating..."} ${amountInUSDConverted ? `(${amountInUSDConverted})` : ""}`}
+        <Text style="14-400" align="right">
+          {totalFeeSolFormatted ? (
+            <span translate="no">
+              {`${totalFeeSolFormatted} ${amountInUSDConverted ? `(${amountInUSDConverted})` : ""}`}
+            </span>
+          ) : (
+            "Calculating..."
+          )}
         </Text>
       </div>
 

@@ -161,16 +161,24 @@ export const XRPDialogDetails = ({
         <Text style="14-600" color="--color-grey" align="left">
           {"Base Fee XRP"}
         </Text>
-        <Text style="14-400" align="right" translate="no">
-          {baseFeeFormatted ?? "Calculating..."}
+        <Text style="14-400" align="right">
+          {baseFeeFormatted ? (
+            <span translate="no">{baseFeeFormatted}</span>
+          ) : (
+            "Calculating..."
+          )}
         </Text>
       </div>
       <div className={style.sendReviewInfoLine}>
         <Text style="14-600" color="--color-grey" align="left">
           {"Load factor"}
         </Text>
-        <Text style="14-400" align="right" translate="no">
-          {loadFactor ?? "Calculating..."}
+        <Text style="14-400" align="right">
+          {loadFactor !== undefined ? (
+            <span translate="no">{loadFactor}</span>
+          ) : (
+            "Calculating..."
+          )}
         </Text>
       </div>
       <div className={style.sendReviewInfoLine}>
