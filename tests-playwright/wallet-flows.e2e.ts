@@ -76,6 +76,12 @@ test("captures the authenticated home balance and responsive action grid", async
   await expect(page.getByText("$124.68")).toBeVisible()
   const walletActions = page.getByTestId("wallet-actions")
   await expect(walletActions).toBeVisible()
+  // The registry-backed dashboard keeps all six core actions in their order.
+  await expect(walletActions.getByRole("link")).toHaveCount(6)
+  await expect(walletActions.getByRole("link").first()).toHaveAttribute(
+    "href",
+    "/en/gooddollar",
+  )
 
   if (testInfo.project.name === "mobile") {
     const actionsToggle = page.getByTestId("wallet-actions-toggle")

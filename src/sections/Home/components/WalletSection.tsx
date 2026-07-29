@@ -11,10 +11,7 @@ import { useSnapshot } from "valtio"
 import { useTranslation } from "translations"
 import { AnalyticsEventTypes } from "@/analytics/types"
 import { useAnalytics } from "@/analytics/useAnalytics"
-import {
-  RoundButton,
-  RoundButtonType,
-} from "@/components/Form/RoundButton/RoundButton"
+import { RoundButton } from "@/components/Form/RoundButton/RoundButton"
 import { BottomSheet } from "@/components/Snippet/BottomSheet/BottomSheet"
 import { useBottomSheetSnapshot } from "@/components/Snippet/BottomSheet/bottomSheetStore"
 import { config } from "@/config"
@@ -31,6 +28,10 @@ import { pwaVersionStore } from "@/stores/versioningStore"
 import { isDeltaMobile, isPasskeyEnabled } from "@/utils/getClientEnvironment"
 import { postMessageToReactNative } from "@/utils/messageReactNative"
 import { isPwa } from "@/utils/pwa"
+import {
+  coreDashboardActions,
+  widgetDashboardActions,
+} from "@/widgets/registry"
 
 import { Menu } from "./Menu"
 import { ProfileCard } from "./ProfileCard"
@@ -187,61 +188,17 @@ export default function WalletSection({
     }
   }, [hasMultipleActionRows])
 
-  const sendLink = (
-    <Link href={`/${locale}/send`} scroll={false} prefetch={true}>
-      <RoundButton
-        buttonType={RoundButtonType.Send}
-        text={homeTranslations.send}
-      />
-    </Link>
-  )
-
-  const receiveLink = (
-    <Link href={`/${locale}/receive`} scroll={false} prefetch={true}>
-      <RoundButton
-        buttonType={RoundButtonType.Receive}
-        text={homeTranslations.receive}
-      />
-    </Link>
-  )
-
-  const swapLink = (
-    <Link href={`/${locale}/swap`} scroll={false} prefetch={true}>
-      <RoundButton
-        buttonType={RoundButtonType.Swap}
-        text={homeTranslations.swap}
-      />
-    </Link>
-  )
-
-  const predictionsLink = (
-    <Link href={`/${locale}/predictions`} scroll={false} prefetch={true}>
-      <RoundButton
-        buttonType={RoundButtonType.Predictions}
-        text={homeTranslations.predictions}
-      />
-    </Link>
-  )
-
-  const goodDollarLink = (
-    <Link href={`/${locale}/gooddollar`} scroll={false} prefetch={true}>
-      <RoundButton
-        buttonType={RoundButtonType.GoodDollar}
-        text={homeTranslations.gooddollar}
-        fill={canClaim}
-      />
-    </Link>
-  )
-
-  const walletConnectLink = (
-    <Link href={`/${locale}/walletconnect`} scroll={false} prefetch={true}>
-      <RoundButton
-        buttonType={RoundButtonType.WalletConnect}
-        text={homeTranslations.walletConnect}
-        fill={sessions.length > 0}
-      />
-    </Link>
-  )
+  const actionLabels: Record<string, string> = {
+    gooddollar: homeTranslations.gooddollar,
+    send: homeTranslations.send,
+    receive: homeTranslations.receive,
+    swap: homeTranslations.swap,
+    predictions: homeTranslations.predictions,
+    walletconnect: homeTranslations.walletConnect,
+  }
+  // Widgets append to the existing grid, allowing the current responsive
+  // collapse control to keep owning the More behavior and core ordering.
+  const dashboardActions = [...coreDashboardActions, ...widgetDashboardActions]
 
   return (
     <>
@@ -273,12 +230,34 @@ export default function WalletSection({
             }
             data-testid="wallet-actions"
           >
-            {goodDollarLink}
-            {sendLink}
-            {receiveLink}
-            {swapLink}
-            {predictionsLink}
-            {walletConnectLink}
+            {dashboardActions.map((action) => {
+              const icon =
+                action.icon.kind === "system" ? action.icon.name : undefined
+              const iconElement =
+                action.icon.kind === "local" ? action.icon.render() : undefined
+              const indicator =
+                action.id === "gooddollar" && canClaim
+                  ? "available"
+                  : action.id === "walletconnect" && sessions.length > 0
+                    ? "connected"
+                    : undefined
+
+              return (
+                <Link
+                  key={action.id}
+                  href={`/${locale}/${action.routeSlug}`}
+                  scroll={false}
+                  prefetch={true}
+                >
+                  <RoundButton
+                    icon={icon}
+                    iconElement={iconElement}
+                    text={actionLabels[action.id] ?? action.label}
+                    indicator={indicator}
+                  />
+                </Link>
+              )
+            })}
           </div>
           {hasMultipleActionRows ? (
             <div
