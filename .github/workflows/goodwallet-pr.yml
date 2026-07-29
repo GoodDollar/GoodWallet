@@ -53,10 +53,12 @@ jobs:
         uses: borales/actions-yarn@v5
         with:
           cmd: test:e2e
-      - name: Upload Playwright screenshots
+      - name: Upload Playwright screenshots and failure artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-screenshots
-          path: tests-playwright/artifacts/
+          name: playwright-artifacts
+          path: |
+            tests-playwright/screenshots/
+            tests-playwright/artifacts/
           if-no-files-found: warn

@@ -5,8 +5,11 @@ const captureScreenshot = async (
   testInfo: TestInfo,
   name: string,
 ) => {
+  await page.evaluate(() => document.fonts.ready)
   await page.screenshot({
-    path: testInfo.outputPath(name),
+    animations: "disabled",
+    caret: "hide",
+    path: testInfo.snapshotPath(name),
     fullPage: true,
   })
 }
