@@ -73,7 +73,7 @@ export const SliderItem: React.FC<ActivityHistoryItem> = (sliderItem) => {
         />
       </SliderRow>
       <SliderRow label="Amount">
-        <div className="flex gap-x-2 font-semibold">
+        <div className="flex gap-x-2 font-semibold" translate="no">
           <TwoElementStacked
             el1={formatTokenAmount(sliderItem.amount, sliderItem.symbol)}
             el2={formatTokenValue(
@@ -91,13 +91,15 @@ export const SliderItem: React.FC<ActivityHistoryItem> = (sliderItem) => {
         </div>
       </SliderRow>
       <SliderRow label="From">
-        <div>{truncateString(sliderItem.from, 12, 4)} </div>
+        <div translate="no">{truncateString(sliderItem.from, 12, 4)} </div>
         <div>
           <Button variant="square" icon="BsCopy" copyValue={sliderItem.from} />
         </div>
       </SliderRow>
       <SliderRow label="To">
-        <div>{ens ? ens : truncateString(sliderItem.to, 12, 4)}</div>
+        <div translate="no">
+          {ens ? ens : truncateString(sliderItem.to, 12, 4)}
+        </div>
         <div>
           <Button
             variant="square"
@@ -108,7 +110,7 @@ export const SliderItem: React.FC<ActivityHistoryItem> = (sliderItem) => {
       </SliderRow>
       {displayedGasFee ? (
         <SliderRow label="Gas fee">
-          <div className="font-semibold">
+          <div className="font-semibold" translate="no">
             <TwoElementStacked
               el1={formatTokenAmount(
                 displayedGasFee,
@@ -128,6 +130,7 @@ export const SliderItem: React.FC<ActivityHistoryItem> = (sliderItem) => {
           href={toExplorerUrl(sliderItem.txHash, chain?.id)}
           target="_blank"
           rel="noopener noreferrer"
+          translate="no"
         >
           {truncateString(sliderItem.txHash, 20, 20)}
         </a>

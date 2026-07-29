@@ -35,7 +35,7 @@ export const TokenItemView = ({
 
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
-              <h4>{symbol}</h4>
+              <h4 translate="no">{symbol}</h4>
             </div>
             <h6>{name}</h6>
           </div>
@@ -45,10 +45,10 @@ export const TokenItemView = ({
           <div className="text-right">
             <div className="flex flex-col items-right">
               {isSelected && <Icon name="BsCheckLg" size="big" />}
-              <h4>
+              <h4 translate="no">
                 {amount && symbol && <>{formatTokenAmount(amount, symbol)}</>}
               </h4>
-              <h6>
+              <h6 translate="no">
                 {usdValue ? formatTokenValue(usdValue, selectedCurrency) : ""}
               </h6>
             </div>

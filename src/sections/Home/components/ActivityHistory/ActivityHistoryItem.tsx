@@ -42,7 +42,7 @@ function formatTokenValueStr(
   const color = isIncoming ? "var(--token-success)" : "var(--token-error)"
 
   return (
-    <span style={{ color }}>
+    <span style={{ color }} translate="no">
       {sign}
       <span>{integerPart}</span>
       {decimalPart && <span className="text-xs">.{decimalPart}</span>}
