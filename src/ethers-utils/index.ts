@@ -1,3 +1,4 @@
+export * from "./address"
 export { setCustomRpcUrls } from "./config"
 export * from "./constants"
 export * from "./contracts"
