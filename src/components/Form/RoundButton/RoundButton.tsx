@@ -1,13 +1,19 @@
 "use client"
 
+import type { ReactNode } from "react"
 import { BsLink45Deg, BsPlusCircle } from "react-icons/bs"
 import { Icon, type IconName } from "ui"
 
 export type RoundButtonProps = {
   onClick?: () => void
-  buttonType: RoundButtonType
+  buttonType?: RoundButtonType
+  // Registry actions can supply a design-system icon or a reviewed local asset
+  // without requiring a new legacy RoundButtonType for every widget.
+  icon?: IconName
+  iconElement?: ReactNode
   text?: string
   fill?: boolean
+  indicator?: "connected" | "available"
 }
 
 export const enum RoundButtonType {
@@ -32,10 +38,16 @@ const buttonIcons: Record<RoundButtonType, IconName> = {
 
 export const RoundButton = ({
   buttonType,
+  icon,
+  iconElement,
   onClick,
   text,
   fill = false,
+  indicator,
 }: RoundButtonProps) => {
+  const selectedIcon =
+    icon ?? (buttonType === undefined ? undefined : buttonIcons[buttonType])
+
   return (
     <div
       className="flex flex-col items-center gap-2 max-w-[60px] select-none cursor-pointer"
@@ -43,9 +55,14 @@ export const RoundButton = ({
     >
       <div className="rounded-full p-px gradient-background">
         <div className="flex aspect-square w-14 h-14 p-4 rounded-full justify-center items-center bg-[var(--token-bg)] btn-circle relative">
-          <Icon name={buttonIcons[buttonType]} size="big" color="white" />
+          {selectedIcon ? (
+            <Icon name={selectedIcon} size="big" color="white" />
+          ) : (
+            iconElement
+          )}
 
-          {fill && buttonType === RoundButtonType.WalletConnect ? (
+          {indicator === "connected" ||
+          (fill && buttonType === RoundButtonType.WalletConnect) ? (
             <BsLink45Deg
               className="absolute bottom-0 right-0 text-white bg-[#1884FF] rounded"
               stroke="white"
@@ -54,7 +71,8 @@ export const RoundButton = ({
               style={{ borderRadius: "50%", padding: "3px" }}
             />
           ) : null}
-          {fill && buttonType === RoundButtonType.GoodDollar ? (
+          {indicator === "available" ||
+          (fill && buttonType === RoundButtonType.GoodDollar) ? (
             <BsPlusCircle
               className="absolute bottom-0 right-0 text-white bg-[#1884FF] rounded"
               stroke="white"
