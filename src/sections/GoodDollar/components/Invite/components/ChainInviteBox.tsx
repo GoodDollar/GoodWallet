@@ -102,7 +102,9 @@ export default function ChainInviteBox(props: {
         {hasInviteCode ? (
           <>
             <div className={styles.chainInviteBoxHeader}>
-              <Text style="14-400">{formattedReward}</Text>
+              <Text style="14-400" translate="no">
+                {formattedReward}
+              </Text>
             </div>
             <div className={styles.chainInviteBoxActions}>
               {hasInviteCode && (

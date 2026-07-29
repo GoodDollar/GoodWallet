@@ -46,7 +46,9 @@ export default function WelcomeRewards({ rewardAmount }: WelcomeRewardsProps) {
 
         <div className={styles.rewardsValueInfoBox}>
           <p className={styles.rewardsValueInfo}>{welcomeReward.eligibility}</p>
-          <h2 className={styles.rewardsValue}>{formattedAmount}</h2>
+          <h2 className={styles.rewardsValue} translate="no">
+            {formattedAmount}
+          </h2>
         </div>
       </div>
 

@@ -225,7 +225,7 @@ export const SVMDialogDetails = ({
         <Text style="14-600" color="text-secondary" align="left">
           {sendTranslations.to}
         </Text>
-        <Text style="14-400" align="right">
+        <Text style="14-400" align="right" translate="no">
           {truncateString(toAddress, 8, 8)}
         </Text>
       </div>
@@ -235,7 +235,11 @@ export const SVMDialogDetails = ({
           {"Base Fee"}
         </Text>
         <Text style="14-400" align="right">
-          {baseFeeFormatted ?? "Calculating..."}
+          {baseFeeFormatted ? (
+            <span translate="no">{baseFeeFormatted}</span>
+          ) : (
+            "Calculating..."
+          )}
         </Text>
       </div>
       <div className={style.sendReviewInfoLine}>
@@ -243,7 +247,11 @@ export const SVMDialogDetails = ({
           {"Prioritization Fee"}
         </Text>
         <Text style="14-400" align="right">
-          {prioritizationFeeFormatted ?? "Calculating..."}
+          {prioritizationFeeFormatted ? (
+            <span translate="no">{prioritizationFeeFormatted}</span>
+          ) : (
+            "Calculating..."
+          )}
         </Text>
       </div>
       {ataFeeLamports ? (
@@ -252,7 +260,11 @@ export const SVMDialogDetails = ({
             {"ATA Creation Fee"}
           </Text>
           <Text style="14-400" align="right">
-            {ataFeeFormatted ?? "Calculating..."}
+            {ataFeeFormatted ? (
+              <span translate="no">{ataFeeFormatted}</span>
+            ) : (
+              "Calculating..."
+            )}
           </Text>
         </div>
       ) : null}
@@ -262,7 +274,13 @@ export const SVMDialogDetails = ({
           {"Total Fee"}
         </Text>
         <Text style="14-400" align="right">
-          {`${totalFeeSolFormatted ?? "Calculating..."} ${amountInUSDConverted ? `(${amountInUSDConverted})` : ""}`}
+          {totalFeeSolFormatted ? (
+            <span translate="no">
+              {`${totalFeeSolFormatted} ${amountInUSDConverted ? `(${amountInUSDConverted})` : ""}`}
+            </span>
+          ) : (
+            "Calculating..."
+          )}
         </Text>
       </div>
 

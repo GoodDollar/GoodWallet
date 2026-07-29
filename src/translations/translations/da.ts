@@ -48,7 +48,7 @@ const da: TypedTranslations = {
     failedNotification: "Log ind fejlede. Prøv igen",
     google: "Fortsæt ved Google",
     facebook: "Fortsæt ved Facebook",
-    pwdless: "Fortsæt via engangskode",
+    pwdless: "Fortsæt via SMS-kode",
     legalText: {
       preText: "Ved at logge ind og fortsætte, accepterer du vores",
       terms: "Vilkår for brug",

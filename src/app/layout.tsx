@@ -53,7 +53,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html translate="no" className={inter.variable}>
+    <html lang="en" className={inter.variable}>
       <head>
         <link rel="shortcut icon" href="/favicon.goodwallet.ico" />
       </head>
