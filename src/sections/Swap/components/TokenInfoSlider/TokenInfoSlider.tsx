@@ -36,7 +36,7 @@ export const TokenInfoSlider = ({
           chainId={token.chainId}
           alt={token.name}
         />
-        <div className={styles.tokenInfo}>
+        <div className={styles.tokenInfo} translate="no">
           <TwoElementStacked el1={token.name} el2={token.symbol} />
         </div>
       </SliderRow>
@@ -52,7 +52,9 @@ export const TokenInfoSlider = ({
         <>
           <Divider color="muted" />
           <SliderRow label={translations.swap.tokenInformation.marketCap}>
-            {formatTokenValue(token.marketCapUSD, selectedCurrency)}
+            <span translate="no">
+              {formatTokenValue(token.marketCapUSD, selectedCurrency)}
+            </span>
           </SliderRow>
         </>
       )}
@@ -60,7 +62,9 @@ export const TokenInfoSlider = ({
         <>
           <Divider color="muted" />
           <SliderRow label={translations.swap.tokenInformation.volume}>
-            {formatTokenValue(token.volumeUSD24H, selectedCurrency)}
+            <span translate="no">
+              {formatTokenValue(token.volumeUSD24H, selectedCurrency)}
+            </span>
           </SliderRow>
         </>
       )}
@@ -68,7 +72,7 @@ export const TokenInfoSlider = ({
         <>
           <Divider color="muted" />
           <SliderRow label={translations.swap.tokenInformation.address}>
-            <div>{truncateString(token.address, 12, 4)} </div>
+            <div translate="no">{truncateString(token.address, 12, 4)} </div>
             <Button variant="square" icon="BsCopy" copyValue={token.address} />
             <Button
               variant="square"
@@ -88,7 +92,9 @@ export const TokenInfoSlider = ({
         <>
           <Divider color="muted" />
           <SliderRow label={translations.swap.tokenInformation.price}>
-            <>{formatTokenPrice(prices?.getBy(token) ?? 0, selectedCurrency)}</>
+            <span translate="no">
+              {formatTokenPrice(prices?.getBy(token) ?? 0, selectedCurrency)}
+            </span>
           </SliderRow>
         </>
       )}

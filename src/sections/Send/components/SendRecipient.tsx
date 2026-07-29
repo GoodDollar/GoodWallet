@@ -102,6 +102,7 @@ export const SendRecipient = (props: { inert?: boolean }) => {
               type="text"
               value={addressLike || ""}
               placeholder={toPlaceHolder}
+              translate="no"
               onChange={(e) => setAddressLike(e.currentTarget.value)}
             />
 

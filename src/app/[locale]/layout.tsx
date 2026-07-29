@@ -1,6 +1,7 @@
 "use client"
 import { useEffect, useState } from "react"
 
+import { useTranslation } from "translations"
 import { LoadingSpinner } from "@/components/Snippet/LoadingSpinner"
 import { useSessionContext } from "@/login"
 import { DeepLink } from "@/sections/Home/components/DeepLink"
@@ -17,9 +18,14 @@ export default function Layout({
   home: React.ReactNode
 }) {
   const { signer, isLoading: sessionIsLoading } = useSessionContext()
+  const { locale } = useTranslation()
 
   const [isFirstMount, setIsFirstMount] = useState(true)
   useEffect(() => setIsFirstMount(false), [])
+  // Keep browser translation services aware of the active built-in locale.
+  useEffect(() => {
+    document.documentElement.lang = locale
+  }, [locale])
   const isLoading = isFirstMount || sessionIsLoading
 
   return (

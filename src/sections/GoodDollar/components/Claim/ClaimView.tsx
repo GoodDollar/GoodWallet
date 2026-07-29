@@ -23,6 +23,7 @@ import { getChainName } from "@/chain/chains"
 import { setBottomSheetProps } from "@/components/Snippet/BottomSheet/bottomSheetStore"
 import { LoadingSpinner } from "@/components/Snippet/LoadingSpinner"
 import { formatTokenAmount } from "@/components/Utils/tokenFormat"
+import { config } from "@/config"
 import { topWallet } from "@/gooddollar/methods/faucet"
 import { collectBountyStore } from "@/gooddollar/stores/collectBountyStore"
 import {
@@ -105,6 +106,14 @@ const getDailyStats = (claims: Record<ChainId, UbiClaim>) => {
 }
 
 export default function ClaimView() {
+  if (config.playwrightTestMode) {
+    return <RequireWhitelist onWhitelist={() => undefined} />
+  }
+
+  return <ClaimViewContent />
+}
+
+function ClaimViewContent() {
   const invitedChainId = useInvitedChainId()
 
   const { locale, translations } = useTranslation()
