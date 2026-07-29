@@ -1,12 +1,13 @@
-import { randomBytes } from "node:crypto"
 import { defineConfig, devices } from "@playwright/test"
 
-const testWalletSeed = randomBytes(32).toString("hex")
+const testWalletSeed =
+  "4c4d6a7e5f6a8b9c0d1e2f30415263748596a7b8c9d0e1f2031425364758697a"
 
 export default defineConfig({
   testDir: "./tests-playwright",
   testMatch: "**/*.e2e.ts",
   outputDir: "tests-playwright/artifacts",
+  snapshotPathTemplate: "{testDir}/screenshots/{projectName}/{arg}{ext}",
   fullyParallel: false,
   workers: 1,
   reporter: "list",
@@ -38,7 +39,7 @@ export default defineConfig({
       NEXT_PUBLIC_TEST_LOGIN_ENABLED: "true",
       NEXT_PUBLIC_TEST_LOGIN_MASTER_SEED: testWalletSeed,
       NEXT_PUBLIC_TEST_LOGIN_USER_NAME: "Playwright test wallet",
-      NEXT_PUBLIC_TEST_LOGIN_PROFILE_IMAGE: "",
+      NEXT_PUBLIC_TEST_LOGIN_PROFILE_IMAGE: "/icon.svg",
     },
   },
 })

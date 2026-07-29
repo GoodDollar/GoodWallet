@@ -106,6 +106,14 @@ const getDailyStats = (claims: Record<ChainId, UbiClaim>) => {
 }
 
 export default function ClaimView() {
+  if (config.playwrightTestMode) {
+    return <RequireWhitelist onWhitelist={() => undefined} />
+  }
+
+  return <ClaimViewContent />
+}
+
+function ClaimViewContent() {
   const invitedChainId = useInvitedChainId()
 
   const { locale, translations } = useTranslation()
@@ -396,10 +404,6 @@ export default function ClaimView() {
 
   const goHome = useRouteTransition(`/${locale}`)
   const addPropagatingTx = useSnapshot(activityHistoryStore).addPropagatingTx
-
-  if (config.playwrightTestMode) {
-    return <RequireWhitelist onWhitelist={() => undefined} />
-  }
 
   const onClaim = () => {
     const ongoingClaims = new Map<ChainId, Promise<void>>()

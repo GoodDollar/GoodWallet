@@ -1,17 +1,10 @@
 import type { Metadata, Viewport } from "next"
-import { Inter } from "next/font/google"
 
 import "@/ui/styles.css"
 
 import { Dialog, Toast } from "ui"
 
 import { PreloadResources } from "./preload-resources.tsx"
-
-const inter = Inter({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-inter",
-})
 
 export const viewport: Viewport = {
   themeColor: "#000",
@@ -53,7 +46,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html translate="no" className={inter.variable}>
+    <html translate="no">
       <head>
         <link rel="shortcut icon" href="/favicon.goodwallet.ico" />
       </head>

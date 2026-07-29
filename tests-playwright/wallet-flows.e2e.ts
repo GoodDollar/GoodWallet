@@ -1,8 +1,5 @@
 import { expect, type Page, test } from "@playwright/test"
 
-const screenshotPath = (name: string, project: string) =>
-  `tests-playwright/${name}-${project}.png`
-
 const preparePage = async (page: Page, showOnboarding: boolean) => {
   await page.context().route("**/*", (route) => {
     const { hostname, pathname } = new URL(route.request().url())
@@ -12,12 +9,18 @@ const preparePage = async (page: Page, showOnboarding: boolean) => {
         body: JSON.stringify({ tokens: {} }),
       })
     }
+    if (hostname === "fonts.googleapis.com") {
+      return route.fulfill({
+        contentType: "text/css",
+        body: '@font-face { font-family: "Inter"; src: local("Arial"); }',
+      })
+    }
     return hostname === "localhost" ? route.continue() : route.abort()
   })
   await page.addInitScript(
     ({ showOnboarding }) => {
       localStorage.setItem("ShowWelcomeDialog", String(showOnboarding))
-      localStorage.setItem("defaultLoginMethod", "testlogin")
+      localStorage.setItem("defaultLoginMethod", JSON.stringify("testlogin"))
       localStorage.setItem("Tracking_Sentry", "denied")
       localStorage.setItem("Tracking_Amplitude", "denied")
       sessionStorage.setItem("gd-claim-view-seen", "true")
@@ -35,15 +38,14 @@ const login = async (page: Page) => {
 
 test("captures the locale-aware onboarding and login entry", async ({
   page,
-}, testInfo) => {
+}) => {
   await preparePage(page, true)
   await page.goto("/da?login=master_seed")
 
   await expect(
     page.getByText("Velkommen til din nye og forbedrede GoodWallet!"),
   ).toBeVisible()
-  await page.screenshot({
-    path: screenshotPath("login-onboarding-da", testInfo.project.name),
+  await expect(page).toHaveScreenshot("login-onboarding-da.png", {
     fullPage: true,
   })
 
@@ -73,18 +75,19 @@ test("captures the authenticated home balance and mobile action overflow", async
     })
   }
 
-  await page.screenshot({
-    path: screenshotPath("home-balances-overflow-en", testInfo.project.name),
+  await expect(page).toHaveScreenshot("home-balances-overflow-en.png", {
     fullPage: true,
   })
 })
 
-test("captures the claim verification requirement", async ({
-  page,
-}, testInfo) => {
+test("captures the claim verification requirement", async ({ page }) => {
   await preparePage(page, false)
   await login(page)
-  await page.getByRole("link", { name: "GoodDollar" }).click()
+  await expect(page.getByRole("link", { name: "GoodDollar" })).toHaveAttribute(
+    "href",
+    "/en/gooddollar",
+  )
+  await page.goto("/en/gooddollar")
 
   await expect(
     page.getByText(
@@ -92,11 +95,7 @@ test("captures the claim verification requirement", async ({
     ),
   ).toBeVisible()
   await expect(page.getByRole("button", { name: "Verify" })).toBeVisible()
-  await page.screenshot({
-    path: screenshotPath(
-      "claim-requires-verification-en",
-      testInfo.project.name,
-    ),
+  await expect(page).toHaveScreenshot("claim-requires-verification-en.png", {
     fullPage: true,
   })
 })
