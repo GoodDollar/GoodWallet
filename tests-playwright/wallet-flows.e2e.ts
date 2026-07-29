@@ -1,4 +1,15 @@
-import { expect, type Page, test } from "@playwright/test"
+import { expect, type Page, type TestInfo, test } from "@playwright/test"
+
+const captureScreenshot = async (
+  page: Page,
+  testInfo: TestInfo,
+  name: string,
+) => {
+  await page.screenshot({
+    path: testInfo.outputPath(name),
+    fullPage: true,
+  })
+}
 
 const preparePage = async (page: Page, showOnboarding: boolean) => {
   await page.context().route("**/*", (route) => {
@@ -38,16 +49,14 @@ const login = async (page: Page) => {
 
 test("captures the locale-aware onboarding and login entry", async ({
   page,
-}) => {
+}, testInfo) => {
   await preparePage(page, true)
   await page.goto("/da?login=master_seed")
 
   await expect(
     page.getByText("Velkommen til din nye og forbedrede GoodWallet!"),
   ).toBeVisible()
-  await expect(page).toHaveScreenshot("login-onboarding-da.png", {
-    fullPage: true,
-  })
+  await captureScreenshot(page, testInfo, "login-onboarding-da.png")
 
   await page.getByRole("button", { name: "Sign In" }).click()
   await expect(
@@ -71,12 +80,12 @@ test("captures the authenticated home balance and responsive action grid", async
     await actionsToggle.getByRole("button").click()
   }
 
-  await expect(page).toHaveScreenshot("home-balances-overflow-en.png", {
-    fullPage: true,
-  })
+  await captureScreenshot(page, testInfo, "home-balances-overflow-en.png")
 })
 
-test("captures the claim verification requirement", async ({ page }) => {
+test("captures the claim verification requirement", async ({
+  page,
+}, testInfo) => {
   await preparePage(page, false)
   await login(page)
   await expect(page.getByRole("link", { name: "GoodDollar" })).toHaveAttribute(
@@ -91,7 +100,5 @@ test("captures the claim verification requirement", async ({ page }) => {
     ),
   ).toBeVisible()
   await expect(page.getByRole("button", { name: "Verify" })).toBeVisible()
-  await expect(page).toHaveScreenshot("claim-requires-verification-en.png", {
-    fullPage: true,
-  })
+  await captureScreenshot(page, testInfo, "claim-requires-verification-en.png")
 })
