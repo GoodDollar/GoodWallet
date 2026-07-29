@@ -26,18 +26,18 @@ export const ClaimFooter = ({ dailyStats }: ClaimFooterProps) => {
       </Text>
 
       <Text style="14-400" color="text-secondary" align="center" el="div">
-        <Text style="14-600" color="text-soft">
+        <Text style="14-600" color="text-soft" translate="no">
           {formatTokenAmount(dailyStats.dailyNumberOfClaimers)}
         </Text>{" "}
         {goodDollarTranslations.claimersReceived}{" "}
-        <Text style="14-600" color="text-soft">
+        <Text style="14-600" color="text-soft" translate="no">
           {formatTokenAmount(dailyStats.dailyClaimedAmount, "G$")}
         </Text>
       </Text>
 
       <Text style="14-400" color="text-secondary" align="center" el="div">
         {goodDollarTranslations.outOf}{" "}
-        <Text style="14-600" color="text-soft">
+        <Text style="14-600" color="text-soft" translate="no">
           {formatTokenAmount(dailyStats.dailyTotalAmount, "G$")}
         </Text>{" "}
         {goodDollarTranslations.available}

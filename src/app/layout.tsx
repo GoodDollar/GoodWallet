@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next"
-
 import "@/ui/styles.css"
 
 import { Dialog, Toast } from "ui"
@@ -46,7 +45,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html translate="no">
+    <html lang="en">
       <head>
         <link rel="shortcut icon" href="/favicon.goodwallet.ico" />
       </head>
