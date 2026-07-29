@@ -20,7 +20,7 @@ export default function InviteesListBox(props: {
 
       {invitees.map((address) => (
         <Box key={address}>
-          <Text style="16-600" color="text-secondary">
+          <Text style="16-600" color="text-secondary" translate="no">
             {truncateString(address, 6, 6)}
           </Text>
           {pendingInvitees?.includes(address) ? (

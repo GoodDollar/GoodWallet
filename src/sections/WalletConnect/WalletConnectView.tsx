@@ -132,6 +132,7 @@ export default function WalletConnectView() {
         value={wcUri}
         placeholder={translations.walletConnect.wcUriPlaceholder}
         isValid={uriValid}
+        translate="no"
         onChange={onUriChange}
       />
       <Button

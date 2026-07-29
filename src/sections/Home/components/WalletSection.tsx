@@ -1,10 +1,11 @@
 "use client"
 
-import { type RefObject, useEffect, useRef } from "react"
+import { type RefObject, useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { useSelectedLayoutSegment } from "next/navigation"
 import { useDebouncedEffect } from "@react-hookz/web"
 import { setUser } from "@sentry/nextjs"
+import { Button } from "ui"
 import { useSnapshot } from "valtio"
 
 import { useTranslation } from "translations"
@@ -41,6 +42,9 @@ export default function WalletSection({
   children: React.ReactNode
 }) {
   const { locale, translations } = useTranslation()
+  const [isActionsCollapsed, setIsActionsCollapsed] = useState(false)
+  const [hasMultipleActionRows, setHasMultipleActionRows] = useState(false)
+  const [actionRowHeight, setActionRowHeight] = useState(0)
 
   const homeTranslations = translations.home
   const {
@@ -153,6 +157,35 @@ export default function WalletSection({
   useEffectScrollToTop(dashboardRootDiv, isBottomSheetOpen)
 
   const menuScrollRef = useRef(null)
+  const actionButtonsRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const actionButtons = actionButtonsRef.current
+    if (!actionButtons) return
+
+    const updateActionRows = () => {
+      const buttons = Array.from(actionButtons.children) as HTMLElement[]
+      const firstButton = buttons[0]
+      if (!firstButton) return
+
+      setActionRowHeight(firstButton.offsetHeight)
+      setHasMultipleActionRows(
+        buttons.some((button) => button.offsetTop !== firstButton.offsetTop),
+      )
+    }
+
+    updateActionRows()
+    const resizeObserver = new ResizeObserver(updateActionRows)
+    resizeObserver.observe(actionButtons)
+
+    return () => resizeObserver.disconnect()
+  }, [])
+
+  useEffect(() => {
+    if (!hasMultipleActionRows) {
+      setIsActionsCollapsed(false)
+    }
+  }, [hasMultipleActionRows])
 
   const sendLink = (
     <Link href={`/${locale}/send`} scroll={false} prefetch={true}>
@@ -225,10 +258,21 @@ export default function WalletSection({
           <ProfileCard
             userName={userName}
             profileImage={profileImage}
-            aggregatedUsdValue={balances?.aggregatedUsdValue}
-            isLoadingValue={isValidating}
+            aggregatedUsdValue={
+              config.playwrightTestMode
+                ? "124.68"
+                : balances?.aggregatedUsdValue
+            }
+            isLoadingValue={config.playwrightTestMode ? false : isValidating}
           />
-          <div className={styles.buttonsContainer}>
+          <div
+            ref={actionButtonsRef}
+            className={styles.buttonsContainer}
+            style={
+              isActionsCollapsed ? { maxHeight: actionRowHeight } : undefined
+            }
+            data-testid="wallet-actions"
+          >
             {goodDollarLink}
             {sendLink}
             {receiveLink}
@@ -236,6 +280,18 @@ export default function WalletSection({
             {predictionsLink}
             {walletConnectLink}
           </div>
+          {hasMultipleActionRows ? (
+            <div
+              className={styles.actionsToggle}
+              data-testid="wallet-actions-toggle"
+            >
+              <Button
+                variant="icon"
+                icon={isActionsCollapsed ? "BsChevronDown" : "BsChevronUp"}
+                onClick={() => setIsActionsCollapsed((prev) => !prev)}
+              />
+            </div>
+          ) : null}
           {/* ref scoll point where sticky menu appears */}
           <div ref={menuScrollRef} />
         </div>

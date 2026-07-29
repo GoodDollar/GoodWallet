@@ -88,7 +88,7 @@ export default function OptionsView() {
                 <Text style="16-600" color="brand">
                   {key} Address
                 </Text>
-                <Text style="12-400" color="text-soft">
+                <Text style="12-400" color="text-soft" translate="no">
                   {truncateString(account.address)}
                 </Text>
               </div>

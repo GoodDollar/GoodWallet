@@ -65,7 +65,9 @@ export default function ReceiveView() {
       </Box>
 
       <Box elevation="high">
-        <Text style="16-400">{truncateString(currentSignerAddress, 8)}</Text>
+        <Text style="16-400" translate="no">
+          {truncateString(currentSignerAddress, 8)}
+        </Text>
 
         <Box width="content">
           {canShare(currentSignerAddress) && (
