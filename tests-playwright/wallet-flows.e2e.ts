@@ -55,7 +55,7 @@ test("captures the locale-aware onboarding and login entry", async ({
   ).toBeVisible()
 })
 
-test("captures the authenticated home balance and mobile action overflow", async ({
+test("captures the authenticated home balance and responsive action grid", async ({
   page,
 }, testInfo) => {
   await preparePage(page, false)
@@ -66,13 +66,9 @@ test("captures the authenticated home balance and mobile action overflow", async
   await expect(walletActions).toBeVisible()
 
   if (testInfo.project.name === "mobile") {
-    const hasOverflow = await walletActions.evaluate(
-      (element) => element.scrollWidth > element.clientWidth,
-    )
-    expect(hasOverflow).toBe(true)
-    await walletActions.evaluate((element) => {
-      element.scrollLeft = element.scrollWidth
-    })
+    const actionsToggle = page.getByTestId("wallet-actions-toggle")
+    await expect(actionsToggle).toBeVisible()
+    await actionsToggle.getByRole("button").click()
   }
 
   await expect(page).toHaveScreenshot("home-balances-overflow-en.png", {

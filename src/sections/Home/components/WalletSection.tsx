@@ -281,7 +281,10 @@ export default function WalletSection({
             {walletConnectLink}
           </div>
           {hasMultipleActionRows ? (
-            <div className={styles.actionsToggle}>
+            <div
+              className={styles.actionsToggle}
+              data-testid="wallet-actions-toggle"
+            >
               <Button
                 variant="icon"
                 icon={isActionsCollapsed ? "BsChevronDown" : "BsChevronUp"}
