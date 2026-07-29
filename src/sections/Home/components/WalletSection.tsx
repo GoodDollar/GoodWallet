@@ -258,8 +258,12 @@ export default function WalletSection({
           <ProfileCard
             userName={userName}
             profileImage={profileImage}
-            aggregatedUsdValue={balances?.aggregatedUsdValue}
-            isLoadingValue={isValidating}
+            aggregatedUsdValue={
+              config.playwrightTestMode
+                ? "124.68"
+                : balances?.aggregatedUsdValue
+            }
+            isLoadingValue={config.playwrightTestMode ? false : isValidating}
           />
           <div
             ref={actionButtonsRef}
@@ -267,6 +271,7 @@ export default function WalletSection({
             style={
               isActionsCollapsed ? { maxHeight: actionRowHeight } : undefined
             }
+            data-testid="wallet-actions"
           >
             {goodDollarLink}
             {sendLink}
@@ -276,7 +281,10 @@ export default function WalletSection({
             {walletConnectLink}
           </div>
           {hasMultipleActionRows ? (
-            <div className={styles.actionsToggle}>
+            <div
+              className={styles.actionsToggle}
+              data-testid="wallet-actions-toggle"
+            >
               <Button
                 variant="icon"
                 icon={isActionsCollapsed ? "BsChevronDown" : "BsChevronUp"}
