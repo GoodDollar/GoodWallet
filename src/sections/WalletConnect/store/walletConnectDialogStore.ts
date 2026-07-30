@@ -44,21 +44,41 @@ export const walletConnectDialogStore = proxy<{
   exiting: boolean
 }>()
 
-export const openWalletConnectDialog = async (args: WalletConnectDialog) => {
-  walletConnectDialogStore.dialog = args
+type QueuedDialog = {
+  args: WalletConnectDialog
+  resolve: (status: WalletConnectDialogStatus) => void
+}
+
+const dialogQueue: QueuedDialog[] = []
+let dialogOpen = false
+
+const openNextDialog = (): void => {
+  if (dialogOpen) return
+  const queuedDialog = dialogQueue.shift()
+  if (!queuedDialog) return
+
+  dialogOpen = true
+  walletConnectDialogStore.dialog = queuedDialog.args
   walletConnectDialogStore.status = "pending"
   walletConnectDialogStore.exiting = false
 
-  await new Promise((resolve) => {
-    subscribe(walletConnectDialogStore, () => {
-      if (walletConnectDialogStore.status !== "pending") {
-        resolve(null)
-      }
-    })
+  const unsubscribe = subscribe(walletConnectDialogStore, () => {
+    if (walletConnectDialogStore.status === "pending") return
+    const status = walletConnectDialogStore.status
+    unsubscribe()
+    dialogOpen = false
+    queuedDialog.resolve(status)
+    openNextDialog()
   })
-
-  return walletConnectDialogStore.status as WalletConnectDialogStatus
 }
+
+export const openWalletConnectDialog = (
+  args: WalletConnectDialog,
+): Promise<WalletConnectDialogStatus> =>
+  new Promise((resolve) => {
+    dialogQueue.push({ args, resolve })
+    openNextDialog()
+  })
 
 export const updateWalletConnectDialogStatus = async (
   status: WalletConnectDialogStatus,
