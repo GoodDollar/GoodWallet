@@ -8,14 +8,17 @@ import {
   assignHostedWidgetProperties,
   clearHostedWidgetProperties,
 } from "../hostProperties"
-import type {
-  HostedWidgetElement,
-  WebComponentWidgetLoader,
-  WidgetHostProps,
+import {
+  assertWidgetModuleMetadata,
+  type HostedWidgetElement,
+  type WebComponentWidgetLoader,
+  type WidgetHostProps,
 } from "../hostTypes"
 
 type TagRegistration = {
   load: WebComponentWidgetLoader
+  packageName: string
+  packageVersion: string
   promise: Promise<string>
 }
 
@@ -24,11 +27,17 @@ const registrationCache = new Map<string, TagRegistration>()
 export const registerElement = (
   load: WebComponentWidgetLoader,
   tagName: string,
+  packageName: string,
+  packageVersion: string,
 ): Promise<string> => {
   const existingDefinition = customElements.get(tagName)
   const cached = registrationCache.get(tagName)
   if (cached) {
-    if (cached.load !== load) {
+    if (
+      cached.load !== load ||
+      cached.packageName !== packageName ||
+      cached.packageVersion !== packageVersion
+    ) {
       return Promise.reject(
         new Error(`Custom Element tag ${tagName} is already registered`),
       )
@@ -43,6 +52,7 @@ export const registerElement = (
 
   const promise = load()
     .then(async (module) => {
+      assertWidgetModuleMetadata(module, packageName, packageVersion)
       const registered = await module.register(tagName)
       if (registered !== tagName) {
         throw new Error(
@@ -59,19 +69,28 @@ export const registerElement = (
       throw error
     })
 
-  registrationCache.set(tagName, { load, promise })
+  registrationCache.set(tagName, {
+    load,
+    packageName,
+    packageVersion,
+    promise,
+  })
   return promise
 }
 
 export const WebComponentWidgetHost = ({
   load,
   tagName,
+  packageName,
+  packageVersion,
   provider,
   themeOverrides,
   config,
 }: WidgetHostProps & {
   load: WebComponentWidgetLoader
   tagName: string
+  packageName: string
+  packageVersion: string
 }) => {
   const elementRef = useRef<HostedWidgetElement | null>(null)
   const [registeredTagName, setRegisteredTagName] = useState<string | null>(
@@ -84,7 +103,7 @@ export const WebComponentWidgetHost = ({
     setRegisteredTagName(null)
     setLoadError(null)
 
-    registerElement(load, tagName)
+    registerElement(load, tagName, packageName, packageVersion)
       .then((registered) => {
         if (!isMounted) return
         setRegisteredTagName(registered)
@@ -101,7 +120,7 @@ export const WebComponentWidgetHost = ({
     return () => {
       isMounted = false
     }
-  }, [load, tagName])
+  }, [load, packageName, packageVersion, tagName])
 
   useEffect(() => {
     const element = elementRef.current

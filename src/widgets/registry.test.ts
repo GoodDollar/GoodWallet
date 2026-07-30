@@ -14,7 +14,13 @@ const widget = defineWidget({
   packageVersion: "1.0.0",
   entry: {
     tagName: "gw-goodreserve-widget",
-    load: async () => ({ register: (tagName) => tagName ?? "unused" }),
+    load: async () => ({
+      goodWidgetMetadata: {
+        packageName: "@goodwidget/goodreserve-widget",
+        packageVersion: "1.0.0",
+      },
+      register: (tagName) => tagName ?? "unused",
+    }),
   },
   routeSlug: "goodreserve",
   displayName: "GoodReserve",
@@ -33,7 +39,13 @@ const reactWidget = defineWidget({
   integrationMode: "react",
   entry: {
     exportName: "GoodReserveWidget",
-    load: async () => ({ GoodReserveWidget: () => null }),
+    load: async () => ({
+      goodWidgetMetadata: {
+        packageName: "@goodwidget/goodreserve-widget",
+        packageVersion: "1.0.0",
+      },
+      GoodReserveWidget: () => null,
+    }),
   },
 })
 

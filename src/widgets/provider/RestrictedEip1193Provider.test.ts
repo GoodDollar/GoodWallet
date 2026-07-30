@@ -189,6 +189,19 @@ describe("RestrictedEip1193Provider", () => {
         ],
       }),
     ).rejects.toMatchObject({ code: 4100 })
+    await expect(
+      provider.request({
+        method: "eth_signTypedData_v4",
+        params: [
+          address,
+          JSON.stringify({
+            domain: { name: "Widget" },
+            types: { Thing: [{ name: "value", type: "uint256" }] },
+            message: { value: 1 },
+          }),
+        ],
+      }),
+    ).rejects.toMatchObject({ code: 4100 })
     expect(requestWalletApproval).not.toHaveBeenCalled()
   })
 

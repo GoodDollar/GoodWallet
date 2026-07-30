@@ -4,20 +4,25 @@ import { useEffect, useState } from "react"
 
 import { LoadingSpinner } from "@/components/Snippet/LoadingSpinner"
 
-import type {
-  HostedReactWidget,
-  ReactWidgetLoader,
-  WidgetHostProps,
+import {
+  assertWidgetModuleMetadata,
+  type HostedReactWidget,
+  type ReactWidgetLoader,
+  type WidgetHostProps,
 } from "../hostTypes"
 import { resolveReactWidget } from "../resolveReactWidget"
 
 export const ReactWidgetHost = ({
   load,
   exportName,
+  packageName,
+  packageVersion,
   ...hostProps
 }: WidgetHostProps & {
   load: ReactWidgetLoader
   exportName: string
+  packageName: string
+  packageVersion: string
 }) => {
   const [Component, setComponent] = useState<HostedReactWidget | null>(null)
   const [loadError, setLoadError] = useState<Error | null>(null)
@@ -30,6 +35,7 @@ export const ReactWidgetHost = ({
     load()
       .then((module) => {
         if (!isMounted) return
+        assertWidgetModuleMetadata(module, packageName, packageVersion)
         const exportedComponent = resolveReactWidget(module, exportName)
         setComponent(() => exportedComponent)
       })
@@ -45,7 +51,7 @@ export const ReactWidgetHost = ({
     return () => {
       isMounted = false
     }
-  }, [exportName, load])
+  }, [exportName, load, packageName, packageVersion])
 
   if (loadError) throw loadError
   if (!Component) return <LoadingSpinner />

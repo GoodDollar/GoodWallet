@@ -16,6 +16,8 @@ export const WidgetRenderer = ({
       <ReactWidgetHost
         load={widget.entry.load}
         exportName={widget.entry.exportName}
+        packageName={widget.packageName}
+        packageVersion={widget.packageVersion}
         {...hostProps}
       />
     )
@@ -25,6 +27,8 @@ export const WidgetRenderer = ({
     <WebComponentWidgetHost
       load={widget.entry.load}
       tagName={widget.entry.tagName}
+      packageName={widget.packageName}
+      packageVersion={widget.packageVersion}
       {...hostProps}
     />
   )

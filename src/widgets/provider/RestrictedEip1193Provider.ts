@@ -370,10 +370,13 @@ export class RestrictedEip1193Provider {
     }
     const context = this.#captureSigningContext(account)
     const { EIP712Domain: _domainType, ...types } = data.types
-    if (
-      data.domain.chainId !== undefined &&
-      Number(data.domain.chainId) !== context.chainId
-    ) {
+    if (data.domain.chainId === undefined) {
+      throw new WidgetProviderError(
+        4100,
+        "Typed-data domain must declare the active widget chain",
+      )
+    }
+    if (Number(data.domain.chainId) !== context.chainId) {
       throw new WidgetProviderError(
         4100,
         "Typed-data chain does not match the active widget chain",
