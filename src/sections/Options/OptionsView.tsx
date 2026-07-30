@@ -11,7 +11,6 @@ import { truncateString } from "@/components/Utils/format"
 import VersionTag from "@/components/VersionTag/VersionTag"
 import { type ISigner, useSessionContext } from "@/login"
 import { getPrivateKeyHex } from "@/login/adapters/privatekey"
-import { getSessionFromLocalStorage } from "@/login/context/SessionContext/storage"
 
 import OptionsMenu from "./components/OptionsMenu"
 import styles from "./OptionsView.module.css"
@@ -21,14 +20,12 @@ export default function OptionsView() {
   const { createToast } = useToast()
   const optionsTranslations = translations.options
   setBottomSheetProps({ title: optionsTranslations.title })
-  const { signer, type } = useSessionContext()
+  const { signer, type, masterSeed } = useSessionContext()
   const { captureEvent } = useAnalytics()
   const [expanded, setExpanded] = useState(false)
   const [selectedChainType, setSelectedChainType] = useState<keyof ISigner>()
   const handleCopyPrivateKey = async () => {
-    if (!selectedChainType) return
-    const session = await getSessionFromLocalStorage()
-    if (!session || session.type !== "PRIVATE_KEY") return
+    if (!selectedChainType || type !== "PRIVATE_KEY" || !masterSeed) return
 
     const status = await openDialog({
       title: optionsTranslations.confirmation,
@@ -38,10 +35,7 @@ export default function OptionsView() {
     })
 
     if (status === "accepted") {
-      const privateKey = await getPrivateKeyHex(
-        selectedChainType,
-        session.masterSeed,
-      )
+      const privateKey = await getPrivateKeyHex(selectedChainType, masterSeed)
       navigator.clipboard.writeText(privateKey)
       captureEvent({ type: AnalyticsEventTypes.PrivateKeyCopied })
       setSelectedChainType(undefined)
