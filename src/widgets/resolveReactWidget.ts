@@ -6,9 +6,6 @@ const isReactComponent = (value: unknown): value is HostedReactWidget => {
   return typeof (value as { $$typeof?: unknown }).$$typeof === "symbol"
 }
 
-/**
- * Resolves the reviewed export name and makes stale registry exports explicit.
- */
 export const resolveReactWidget = (
   module: Record<string, unknown>,
   exportName: string,

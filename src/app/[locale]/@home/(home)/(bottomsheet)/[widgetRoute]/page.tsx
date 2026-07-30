@@ -3,10 +3,6 @@ import { notFound } from "next/navigation"
 import { AuthenticatedWidgetRoute } from "@/widgets/AuthenticatedWidgetRoute"
 import { getWidgetByRoute } from "@/widgets/registry"
 
-/**
- * Static core routes take precedence; this fallback can mount only a reviewed
- * registry route and treats every other unknown bottom-sheet URL as not found.
- */
 export default async function WidgetRoutePage({
   params,
 }: {

@@ -7,9 +7,7 @@ import { Icon, type IconName } from "ui"
 export type RoundButtonProps = {
   onClick?: () => void
   buttonType?: RoundButtonType
-  /** Registry actions may use a system icon without adding a legacy button type. */
   icon?: IconName
-  /** Registry actions may use a reviewed local asset without serializing it. */
   iconElement?: ReactNode
   text?: string
   fill?: boolean

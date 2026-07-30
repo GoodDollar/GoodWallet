@@ -9,10 +9,6 @@ import {
 
 export type WidgetIntegrationMode = "web-component" | "react"
 
-/**
- * Custom Elements are the normal plugin boundary; React is an explicit,
- * reviewed exception for packages which cannot expose a Custom Element.
- */
 export const DEFAULT_WIDGET_INTEGRATION_MODE: WidgetIntegrationMode =
   "web-component"
 
@@ -28,22 +24,10 @@ export type DashboardAction = {
   widgetId?: string
 }
 
-/**
- * A registry entry is reviewed source rather than remote widget metadata.
- * This prevents a package or its manifest from enlarging wallet authority.
- */
-export type RegisteredWidget = {
+type RegisteredWidgetBase = {
   widgetId: `goodwidget.${string}`
   packageName: `@goodwidget/${string}`
   packageVersion: `${number}.${number}.${number}`
-  integrationMode?: WidgetIntegrationMode
-  entries: {
-    react: { exportName: string; load: ReactWidgetLoader }
-    webComponent: {
-      tagName: `${string}-${string}`
-      load: WebComponentWidgetLoader
-    }
-  }
   routeSlug: string
   displayName: string
   description: string
@@ -53,6 +37,21 @@ export type RegisteredWidget = {
     requiredMethods: readonly string[]
   }
 }
+
+export type RegisteredWidget = RegisteredWidgetBase &
+  (
+    | {
+        integrationMode?: "web-component"
+        entry: {
+          tagName: `${string}-${string}`
+          load: WebComponentWidgetLoader
+        }
+      }
+    | {
+        integrationMode: "react"
+        entry: { exportName: string; load: ReactWidgetLoader }
+      }
+  )
 
 export const defineWidget = <const T extends RegisteredWidget>(widget: T): T =>
   widget
@@ -76,9 +75,6 @@ const RESERVED_WIDGET_ROUTES = new Set([
   "qr",
 ])
 
-/**
- * Validates every security-sensitive registry field before it becomes routable.
- */
 const validateWidget = (widget: RegisteredWidget): void => {
   if (!EXACT_PACKAGE_VERSION.test(widget.packageVersion)) {
     throw new Error(
@@ -120,9 +116,6 @@ const validateWidget = (widget: RegisteredWidget): void => {
   }
 }
 
-/**
- * Creates both identity and route indexes, rejecting collisions at module load.
- */
 export const createWidgetRegistry = (
   widgets: readonly RegisteredWidget[],
 ): ReadonlyMap<string, RegisteredWidget> => {
@@ -138,23 +131,19 @@ export const createWidgetRegistry = (
     if (routes.has(widget.routeSlug)) {
       throw new Error(`Duplicate widget route: ${widget.routeSlug}`)
     }
-    if (tags.has(widget.entries.webComponent.tagName)) {
+    if (widget.integrationMode !== "react" && tags.has(widget.entry.tagName)) {
       throw new Error(
-        `Duplicate widget Custom Element tag: ${widget.entries.webComponent.tagName}`,
+        `Duplicate widget Custom Element tag: ${widget.entry.tagName}`,
       )
     }
     registry.set(widget.widgetId, widget)
     routes.add(widget.routeSlug)
-    tags.add(widget.entries.webComponent.tagName)
+    if (widget.integrationMode !== "react") tags.add(widget.entry.tagName)
   }
 
   return registry
 }
 
-/**
- * Add a released package only with literal import loaders and its exact version.
- * No package is registered until a reviewed widget-specific follow-up exists.
- */
 export const WIDGETS: readonly RegisteredWidget[] = []
 export const widgetRegistry = createWidgetRegistry(WIDGETS)
 
@@ -163,9 +152,6 @@ export const getWidgetByRoute = (
 ): RegisteredWidget | undefined =>
   WIDGETS.find((widget) => widget.routeSlug === routeSlug)
 
-/**
- * These six action IDs preserve the existing dashboard order and behavior.
- */
 export const coreDashboardActions = [
   {
     id: "gooddollar",
@@ -205,9 +191,6 @@ export const coreDashboardActions = [
   },
 ] as const satisfies readonly DashboardAction[]
 
-/**
- * Widgets join the existing responsive action list after the six core actions.
- */
 export const widgetDashboardActions = WIDGETS.map(
   (widget): DashboardAction => ({
     id: widget.widgetId,

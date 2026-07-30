@@ -196,8 +196,6 @@ export default function WalletSection({
     predictions: homeTranslations.predictions,
     walletconnect: homeTranslations.walletConnect,
   }
-  // Widgets append to the existing grid, allowing the current responsive
-  // collapse control to keep owning the More behavior and core ordering.
   const dashboardActions = [...coreDashboardActions, ...widgetDashboardActions]
 
   return (

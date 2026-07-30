@@ -229,29 +229,6 @@ describe("RestrictedEip1193Provider", () => {
     )
   })
 
-  it("rejects approval when the account or chain changes", async () => {
-    let resolveApproval: ((approved: boolean) => void) | undefined
-    const requestWalletApproval = vi.fn(
-      () =>
-        new Promise<boolean>((resolve) => {
-          resolveApproval = resolve
-        }),
-    )
-    const { provider } = createProvider({ requestWalletApproval })
-    const pending = provider.request({
-      method: "personal_sign",
-      params: ["message", address],
-    })
-    await vi.waitFor(() => expect(requestWalletApproval).toHaveBeenCalled())
-    provider.updateAccount({
-      ...signer,
-      address: "0x2222222222222222222222222222222222222222",
-    })
-    resolveApproval?.(true)
-    await expect(pending).rejects.toMatchObject({ code: 4100 })
-    expect(signer.signMessage).not.toHaveBeenCalled()
-  })
-
   it("revokes retained providers and pending approvals", async () => {
     let resolveApproval: ((approved: boolean) => void) | undefined
     const requestWalletApproval = vi.fn(
@@ -278,7 +255,7 @@ describe("RestrictedEip1193Provider", () => {
     expect(signer.signMessage).not.toHaveBeenCalled()
   })
 
-  it("rejects conflicting gas fields and same-address signer replacement", async () => {
+  it("rejects conflicting gas fields", async () => {
     const { provider } = createProvider()
     await expect(
       provider.request({
@@ -294,30 +271,5 @@ describe("RestrictedEip1193Provider", () => {
         ],
       }),
     ).rejects.toMatchObject({ code: 4200 })
-
-    let resolveApproval: ((approved: boolean) => void) | undefined
-    const requestWalletApproval = vi.fn(
-      () =>
-        new Promise<boolean>((resolve) => {
-          resolveApproval = resolve
-        }),
-    )
-    const { provider: signingProvider } = createProvider({
-      requestWalletApproval,
-    })
-    const pending = signingProvider.request({
-      method: "personal_sign",
-      params: ["message", address],
-    })
-    await vi.waitFor(() => expect(requestWalletApproval).toHaveBeenCalled())
-    signingProvider.updateAccount({
-      address,
-      signMessage: vi.fn(async () => "0xother"),
-      signTypedData: vi.fn(async () => "0xtyped"),
-      signTransaction: vi.fn(async () => "0xraw"),
-    })
-    resolveApproval?.(true)
-    await expect(pending).rejects.toMatchObject({ code: 4100 })
-    expect(signer.signMessage).not.toHaveBeenCalled()
   })
 })

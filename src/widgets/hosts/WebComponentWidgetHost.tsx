@@ -63,9 +63,6 @@ export const registerElement = (
   return promise
 }
 
-/**
- * Registers and mounts a widget Custom Element exclusively on the client.
- */
 export const WebComponentWidgetHost = ({
   load,
   tagName,

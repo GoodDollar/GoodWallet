@@ -44,9 +44,6 @@ const requestWalletApproval = async (
   return status === "accepted"
 }
 
-/**
- * This is the sole bridge from an authenticated session into widget code.
- */
 export const WidgetProvider = ({
   chainIds,
   requiredMethods,

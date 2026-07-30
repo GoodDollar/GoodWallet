@@ -11,10 +11,6 @@ import {
   XDC_CHAIN_ID,
 } from "@/chain/chain-ids"
 
-/**
- * This central allowlist is the outer security boundary for every in-process
- * widget. Registry entries can narrow it, but cannot broaden it.
- */
 export const WIDGET_READ_METHODS = new Set([
   "eth_blockNumber",
   "eth_call",

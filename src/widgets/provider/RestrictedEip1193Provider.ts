@@ -45,10 +45,6 @@ export type RestrictedProviderOptions = {
   chainIds: readonly number[]
   requiredMethods: readonly string[]
   initialChainId?: number
-  /**
-   * This callback belongs to GoodWallet UI, never to the widget. Its secure
-   * default leaves every signing method disabled until that UI is supplied.
-   */
   requestWalletApproval?: (request: WalletApprovalRequest) => Promise<boolean>
   prepareTransaction?: (
     chainId: number,
@@ -89,11 +85,6 @@ const normalizeError = (error: unknown): WidgetProviderError => {
   return new WidgetProviderError(rejected ? 4001 : 4200, message, error)
 }
 
-/**
- * A capability-limited EIP-1193 facade over GoodWallet's active EVM session.
- * The real signer and session are private fields and cannot be retrieved by a
- * widget through this interface.
- */
 export class RestrictedEip1193Provider {
   readonly #allowedChainIds: ReadonlySet<number>
   readonly #allowedMethods: ReadonlySet<string>
@@ -144,7 +135,6 @@ export class RestrictedEip1193Provider {
     }
 
     this.#signer = options.signer
-    // Signing is disabled unless a Wallet-owned confirmation surface opts in.
     this.#requestWalletApproval =
       options.requestWalletApproval ?? (async () => false)
     this.#prepareTransaction =
@@ -194,16 +184,6 @@ export class RestrictedEip1193Provider {
   ): this {
     this.#listeners.get(event)?.delete(listener)
     return this
-  }
-
-  /**
-   * Session updates retain the facade while notifying a widget of account loss.
-   */
-  updateAccount(signer: EVMSigner): void {
-    this.#assertActive()
-    const accountChanged = !addressesMatch(signer.address, this.#signer.address)
-    this.#signer = signer
-    if (accountChanged) this.#emit("accountsChanged", [signer.address])
   }
 
   dispose(): void {
@@ -440,7 +420,7 @@ export class RestrictedEip1193Provider {
     }
     if (
       rawRequest.gas !== undefined &&
-      rawRequest.gasLimit !== undefined &&
+      rawRequest.gasLimit != null &&
       BigInt(rawRequest.gas) !== BigInt(rawRequest.gasLimit)
     ) {
       throw new WidgetProviderError(

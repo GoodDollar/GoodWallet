@@ -11,9 +11,6 @@ import { useWidgetProvider, WidgetProvider } from "./provider/WidgetProvider"
 import { type RegisteredWidget, widgetRegistry } from "./registry"
 import { WidgetRenderer } from "./WidgetRenderer"
 
-/**
- * Requires an authenticated wallet session before any widget package is loaded.
- */
 export const AuthenticatedWidgetRoute = ({
   widgetId,
   themeOverrides,
@@ -42,7 +39,6 @@ export const AuthenticatedWidgetRoute = ({
 
   return (
     <WidgetProvider
-      key={widget.widgetId}
       chainIds={widget.providerPolicy.chainIds}
       requiredMethods={widget.providerPolicy.requiredMethods}
     >
@@ -55,9 +51,6 @@ export const AuthenticatedWidgetRoute = ({
   )
 }
 
-/**
- * The provider capability enters the renderer only after authentication.
- */
 const MountedWidget = ({
   widget,
   themeOverrides,

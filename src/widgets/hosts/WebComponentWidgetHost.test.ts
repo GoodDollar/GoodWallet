@@ -10,7 +10,9 @@ describe("Custom Element registration", () => {
 
   it("registers a tag once and rejects a different loader for the same tag", async () => {
     const define = vi.fn()
-    const get = vi.fn(() => undefined)
+    const get = vi.fn<() => CustomElementConstructor | undefined>(
+      () => undefined,
+    )
     vi.stubGlobal("customElements", { define, get })
 
     const firstLoad = vi.fn(async () => ({

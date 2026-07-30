@@ -12,15 +12,9 @@ const widget = defineWidget({
   widgetId: "goodwidget.goodreserve",
   packageName: "@goodwidget/goodreserve-widget",
   packageVersion: "1.0.0",
-  entries: {
-    react: {
-      exportName: "GoodReserveWidget",
-      load: async () => ({ GoodReserveWidget: () => null }),
-    },
-    webComponent: {
-      tagName: "gw-goodreserve-widget",
-      load: async () => ({ register: (tagName) => tagName ?? "unused" }),
-    },
+  entry: {
+    tagName: "gw-goodreserve-widget",
+    load: async () => ({ register: (tagName) => tagName ?? "unused" }),
   },
   routeSlug: "goodreserve",
   displayName: "GoodReserve",
@@ -32,6 +26,17 @@ const widget = defineWidget({
   },
 })
 
+const reactWidget = defineWidget({
+  ...widget,
+  widgetId: "goodwidget.react",
+  routeSlug: "react",
+  integrationMode: "react",
+  entry: {
+    exportName: "GoodReserveWidget",
+    load: async () => ({ GoodReserveWidget: () => null }),
+  },
+})
+
 describe("widget registry", () => {
   it("indexes typed widgets by immutable ID", () => {
     expect(createWidgetRegistry([widget]).get(widget.widgetId)).toBe(widget)
@@ -40,9 +45,7 @@ describe("widget registry", () => {
   it("defaults to Web Components and permits a reviewed React override", () => {
     expect(DEFAULT_WIDGET_INTEGRATION_MODE).toBe("web-component")
     expect(resolveWidgetIntegrationMode(widget)).toBe("web-component")
-    expect(
-      resolveWidgetIntegrationMode({ ...widget, integrationMode: "react" }),
-    ).toBe("react")
+    expect(resolveWidgetIntegrationMode(reactWidget)).toBe("react")
   })
 
   it("rejects duplicate IDs and routes", () => {
