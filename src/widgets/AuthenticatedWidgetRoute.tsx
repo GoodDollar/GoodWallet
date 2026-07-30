@@ -42,6 +42,7 @@ export const AuthenticatedWidgetRoute = ({
 
   return (
     <WidgetProvider
+      key={widget.widgetId}
       chainIds={widget.providerPolicy.chainIds}
       requiredMethods={widget.providerPolicy.requiredMethods}
     >

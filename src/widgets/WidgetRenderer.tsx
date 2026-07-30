@@ -17,6 +17,7 @@ export const WidgetRenderer = ({
   if (resolveWidgetIntegrationMode(widget) === "react") {
     return (
       <ReactWidgetHost
+        key={widget.widgetId}
         load={widget.entries.react.load}
         exportName={widget.entries.react.exportName}
         {...hostProps}
@@ -26,6 +27,7 @@ export const WidgetRenderer = ({
 
   return (
     <WebComponentWidgetHost
+      key={widget.widgetId}
       load={widget.entries.webComponent.load}
       tagName={widget.entries.webComponent.tagName}
       {...hostProps}

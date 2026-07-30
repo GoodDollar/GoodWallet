@@ -4,9 +4,12 @@ import type {
   TypedDataField,
 } from "ethers"
 import { getBytes } from "ethers"
+import { copyRequest } from "ethers/providers"
 
 import { getViemClient } from "@/chain/provider/EVM/viemClients"
+import { getEthersProvider } from "@/ethers-utils"
 import type { EVMSigner } from "@/login"
+import { WalletWrapper } from "@/sections/WalletConnect/utils/WalletWrapper"
 
 import {
   WIDGET_EVM_CHAIN_IDS,
@@ -47,6 +50,11 @@ export type RestrictedProviderOptions = {
    * default leaves every signing method disabled until that UI is supplied.
    */
   requestWalletApproval?: (request: WalletApprovalRequest) => Promise<boolean>
+  prepareTransaction?: (
+    chainId: number,
+    signer: EVMSigner,
+    request: TransactionRequest,
+  ) => Promise<TransactionRequest>
   rpcRequest?: (chainId: number, request: ProviderRequest) => Promise<unknown>
 }
 
@@ -62,6 +70,16 @@ const asChainId = (value: unknown): number => {
 
 const addressesMatch = (left: unknown, right: string): boolean =>
   typeof left === "string" && left.toLowerCase() === right.toLowerCase()
+
+const approvalTransaction = (
+  request: TransactionRequest,
+): Record<string, unknown> =>
+  Object.fromEntries(
+    Object.entries(request).map(([key, value]) => [
+      key,
+      typeof value === "bigint" ? `0x${value.toString(16)}` : value,
+    ]),
+  )
 
 const normalizeError = (error: unknown): WidgetProviderError => {
   if (error instanceof WidgetProviderError) return error
@@ -86,8 +104,13 @@ export class RestrictedEip1193Provider {
   readonly #requestWalletApproval: NonNullable<
     RestrictedProviderOptions["requestWalletApproval"]
   >
+  readonly #prepareTransaction: NonNullable<
+    RestrictedProviderOptions["prepareTransaction"]
+  >
   readonly #rpcRequest: NonNullable<RestrictedProviderOptions["rpcRequest"]>
+  #approvalPending = false
   #chainId: number
+  #revoked = false
   #signer: EVMSigner
 
   constructor(options: RestrictedProviderOptions) {
@@ -124,6 +147,15 @@ export class RestrictedEip1193Provider {
     // Signing is disabled unless a Wallet-owned confirmation surface opts in.
     this.#requestWalletApproval =
       options.requestWalletApproval ?? (async () => false)
+    this.#prepareTransaction =
+      options.prepareTransaction ??
+      (async (chainId, signer, request) => {
+        const connectedSigner = new WalletWrapper(
+          signer,
+          getEthersProvider(chainId),
+        )
+        return await connectedSigner.populateTransaction(request)
+      })
     this.#rpcRequest =
       options.rpcRequest ??
       (async (chainId, request) => {
@@ -140,6 +172,10 @@ export class RestrictedEip1193Provider {
 
   get supportedMethods(): readonly string[] {
     return [...this.#allowedMethods]
+  }
+
+  get isRevoked(): boolean {
+    return this.#revoked
   }
 
   on(
@@ -164,12 +200,21 @@ export class RestrictedEip1193Provider {
    * Session updates retain the facade while notifying a widget of account loss.
    */
   updateAccount(signer: EVMSigner): void {
+    this.#assertActive()
     const accountChanged = !addressesMatch(signer.address, this.#signer.address)
     this.#signer = signer
     if (accountChanged) this.#emit("accountsChanged", [signer.address])
   }
 
+  dispose(): void {
+    if (this.#revoked) return
+    this.#revoked = true
+    this.#emit("accountsChanged", [])
+    this.#listeners.clear()
+  }
+
   async request(request: ProviderRequest): Promise<unknown> {
+    this.#assertActive()
     if (!WIDGET_PROVIDER_METHODS.has(request.method)) {
       throw new WidgetProviderError(
         4200,
@@ -201,7 +246,9 @@ export class RestrictedEip1193Provider {
           return await this.#sendTransaction(params)
         default:
           if (WIDGET_READ_METHODS.has(request.method)) {
-            return await this.#rpcRequest(this.#chainId, request)
+            const result = await this.#rpcRequest(this.#chainId, request)
+            this.#assertActive()
+            return result
           }
           throw new WidgetProviderError(4200, "Unsupported widget request")
       }
@@ -214,11 +261,45 @@ export class RestrictedEip1193Provider {
     for (const listener of this.#listeners.get(event) ?? []) listener(value)
   }
 
-  #assertAccount(account: unknown): void {
+  #assertActive(): void {
+    if (this.#revoked) {
+      throw new WidgetProviderError(4100, "The widget provider was revoked")
+    }
+  }
+
+  #captureSigningContext(account: unknown): {
+    signer: EVMSigner
+    account: string
+    chainId: number
+  } {
+    this.#assertActive()
     if (!addressesMatch(account, this.#signer.address)) {
       throw new WidgetProviderError(
         4100,
         "The signing account does not match the active GoodWallet session",
+      )
+    }
+    return {
+      signer: this.#signer,
+      account: this.#signer.address,
+      chainId: this.#chainId,
+    }
+  }
+
+  #assertSigningContext(context: {
+    signer: EVMSigner
+    account: string
+    chainId: number
+  }): void {
+    this.#assertActive()
+    if (
+      this.#signer !== context.signer ||
+      !addressesMatch(this.#signer.address, context.account) ||
+      this.#chainId !== context.chainId
+    ) {
+      throw new WidgetProviderError(
+        4100,
+        "The active wallet account or chain changed during approval",
       )
     }
   }
@@ -226,18 +307,33 @@ export class RestrictedEip1193Provider {
   async #requestSigningApproval(
     method: string,
     params: readonly unknown[],
+    context: {
+      signer: EVMSigner
+      account: string
+      chainId: number
+    },
   ): Promise<void> {
-    const approved = await this.#requestWalletApproval({
-      method,
-      params,
-      account: this.#signer.address,
-      chainId: this.#chainId,
-    })
-    if (!approved) {
-      throw new WidgetProviderError(
-        4001,
-        "GoodWallet did not approve the signing request",
-      )
+    if (this.#approvalPending) {
+      throw new WidgetProviderError(4200, "Another widget approval is pending")
+    }
+    this.#assertSigningContext(context)
+    this.#approvalPending = true
+    try {
+      const approved = await this.#requestWalletApproval({
+        method,
+        params,
+        account: context.account,
+        chainId: context.chainId,
+      })
+      this.#assertSigningContext(context)
+      if (!approved) {
+        throw new WidgetProviderError(
+          4001,
+          "GoodWallet did not approve the signing request",
+        )
+      }
+    } finally {
+      this.#approvalPending = false
     }
   }
 
@@ -250,7 +346,7 @@ export class RestrictedEip1193Provider {
     const chainId = asChainId(rawChainId)
     if (!this.#allowedChainIds.has(chainId)) {
       throw new WidgetProviderError(
-        4901,
+        4100,
         `Chain ${chainId} is not allowed for this widget`,
       )
     }
@@ -263,19 +359,21 @@ export class RestrictedEip1193Provider {
 
   async #signMessage(params: readonly unknown[]): Promise<string> {
     const [message, account] = params
-    this.#assertAccount(account)
     if (typeof message !== "string") {
       throw new WidgetProviderError(4200, "personal_sign requires a message")
     }
-    await this.#requestSigningApproval("personal_sign", params)
-    return await this.#signer.signMessage(
+    const context = this.#captureSigningContext(account)
+    const approvalParams = [message, context.account] as const
+    await this.#requestSigningApproval("personal_sign", approvalParams, context)
+    const signature = await context.signer.signMessage(
       /^0x[0-9a-f]*$/i.test(message) ? getBytes(message) : message,
     )
+    this.#assertSigningContext(context)
+    return signature
   }
 
   async #signTypedData(params: readonly unknown[]): Promise<string> {
     const [account, rawData] = params
-    this.#assertAccount(account)
     if (typeof rawData !== "string") {
       throw new WidgetProviderError(
         4200,
@@ -290,45 +388,94 @@ export class RestrictedEip1193Provider {
     if (!data.domain || !data.types || !data.message) {
       throw new WidgetProviderError(4200, "Invalid EIP-712 typed data")
     }
+    const context = this.#captureSigningContext(account)
     const { EIP712Domain: _domainType, ...types } = data.types
     if (
       data.domain.chainId !== undefined &&
-      Number(data.domain.chainId) !== this.#chainId
+      Number(data.domain.chainId) !== context.chainId
     ) {
       throw new WidgetProviderError(
         4100,
         "Typed-data chain does not match the active widget chain",
       )
     }
-    await this.#requestSigningApproval("eth_signTypedData_v4", params)
-    return await this.#signer.signTypedData(data.domain, types, data.message)
+    const approvalParams = [context.account, rawData] as const
+    await this.#requestSigningApproval(
+      "eth_signTypedData_v4",
+      approvalParams,
+      context,
+    )
+    const signature = await context.signer.signTypedData(
+      data.domain,
+      types,
+      data.message,
+    )
+    this.#assertSigningContext(context)
+    return signature
   }
 
   async #sendTransaction(params: readonly unknown[]): Promise<unknown> {
     const transaction = params[0]
-    if (!transaction || typeof transaction !== "object") {
+    if (
+      !transaction ||
+      typeof transaction !== "object" ||
+      Array.isArray(transaction)
+    ) {
       throw new WidgetProviderError(4200, "A transaction object is required")
     }
-    const request = transaction as TransactionRequest & {
+    const rawRequest = transaction as TransactionRequest & {
       from?: string
+      gas?: string | number | bigint
       chainId?: string | number
     }
-    this.#assertAccount(request.from)
+    const context = this.#captureSigningContext(rawRequest.from)
     if (
-      request.chainId !== undefined &&
-      Number(request.chainId) !== this.#chainId
+      rawRequest.chainId !== undefined &&
+      Number(rawRequest.chainId) !== context.chainId
     ) {
       throw new WidgetProviderError(
         4100,
         "Transaction chain does not match the active widget chain",
       )
     }
-    await this.#requestSigningApproval("eth_sendTransaction", params)
-    const { from: _from, ...signableRequest } = request
-    const rawTransaction = await this.#signer.signTransaction(signableRequest)
-    return await this.#rpcRequest(this.#chainId, {
+    if (
+      rawRequest.gas !== undefined &&
+      rawRequest.gasLimit !== undefined &&
+      BigInt(rawRequest.gas) !== BigInt(rawRequest.gasLimit)
+    ) {
+      throw new WidgetProviderError(
+        4200,
+        "Transaction gas and gasLimit must match",
+      )
+    }
+    const copiedRequest = copyRequest({
+      ...rawRequest,
+      chainId: context.chainId,
+      gasLimit: rawRequest.gasLimit ?? rawRequest.gas,
+    })
+    const { from: _from, ...unsignedRequest } = copiedRequest
+    const populatedRequest = copyRequest(
+      await this.#prepareTransaction(
+        context.chainId,
+        context.signer,
+        unsignedRequest,
+      ),
+    )
+    this.#assertSigningContext(context)
+    const approvalParams = [approvalTransaction(populatedRequest)] as const
+    await this.#requestSigningApproval(
+      "eth_sendTransaction",
+      approvalParams,
+      context,
+    )
+    const rawTransaction =
+      await context.signer.signTransaction(populatedRequest)
+    this.#assertSigningContext(context)
+    const result = await this.#rpcRequest(context.chainId, {
       method: "eth_sendRawTransaction",
       params: [rawTransaction],
     })
+    this.#assertSigningContext(context)
+    return result
   }
 }

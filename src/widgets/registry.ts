@@ -64,6 +64,17 @@ export const resolveWidgetIntegrationMode = (
 
 const EXACT_PACKAGE_VERSION = /^\d+\.\d+\.\d+$/
 const ROUTE_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+const RESERVED_WIDGET_ROUTES = new Set([
+  "gooddollar",
+  "send",
+  "receive",
+  "swap",
+  "predictions",
+  "walletconnect",
+  "options",
+  "promo",
+  "qr",
+])
 
 /**
  * Validates every security-sensitive registry field before it becomes routable.
@@ -76,6 +87,14 @@ const validateWidget = (widget: RegisteredWidget): void => {
   }
   if (!ROUTE_SLUG.test(widget.routeSlug)) {
     throw new Error(`Widget ${widget.widgetId} has an invalid route slug`)
+  }
+  if (RESERVED_WIDGET_ROUTES.has(widget.routeSlug)) {
+    throw new Error(
+      `Widget ${widget.widgetId} uses a reserved route: ${widget.routeSlug}`,
+    )
+  }
+  if (widget.providerPolicy.chainIds.length === 0) {
+    throw new Error(`Widget ${widget.widgetId} requires at least one chain`)
   }
   const unsupportedChains = widget.providerPolicy.chainIds.filter(
     (chainId) => !WIDGET_EVM_CHAIN_IDS.has(chainId),
@@ -109,6 +128,7 @@ export const createWidgetRegistry = (
 ): ReadonlyMap<string, RegisteredWidget> => {
   const registry = new Map<string, RegisteredWidget>()
   const routes = new Set<string>()
+  const tags = new Set<string>()
 
   for (const widget of widgets) {
     validateWidget(widget)
@@ -118,8 +138,14 @@ export const createWidgetRegistry = (
     if (routes.has(widget.routeSlug)) {
       throw new Error(`Duplicate widget route: ${widget.routeSlug}`)
     }
+    if (tags.has(widget.entries.webComponent.tagName)) {
+      throw new Error(
+        `Duplicate widget Custom Element tag: ${widget.entries.webComponent.tagName}`,
+      )
+    }
     registry.set(widget.widgetId, widget)
     routes.add(widget.routeSlug)
+    tags.add(widget.entries.webComponent.tagName)
   }
 
   return registry

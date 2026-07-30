@@ -28,6 +28,8 @@ export const ReactWidgetHost = ({
 
   useEffect(() => {
     let isMounted = true
+    setComponent(null)
+    setLoadError(null)
 
     load()
       .then((module) => {

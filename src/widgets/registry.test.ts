@@ -82,6 +82,30 @@ describe("widget registry", () => {
     ).toThrow("unsupported methods")
   })
 
+  it("rejects reserved routes, empty chains, and duplicate Custom Element tags", () => {
+    expect(() =>
+      createWidgetRegistry([{ ...widget, routeSlug: "send" }]),
+    ).toThrow("reserved route")
+    expect(() =>
+      createWidgetRegistry([
+        {
+          ...widget,
+          providerPolicy: { ...widget.providerPolicy, chainIds: [] },
+        },
+      ]),
+    ).toThrow("at least one chain")
+    expect(() =>
+      createWidgetRegistry([
+        widget,
+        {
+          ...widget,
+          widgetId: "goodwidget.other",
+          routeSlug: "other",
+        },
+      ]),
+    ).toThrow("Duplicate widget Custom Element tag")
+  })
+
   it("keeps the six reviewed core actions ahead of widget actions", () => {
     expect(coreDashboardActions.map(({ id }) => id)).toEqual([
       "gooddollar",

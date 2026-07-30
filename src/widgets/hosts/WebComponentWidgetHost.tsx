@@ -14,6 +14,55 @@ import type {
   WidgetHostProps,
 } from "../hostTypes"
 
+type TagRegistration = {
+  load: WebComponentWidgetLoader
+  promise: Promise<string>
+}
+
+const registrationCache = new Map<string, TagRegistration>()
+
+export const registerElement = (
+  load: WebComponentWidgetLoader,
+  tagName: string,
+): Promise<string> => {
+  const existingDefinition = customElements.get(tagName)
+  const cached = registrationCache.get(tagName)
+  if (cached) {
+    if (cached.load !== load) {
+      return Promise.reject(
+        new Error(`Custom Element tag ${tagName} is already registered`),
+      )
+    }
+    return cached.promise
+  }
+  if (existingDefinition) {
+    return Promise.reject(
+      new Error(`Custom Element tag ${tagName} is already registered`),
+    )
+  }
+
+  const promise = load()
+    .then(async (module) => {
+      const registered = await module.register(tagName)
+      if (registered !== tagName) {
+        throw new Error(
+          `Widget registered ${registered}; expected declared tag ${tagName}`,
+        )
+      }
+      if (!customElements.get(tagName)) {
+        throw new Error(`Widget did not register Custom Element ${tagName}`)
+      }
+      return registered
+    })
+    .catch((error: unknown) => {
+      registrationCache.delete(tagName)
+      throw error
+    })
+
+  registrationCache.set(tagName, { load, promise })
+  return promise
+}
+
 /**
  * Registers and mounts a widget Custom Element exclusively on the client.
  */
@@ -35,17 +84,12 @@ export const WebComponentWidgetHost = ({
 
   useEffect(() => {
     let isMounted = true
+    setRegisteredTagName(null)
+    setLoadError(null)
 
-    // Element classes may depend on HTMLElement at module evaluation time.
-    load()
-      .then(async (module) => {
-        const registered = await module.register(tagName)
+    registerElement(load, tagName)
+      .then((registered) => {
         if (!isMounted) return
-        if (registered !== tagName) {
-          throw new Error(
-            `Widget registered ${registered}; expected declared tag ${tagName}`,
-          )
-        }
         setRegisteredTagName(registered)
       })
       .catch((error: unknown) => {
@@ -66,7 +110,6 @@ export const WebComponentWidgetHost = ({
     const element = elementRef.current
     if (!element || !registeredTagName) return
 
-    // Object assignment preserves provider identity and prevents HTML leakage.
     assignHostedWidgetProperties(element, {
       provider,
       themeOverrides,
