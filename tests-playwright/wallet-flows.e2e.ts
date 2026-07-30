@@ -47,7 +47,7 @@ const preparePage = async (page: Page, showOnboarding: boolean) => {
 const login = async (page: Page) => {
   await page.goto("/en?login=master_seed")
   await page.getByRole("button", { name: "Playwright test wallet" }).click()
-  await expect(page.getByText("Playwright test wallet")).toBeVisible()
+  await expect(page.getByTestId("wallet-actions")).toBeVisible()
 }
 
 test("captures the locale-aware onboarding and login entry", async ({
@@ -96,11 +96,10 @@ test("captures the claim verification requirement", async ({
 }, testInfo) => {
   await preparePage(page, false)
   await login(page)
-  await expect(page.getByRole("link", { name: "GoodDollar" })).toHaveAttribute(
-    "href",
-    "/en/gooddollar",
-  )
-  await page.goto("/en/gooddollar")
+  const goodDollarLink = page.getByRole("link", { name: "GoodDollar" })
+  await expect(goodDollarLink).toHaveAttribute("href", "/en/gooddollar")
+  await goodDollarLink.click()
+  await expect(page).toHaveURL(/\/en\/gooddollar/)
 
   await expect(
     page.getByText(
