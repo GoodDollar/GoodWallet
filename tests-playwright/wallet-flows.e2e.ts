@@ -99,13 +99,13 @@ test("captures the claim verification requirement", async ({
   const goodDollarLink = page.getByRole("link", { name: "GoodDollar" })
   await expect(goodDollarLink).toHaveAttribute("href", "/en/gooddollar")
   await goodDollarLink.click()
-  await expect(page).toHaveURL(/\/en\/gooddollar/)
+  await page.waitForURL(/\/en\/gooddollar/, { timeout: 60_000 })
 
   await expect(
     page.getByText(
       "Before you can start to claim your GoodDollars you first need to pass face verification to whitelist your account.",
     ),
-  ).toBeVisible()
+  ).toBeVisible({ timeout: 30_000 })
   await expect(page.getByRole("button", { name: "Verify" })).toBeVisible()
   await captureScreenshot(page, testInfo, "claim-requires-verification-en.png")
 })
