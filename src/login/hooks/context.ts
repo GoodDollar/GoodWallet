@@ -10,7 +10,6 @@ import type { Addresses, ISignerSession } from "../types"
 export type ISessionContext = Partial<ISignerSession> & {
   addresses?: Addresses
   isLoading: boolean
-  masterSeed?: string
   logout?: () => void
   setSession(session: ISignerSession): void
 }

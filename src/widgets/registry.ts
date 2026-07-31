@@ -1,6 +1,8 @@
 import type { ReactNode } from "react"
 import type { IconName } from "ui"
 
+import { CELO_CHAIN_ID } from "@/chain/chain-ids"
+
 import type { ReactWidgetLoader, WebComponentWidgetLoader } from "./hostTypes"
 import {
   WIDGET_EVM_CHAIN_IDS,
@@ -8,9 +10,6 @@ import {
 } from "./provider/policy"
 
 export type WidgetIntegrationMode = "web-component" | "react"
-
-export const DEFAULT_WIDGET_INTEGRATION_MODE: WidgetIntegrationMode =
-  "web-component"
 
 export type DashboardIcon =
   | { kind: "system"; name: IconName }
@@ -55,11 +54,6 @@ export type RegisteredWidget = RegisteredWidgetBase &
 
 export const defineWidget = <const T extends RegisteredWidget>(widget: T): T =>
   widget
-
-export const resolveWidgetIntegrationMode = (
-  widget: RegisteredWidget,
-): WidgetIntegrationMode =>
-  widget.integrationMode ?? DEFAULT_WIDGET_INTEGRATION_MODE
 
 const EXACT_PACKAGE_VERSION = /^\d+\.\d+\.\d+$/
 const ROUTE_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
@@ -144,7 +138,29 @@ export const createWidgetRegistry = (
   return registry
 }
 
-export const WIDGETS: readonly RegisteredWidget[] = []
+const testFixtureWidget = defineWidget({
+  widgetId: "goodwidget.test-fixture",
+  packageName: "@goodwidget/test-fixture",
+  packageVersion: "0.0.0",
+  routeSlug: "test-fixture",
+  displayName: "Test Fixture",
+  description: "Playwright widget host fixture",
+  icon: { kind: "system", name: "Cash" },
+  integrationMode: "react",
+  entry: {
+    exportName: "TestFixtureWidget",
+    load: () => import("./fixtures/TestFixtureWidget"),
+  },
+  providerPolicy: {
+    chainIds: [CELO_CHAIN_ID],
+    requiredMethods: ["eth_accounts", "eth_chainId"],
+  },
+})
+
+export const WIDGETS: readonly RegisteredWidget[] =
+  process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE === "true"
+    ? [testFixtureWidget]
+    : []
 export const widgetRegistry = createWidgetRegistry(WIDGETS)
 
 export const getWidgetByRoute = (

@@ -1,8 +1,4 @@
-import type {
-  TransactionRequest,
-  TypedDataDomain,
-  TypedDataField,
-} from "ethers"
+import type { TransactionRequest } from "ethers"
 import { getBytes } from "ethers"
 import { copyRequest } from "ethers/providers"
 
@@ -11,11 +7,7 @@ import { getEthersProvider } from "@/ethers-utils"
 import type { EVMSigner } from "@/login"
 import { WalletWrapper } from "@/sections/WalletConnect/utils/WalletWrapper"
 
-import {
-  WIDGET_EVM_CHAIN_IDS,
-  WIDGET_PROVIDER_METHODS,
-  WIDGET_READ_METHODS,
-} from "./policy"
+import { WIDGET_EVM_CHAIN_IDS, WIDGET_PROVIDER_METHODS } from "./policy"
 
 export type ProviderRequest = {
   method: string
@@ -156,18 +148,6 @@ export class RestrictedEip1193Provider {
       })
   }
 
-  get chainId(): number {
-    return this.#chainId
-  }
-
-  get supportedMethods(): readonly string[] {
-    return [...this.#allowedMethods]
-  }
-
-  get isRevoked(): boolean {
-    return this.#revoked
-  }
-
   on(
     event: "accountsChanged" | "chainChanged",
     listener: (...args: unknown[]) => void,
@@ -220,16 +200,9 @@ export class RestrictedEip1193Provider {
           return this.#switchChain(params)
         case "personal_sign":
           return await this.#signMessage(params)
-        case "eth_signTypedData_v4":
-          return await this.#signTypedData(params)
         case "eth_sendTransaction":
           return await this.#sendTransaction(params)
         default:
-          if (WIDGET_READ_METHODS.has(request.method)) {
-            const result = await this.#rpcRequest(this.#chainId, request)
-            this.#assertActive()
-            return result
-          }
           throw new WidgetProviderError(4200, "Unsupported widget request")
       }
     } catch (error) {
@@ -352,51 +325,6 @@ export class RestrictedEip1193Provider {
     return signature
   }
 
-  async #signTypedData(params: readonly unknown[]): Promise<string> {
-    const [account, rawData] = params
-    if (typeof rawData !== "string") {
-      throw new WidgetProviderError(
-        4200,
-        "eth_signTypedData_v4 requires JSON typed data",
-      )
-    }
-    const data = JSON.parse(rawData) as {
-      domain?: TypedDataDomain
-      types?: Record<string, TypedDataField[]>
-      message?: Record<string, unknown>
-    }
-    if (!data.domain || !data.types || !data.message) {
-      throw new WidgetProviderError(4200, "Invalid EIP-712 typed data")
-    }
-    const context = this.#captureSigningContext(account)
-    const { EIP712Domain: _domainType, ...types } = data.types
-    if (data.domain.chainId === undefined) {
-      throw new WidgetProviderError(
-        4100,
-        "Typed-data domain must declare the active widget chain",
-      )
-    }
-    if (Number(data.domain.chainId) !== context.chainId) {
-      throw new WidgetProviderError(
-        4100,
-        "Typed-data chain does not match the active widget chain",
-      )
-    }
-    const approvalParams = [context.account, rawData] as const
-    await this.#requestSigningApproval(
-      "eth_signTypedData_v4",
-      approvalParams,
-      context,
-    )
-    const signature = await context.signer.signTypedData(
-      data.domain,
-      types,
-      data.message,
-    )
-    this.#assertSigningContext(context)
-    return signature
-  }
-
   async #sendTransaction(params: readonly unknown[]): Promise<unknown> {
     const transaction = params[0]
     if (
@@ -408,7 +336,6 @@ export class RestrictedEip1193Provider {
     }
     const rawRequest = transaction as TransactionRequest & {
       from?: string
-      gas?: string | number | bigint
       chainId?: string | number
     }
     const context = this.#captureSigningContext(rawRequest.from)
@@ -421,20 +348,9 @@ export class RestrictedEip1193Provider {
         "Transaction chain does not match the active widget chain",
       )
     }
-    if (
-      rawRequest.gas !== undefined &&
-      rawRequest.gasLimit != null &&
-      BigInt(rawRequest.gas) !== BigInt(rawRequest.gasLimit)
-    ) {
-      throw new WidgetProviderError(
-        4200,
-        "Transaction gas and gasLimit must match",
-      )
-    }
     const copiedRequest = copyRequest({
       ...rawRequest,
       chainId: context.chainId,
-      gasLimit: rawRequest.gasLimit ?? rawRequest.gas,
     })
     const { from: _from, ...unsignedRequest } = copiedRequest
     const populatedRequest = copyRequest(

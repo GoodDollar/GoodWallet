@@ -3,9 +3,7 @@ import { describe, expect, it } from "vitest"
 import {
   coreDashboardActions,
   createWidgetRegistry,
-  DEFAULT_WIDGET_INTEGRATION_MODE,
   defineWidget,
-  resolveWidgetIntegrationMode,
 } from "./registry"
 
 const widget = defineWidget({
@@ -27,7 +25,7 @@ const widget = defineWidget({
   description: "Reserve",
   icon: { kind: "system", name: "Cash" },
   providerPolicy: {
-    chainIds: [1, 42220],
+    chainIds: [42220],
     requiredMethods: ["eth_accounts", "eth_chainId"],
   },
 })
@@ -54,10 +52,10 @@ describe("widget registry", () => {
     expect(createWidgetRegistry([widget]).get(widget.widgetId)).toBe(widget)
   })
 
-  it("defaults to Web Components and permits a reviewed React override", () => {
-    expect(DEFAULT_WIDGET_INTEGRATION_MODE).toBe("web-component")
-    expect(resolveWidgetIntegrationMode(widget)).toBe("web-component")
-    expect(resolveWidgetIntegrationMode(reactWidget)).toBe("react")
+  it("accepts web-component and react integration modes", () => {
+    expect(widget.integrationMode).toBeUndefined()
+    expect(reactWidget.integrationMode).toBe("react")
+    expect(createWidgetRegistry([widget, reactWidget]).size).toBe(2)
   })
 
   it("rejects duplicate IDs and routes", () => {

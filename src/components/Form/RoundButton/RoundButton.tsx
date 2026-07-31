@@ -6,46 +6,19 @@ import { Icon, type IconName } from "ui"
 
 export type RoundButtonProps = {
   onClick?: () => void
-  buttonType?: RoundButtonType
   icon?: IconName
   iconElement?: ReactNode
   text?: string
-  fill?: boolean
   indicator?: "connected" | "available"
 }
 
-export const enum RoundButtonType {
-  Fund,
-  Send,
-  Receive,
-  GoodDollar,
-  Swap,
-  WalletConnect,
-  Predictions,
-}
-
-const buttonIcons: Record<RoundButtonType, IconName> = {
-  [RoundButtonType.Fund]: "Cash",
-  [RoundButtonType.Send]: "ArrowUpAlt",
-  [RoundButtonType.Receive]: "ArrowDownAlt",
-  [RoundButtonType.GoodDollar]: "goodDollarLogo",
-  [RoundButtonType.Swap]: "Swap",
-  [RoundButtonType.WalletConnect]: "walletConnectLogo",
-  [RoundButtonType.Predictions]: "Predictions",
-}
-
 export const RoundButton = ({
-  buttonType,
   icon,
   iconElement,
   onClick,
   text,
-  fill = false,
   indicator,
 }: RoundButtonProps) => {
-  const selectedIcon =
-    icon ?? (buttonType === undefined ? undefined : buttonIcons[buttonType])
-
   return (
     <div
       className="flex flex-col items-center gap-2 max-w-[60px] select-none cursor-pointer"
@@ -53,14 +26,9 @@ export const RoundButton = ({
     >
       <div className="rounded-full p-px gradient-background">
         <div className="flex aspect-square w-14 h-14 p-4 rounded-full justify-center items-center bg-[var(--token-bg)] btn-circle relative">
-          {selectedIcon ? (
-            <Icon name={selectedIcon} size="big" color="white" />
-          ) : (
-            iconElement
-          )}
+          {icon ? <Icon name={icon} size="big" color="white" /> : iconElement}
 
-          {indicator === "connected" ||
-          (fill && buttonType === RoundButtonType.WalletConnect) ? (
+          {indicator === "connected" ? (
             <BsLink45Deg
               className="absolute bottom-0 right-0 text-white bg-[#1884FF] rounded"
               stroke="white"
@@ -69,8 +37,7 @@ export const RoundButton = ({
               style={{ borderRadius: "50%", padding: "3px" }}
             />
           ) : null}
-          {indicator === "available" ||
-          (fill && buttonType === RoundButtonType.GoodDollar) ? (
+          {indicator === "available" ? (
             <BsPlusCircle
               className="absolute bottom-0 right-0 text-white bg-[#1884FF] rounded"
               stroke="white"

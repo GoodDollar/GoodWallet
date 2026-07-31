@@ -22,11 +22,10 @@ const signer = {
 
 const allTestMethods = [
   "eth_accounts",
+  "eth_requestAccounts",
   "eth_chainId",
-  "eth_getBalance",
   "wallet_switchEthereumChain",
   "personal_sign",
-  "eth_signTypedData_v4",
   "eth_sendTransaction",
 ]
 
@@ -70,21 +69,11 @@ describe("RestrictedEip1193Provider", () => {
     vi.clearAllMocks()
   })
 
-  it("exposes only the active account and forwards reviewed reads", async () => {
-    const { provider, rpcRequest } = createProvider()
+  it("exposes only the active account", async () => {
+    const { provider } = createProvider()
     await expect(provider.request({ method: "eth_accounts" })).resolves.toEqual(
       [address],
     )
-    await expect(
-      provider.request({
-        method: "eth_getBalance",
-        params: [address, "latest"],
-      }),
-    ).resolves.toBe("0xresult")
-    expect(rpcRequest).toHaveBeenCalledWith(1, {
-      method: "eth_getBalance",
-      params: [address, "latest"],
-    })
   })
 
   it("enforces each widget's configured method subset", async () => {
@@ -93,8 +82,7 @@ describe("RestrictedEip1193Provider", () => {
     })
     await expect(
       provider.request({
-        method: "eth_getBalance",
-        params: [address, "latest"],
+        method: "eth_chainId",
       }),
     ).rejects.toMatchObject({ code: 4100 })
   })
@@ -138,7 +126,6 @@ describe("RestrictedEip1193Provider", () => {
             chainId: 1,
             to: address,
             value: BigInt(1),
-            gas: "0x5208",
           },
         ],
       }),
@@ -149,7 +136,7 @@ describe("RestrictedEip1193Provider", () => {
     expect(prepareTransaction).toHaveBeenCalledWith(
       1,
       signer,
-      expect.objectContaining({ gasLimit: BigInt(21000) }),
+      expect.objectContaining({ to: address }),
     )
     expect(signer.signTransaction).toHaveBeenCalled()
     expect(rpcRequest).toHaveBeenCalledWith(1, {
@@ -168,38 +155,12 @@ describe("RestrictedEip1193Provider", () => {
     ).rejects.toMatchObject({ code: 4001 })
   })
 
-  it("rejects mismatched signing accounts and typed-data chains before approval", async () => {
+  it("rejects mismatched signing accounts before approval", async () => {
     const { provider, requestWalletApproval } = createProvider()
     await expect(
       provider.request({
         method: "personal_sign",
         params: ["message", "0x2222222222222222222222222222222222222222"],
-      }),
-    ).rejects.toMatchObject({ code: 4100 })
-    await expect(
-      provider.request({
-        method: "eth_signTypedData_v4",
-        params: [
-          address,
-          JSON.stringify({
-            domain: { name: "Widget", chainId: 42220 },
-            types: { Thing: [{ name: "value", type: "uint256" }] },
-            message: { value: 1 },
-          }),
-        ],
-      }),
-    ).rejects.toMatchObject({ code: 4100 })
-    await expect(
-      provider.request({
-        method: "eth_signTypedData_v4",
-        params: [
-          address,
-          JSON.stringify({
-            domain: { name: "Widget" },
-            types: { Thing: [{ name: "value", type: "uint256" }] },
-            message: { value: 1 },
-          }),
-        ],
       }),
     ).rejects.toMatchObject({ code: 4100 })
     expect(requestWalletApproval).not.toHaveBeenCalled()
@@ -266,23 +227,5 @@ describe("RestrictedEip1193Provider", () => {
     ).rejects.toMatchObject({ code: 4100 })
     expect(listener).toHaveBeenCalledWith([])
     expect(signer.signMessage).not.toHaveBeenCalled()
-  })
-
-  it("rejects conflicting gas fields", async () => {
-    const { provider } = createProvider()
-    await expect(
-      provider.request({
-        method: "eth_sendTransaction",
-        params: [
-          {
-            from: address,
-            chainId: 1,
-            to: address,
-            gas: "0x5208",
-            gasLimit: "0x5209",
-          },
-        ],
-      }),
-    ).rejects.toMatchObject({ code: 4200 })
   })
 })
