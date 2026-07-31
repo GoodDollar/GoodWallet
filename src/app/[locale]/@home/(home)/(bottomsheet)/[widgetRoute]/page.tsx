@@ -1,7 +1,13 @@
 import { notFound } from "next/navigation"
 
 import { AuthenticatedWidgetRoute } from "@/widgets/AuthenticatedWidgetRoute"
-import { getWidgetByRoute } from "@/widgets/registry"
+import { getWidgetByRoute, WIDGETS } from "@/widgets/registry"
+
+export const dynamicParams = false
+
+export function generateStaticParams() {
+  return WIDGETS.map((widget) => ({ widgetRoute: widget.routeSlug }))
+}
 
 export default async function WidgetRoutePage({
   params,

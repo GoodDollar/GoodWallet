@@ -127,8 +127,12 @@ test("opens the registered test fixture widget from the dashboard", async ({
 test("rejects unregistered widget routes", async ({ page }) => {
   await preparePage(page, false)
   await login(page)
-  const response = await page.goto("/en/not-a-registered-widget")
-  expect(response?.status()).toBe(404)
+  await page.goto("/en/not-a-registered-widget")
+  await expect(page.getByRole("heading", { name: "404" })).toBeVisible()
+  await expect(
+    page.getByRole("heading", { name: "This page could not be found." }),
+  ).toBeVisible()
+  await expect(page.getByTestId("test-fixture-widget")).toHaveCount(0)
 })
 
 test("captures the claim verification requirement", async ({
