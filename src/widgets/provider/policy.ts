@@ -4,6 +4,8 @@ export const WIDGET_PROVIDER_METHOD_LIST = [
   "eth_accounts",
   "eth_requestAccounts",
   "eth_chainId",
+  "eth_getBalance",
+  "eth_call",
   "wallet_switchEthereumChain",
   "personal_sign",
   "eth_sendTransaction",
