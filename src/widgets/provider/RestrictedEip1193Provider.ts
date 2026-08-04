@@ -202,6 +202,9 @@ export class RestrictedEip1193Provider {
           return await this.#signMessage(params)
         case "eth_sendTransaction":
           return await this.#sendTransaction(params)
+        case "eth_getBalance":
+        case "eth_call":
+          return await this.#rpcRequest(this.#chainId, request)
         default:
           throw new WidgetProviderError(4200, "Unsupported widget request")
       }
