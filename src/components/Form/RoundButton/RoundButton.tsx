@@ -1,40 +1,23 @@
 "use client"
 
+import type { ReactNode } from "react"
 import { BsLink45Deg, BsPlusCircle } from "react-icons/bs"
 import { Icon, type IconName } from "ui"
 
 export type RoundButtonProps = {
   onClick?: () => void
-  buttonType: RoundButtonType
+  icon?: IconName
+  iconElement?: ReactNode
   text?: string
-  fill?: boolean
-}
-
-export const enum RoundButtonType {
-  Fund,
-  Send,
-  Receive,
-  GoodDollar,
-  Swap,
-  WalletConnect,
-  Predictions,
-}
-
-const buttonIcons: Record<RoundButtonType, IconName> = {
-  [RoundButtonType.Fund]: "Cash",
-  [RoundButtonType.Send]: "ArrowUpAlt",
-  [RoundButtonType.Receive]: "ArrowDownAlt",
-  [RoundButtonType.GoodDollar]: "goodDollarLogo",
-  [RoundButtonType.Swap]: "Swap",
-  [RoundButtonType.WalletConnect]: "walletConnectLogo",
-  [RoundButtonType.Predictions]: "Predictions",
+  indicator?: "connected" | "available"
 }
 
 export const RoundButton = ({
-  buttonType,
+  icon,
+  iconElement,
   onClick,
   text,
-  fill = false,
+  indicator,
 }: RoundButtonProps) => {
   return (
     <div
@@ -43,9 +26,9 @@ export const RoundButton = ({
     >
       <div className="rounded-full p-px gradient-background">
         <div className="flex aspect-square w-14 h-14 p-4 rounded-full justify-center items-center bg-[var(--token-bg)] btn-circle relative">
-          <Icon name={buttonIcons[buttonType]} size="big" color="white" />
+          {icon ? <Icon name={icon} size="big" color="white" /> : iconElement}
 
-          {fill && buttonType === RoundButtonType.WalletConnect ? (
+          {indicator === "connected" ? (
             <BsLink45Deg
               className="absolute bottom-0 right-0 text-white bg-[#1884FF] rounded"
               stroke="white"
@@ -54,7 +37,7 @@ export const RoundButton = ({
               style={{ borderRadius: "50%", padding: "3px" }}
             />
           ) : null}
-          {fill && buttonType === RoundButtonType.GoodDollar ? (
+          {indicator === "available" ? (
             <BsPlusCircle
               className="absolute bottom-0 right-0 text-white bg-[#1884FF] rounded"
               stroke="white"
