@@ -10,6 +10,9 @@ export const WIDGET_PROVIDER_METHODS = new Set([
   "eth_requestAccounts",
   "eth_chainId",
   "wallet_switchEthereumChain",
+  // Read-only methods required by AI Credits widget for balance and contract queries
+  "eth_getBalance",
+  "eth_call",
   ...WIDGET_SIGNING_METHODS,
 ])
 

@@ -65,4 +65,4 @@ tsconfig.tsbuildinfo
 
 # Codex
 codex-resume
-.agents/skills
+.agents/skillslocal-packages/

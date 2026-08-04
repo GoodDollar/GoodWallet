@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest"
 
 import {
+  WIDGETS,
   coreDashboardActions,
   createWidgetRegistry,
   defineWidget,
+  widgetDashboardActions,
 } from "./registry"
 
 const widget = defineWidget({
@@ -128,5 +130,32 @@ describe("widget registry", () => {
       "predictions",
       "walletconnect",
     ])
+  })
+
+  describe("AI Credits widget", () => {
+    it("is present in the live WIDGETS array with the correct widgetId", () => {
+      const aiCredits = WIDGETS.find(
+        (w) => w.widgetId === "goodwidget.ai-credits",
+      )
+      expect(aiCredits).toBeDefined()
+      expect(aiCredits?.routeSlug).toBe("ai-credits")
+      expect(aiCredits?.packageName).toBe("@goodwidget/ai-credits-widget")
+    })
+
+    it("passes registry validation (createWidgetRegistry does not throw)", () => {
+      const aiCredits = WIDGETS.find(
+        (w) => w.widgetId === "goodwidget.ai-credits",
+      )!
+      expect(() => createWidgetRegistry([aiCredits])).not.toThrow()
+    })
+
+    it("appears in widgetDashboardActions", () => {
+      const action = widgetDashboardActions.find(
+        (a) => a.widgetId === "goodwidget.ai-credits",
+      )
+      expect(action).toBeDefined()
+      expect(action?.routeSlug).toBe("ai-credits")
+      expect(action?.label).toBe("AI Credits")
+    })
   })
 })

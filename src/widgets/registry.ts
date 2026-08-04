@@ -3,6 +3,8 @@ import type { IconName } from "ui"
 
 import { CELO_CHAIN_ID } from "@/chain/chain-ids"
 
+import { AiCreditsIcon } from "./icons/AiCreditsIcon"
+
 import type { ReactWidgetLoader, WebComponentWidgetLoader } from "./hostTypes"
 import {
   WIDGET_EVM_CHAIN_IDS,
@@ -138,7 +140,42 @@ export const createWidgetRegistry = (
   return registry
 }
 
-const testFixtureWidget = defineWidget({
+/**
+ * AI Credits widget – allows authenticated users to purchase AI compute credits
+ * directly from the wallet dashboard using their G$ balance.
+ *
+ * Integration mode: web-component (Custom Element `ai-credits-widget`).
+ * Required EIP-1193 methods: eth_accounts, eth_chainId, eth_getBalance, eth_call,
+ *   eth_sendTransaction (for purchases).
+ */
+const aiCreditsWidget = defineWidget({
+  widgetId: "goodwidget.ai-credits",
+  packageName: "@goodwidget/ai-credits-widget",
+  packageVersion: "0.1.0",
+  routeSlug: "ai-credits",
+  displayName: "AI Credits",
+  description: "Purchase AI compute credits with your G$ balance",
+  icon: { kind: "local", render: () => <AiCreditsIcon /> },
+  integrationMode: "web-component",
+  entry: {
+    tagName: "ai-credits-widget",
+    load: () => import("@goodwidget/ai-credits-widget/register"),
+  },
+  providerPolicy: {
+    chainIds: [CELO_CHAIN_ID],
+    // eth_getBalance and eth_call are needed for balance checks and contract reads;
+    // eth_sendTransaction is required to submit credit-purchase transactions.
+    requiredMethods: [
+      "eth_accounts",
+      "eth_chainId",
+      "eth_getBalance",
+      "eth_call",
+      "eth_sendTransaction",
+    ],
+  },
+})
+
+
   widgetId: "goodwidget.test-fixture",
   packageName: "@goodwidget/test-fixture",
   packageVersion: "0.0.0",
@@ -160,7 +197,7 @@ const testFixtureWidget = defineWidget({
 export const WIDGETS: readonly RegisteredWidget[] =
   process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE === "true"
     ? [testFixtureWidget]
-    : []
+    : [aiCreditsWidget]
 export const widgetRegistry = createWidgetRegistry(WIDGETS)
 
 export const getWidgetByRoute = (

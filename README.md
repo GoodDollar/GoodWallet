@@ -92,3 +92,18 @@ yarn dev
 Other scripts: `yarn build`, `yarn start`, `yarn test`, `yarn lint`.
 
 Then open http://localhost:3000 in your browser
+
+## GoodWidget local-tarball workflow
+
+Widget packages that are not yet published to npm (e.g. `@goodwidget/ai-credits-widget`)
+must be installed from a local tarball built inside the
+[GoodDollar/GoodWidget](https://github.com/GoodDollar/GoodWidget) monorepo.
+
+1. Clone `GoodDollar/GoodWidget` alongside this repo.
+2. Inside the GoodWidget monorepo, pack the widget:
+   ```sh
+   pnpm --filter @goodwidget/ai-credits-widget pack --pack-destination /path/to/GoodWallet/local-packages
+   ```
+3. The tarball lands at `local-packages/ai-credits-widget.tgz` (already referenced in `package.json`).
+4. Run `yarn install` in this repo to link the tarball.
+5. The path `local-packages/*.tgz` is git-ignored; do **not** commit tarballs.
