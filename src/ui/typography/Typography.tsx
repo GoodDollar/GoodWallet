@@ -66,6 +66,7 @@ export default function Typography(props: {
   truncate?: boolean
   noWrap?: boolean
   className?: string
+  translate?: "no"
 }) {
   const Element = props.el ?? "span"
   const [size, weight] = props.style?.split("-") ?? ["14", "400"]
@@ -84,6 +85,7 @@ export default function Typography(props: {
         props.className || "",
       ].join(" ")}
       style={{ color, fontSize, fontWeight, textAlign, whiteSpace }}
+      translate={props.translate}
     >
       {props.children}
     </Element>

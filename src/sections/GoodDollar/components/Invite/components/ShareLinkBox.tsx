@@ -94,7 +94,7 @@ export default function ShareLinkBox(props: {
 
       {hasInviteCode ? (
         <>
-          <Text style="14-400" color="text-tertiary">
+          <Text style="14-400" color="text-tertiary" translate="no">
             {myInvLink}
           </Text>
 
