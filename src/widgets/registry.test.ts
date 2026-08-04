@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest"
 
+import { WIDGET_PROVIDER_METHOD_LIST } from "./provider/policy"
 import {
-  WIDGETS,
   coreDashboardActions,
   createWidgetRegistry,
   defineWidget,
+  WIDGETS,
   widgetDashboardActions,
 } from "./registry"
 
@@ -145,7 +146,9 @@ describe("widget registry", () => {
     it("passes registry validation (createWidgetRegistry does not throw)", () => {
       const aiCredits = WIDGETS.find(
         (w) => w.widgetId === "goodwidget.ai-credits",
-      )!
+      )
+      expect(aiCredits).toBeDefined()
+      if (!aiCredits) return
       expect(() => createWidgetRegistry([aiCredits])).not.toThrow()
     })
 
@@ -156,6 +159,15 @@ describe("widget registry", () => {
       expect(action).toBeDefined()
       expect(action?.routeSlug).toBe("ai-credits")
       expect(action?.label).toBe("AI Credits")
+    })
+
+    it("uses the shared provider method allowlist", () => {
+      const aiCredits = WIDGETS.find(
+        (w) => w.widgetId === "goodwidget.ai-credits",
+      )
+      expect(aiCredits?.providerPolicy.requiredMethods).toEqual([
+        ...WIDGET_PROVIDER_METHOD_LIST,
+      ])
     })
   })
 })

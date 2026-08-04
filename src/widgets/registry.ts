@@ -7,6 +7,7 @@ import type { ReactWidgetLoader, WebComponentWidgetLoader } from "./hostTypes"
 import { AiCreditsIcon } from "./icons/AiCreditsIcon"
 import {
   WIDGET_EVM_CHAIN_IDS,
+  WIDGET_PROVIDER_METHOD_LIST,
   WIDGET_PROVIDER_METHODS,
 } from "./provider/policy"
 
@@ -140,14 +141,6 @@ export const createWidgetRegistry = (
   return registry
 }
 
-/**
- * AI Credits widget – allows authenticated users to purchase AI compute credits
- * directly from the wallet dashboard using their G$ balance.
- *
- * Integration mode: web-component (Custom Element `ai-credits-widget`).
- * Required EIP-1193 methods: eth_accounts, eth_chainId, eth_getBalance, eth_call,
- *   eth_sendTransaction (for purchases).
- */
 const aiCreditsWidget = defineWidget({
   widgetId: "goodwidget.ai-credits",
   packageName: "@goodwidget/ai-credits-widget",
@@ -163,16 +156,7 @@ const aiCreditsWidget = defineWidget({
   },
   providerPolicy: {
     chainIds: [CELO_CHAIN_ID],
-    requiredMethods: [
-      "eth_accounts",
-      "eth_requestAccounts",
-      "eth_chainId",
-      "wallet_switchEthereumChain",
-      "eth_getBalance",
-      "eth_call",
-      "personal_sign",
-      "eth_sendTransaction",
-    ],
+    requiredMethods: WIDGET_PROVIDER_METHOD_LIST,
   },
   elementProps: {
     backendUrl: process.env.NEXT_PUBLIC_AI_CREDITS_BACKEND_URL,
