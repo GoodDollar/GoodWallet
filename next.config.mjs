@@ -1,5 +1,5 @@
 // Injected content via Sentry wizard below
-import { withSentryConfig } from "@sentry/nextjs"
+import { withSentryConfig } from "@sentry/nextjs";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -9,10 +9,15 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA: process.env.VERCEL_GIT_COMMIT_SHA,
   },
+  turbopack: {
+    // Keep Turbopack scoped to this checkout without baking a contributor's
+    // local path into CI, Vercel, or another maintainer's environment.
+    root: process.cwd(),
+  },
   images: {
     minimumCacheTTL: 31536000,
     remotePatterns: [
-       {
+      {
         protocol: "https",
         hostname: "**.amazonaws.com",
         port: "",
@@ -36,8 +41,8 @@ const nextConfig = {
       source: "/privacy-policy",
       destination: "https://gooddollar.org/privacy-policy",
       permanent: true,
-    }
-  ], 
+    },
+  ],
   headers: async () => {
     const headers = [
       {
@@ -50,21 +55,21 @@ const nextConfig = {
           },
         ],
       },
-    ]
+    ];
     if (process.env.VERCEL_NO_INDEX === "true") {
       headers.push({
         headers: [
           {
-            key: 'X-Robots-Tag',
-            value: 'noindex',
+            key: "X-Robots-Tag",
+            value: "noindex",
           },
         ],
-        source: '/:path*',
+        source: "/:path*",
       });
     }
     return headers;
   },
-}
+};
 
 const nextConfigWithSentry = withSentryConfig(nextConfig, {
   // For all available options, see:
@@ -97,9 +102,9 @@ const nextConfigWithSentry = withSentryConfig(nextConfig, {
     automaticVercelMonitors: false,
     treeshake: {
       // Automatically tree-shake Sentry logger statements to reduce bundle size
-      removeDebugLogging: true
-    }
-  }
-})
+      removeDebugLogging: true,
+    },
+  },
+});
 
-export default nextConfigWithSentry
+export default nextConfigWithSentry;

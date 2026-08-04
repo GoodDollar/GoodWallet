@@ -19,20 +19,24 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Install Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 24
 
       - name: Run install
-        uses: borales/actions-yarn@v5
+        uses: borales/actions-yarn@3766bb1335b98fb13c60eaf358fe20811b730a88 # v5
         with:
-          cmd: install
+          cmd: install --immutable
+
+      - name: Validate exact GoodWidget dependencies
+        # Widgets execute in-process, so PRs must pin the bytes reviewers audit.
+        run: yarn widget-deps:check
 
       - name: Run Biome Check
-        uses: borales/actions-yarn@v5
+        uses: borales/actions-yarn@3766bb1335b98fb13c60eaf358fe20811b730a88 # v5
         with:
           cmd: biome:verify:all
 
@@ -42,7 +46,7 @@ jobs:
         run: yarn build
 
       - name: Run Tests
-        uses: borales/actions-yarn@v5
+        uses: borales/actions-yarn@3766bb1335b98fb13c60eaf358fe20811b730a88 # v5
         with:
           cmd: test
 
@@ -50,15 +54,26 @@ jobs:
         run: yarn playwright install --with-deps chromium
 
       - name: Run Playwright screenshots
-        uses: borales/actions-yarn@v5
+        uses: borales/actions-yarn@3766bb1335b98fb13c60eaf358fe20811b730a88 # v5
         with:
           cmd: test:e2e
+
       - name: Upload Playwright screenshots and failure artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: playwright-artifacts
           path: |
             tests-playwright/screenshots/
             tests-playwright/artifacts/
           if-no-files-found: warn
+  dependency-review:
+    name: Dependency review
+    # Surface transitive dependency changes separately from application tests.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
