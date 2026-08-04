@@ -36,6 +36,7 @@ type RegisteredWidgetBase = {
     chainIds: readonly number[]
     requiredMethods: readonly string[]
   }
+  elementProps?: Record<string, unknown>
 }
 
 export type RegisteredWidget = RegisteredWidgetBase &
@@ -172,6 +173,11 @@ const aiCreditsWidget = defineWidget({
       "personal_sign",
       "eth_sendTransaction",
     ],
+  },
+  elementProps: {
+    backendUrl: process.env.NEXT_PUBLIC_AI_CREDITS_BACKEND_URL,
+    fundingVaultAddress:
+      process.env.NEXT_PUBLIC_AI_CREDITS_FUNDING_VAULT_ADDRESS,
   },
 })
 

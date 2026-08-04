@@ -10,25 +10,26 @@ import type { RestrictedEip1193Provider } from "./provider/RestrictedEip1193Prov
 describe("Web Component host properties", () => {
   it("hands objects over by identity and clears Wallet references on cleanup", () => {
     const provider = {} as RestrictedEip1193Provider
-    const element = {} as HostedWidgetElement
+    const element = {} as HostedWidgetElement & Record<string, unknown>
     const themeOverrides = { color: { primary: "#00AFFE" } }
     const config = { environment: "production" }
-    const backendUrl = "https://api.example.com"
-    const fundingVaultAddress = "0xfundingvault"
+    const elementProps = {
+      backendUrl: "https://api.example.com",
+      fundingVaultAddress: "0xfundingvault",
+    }
 
     assignHostedWidgetProperties(element, {
       provider,
       themeOverrides,
       config,
-      backendUrl,
-      fundingVaultAddress,
+      elementProps,
     })
 
     expect(element.provider).toBe(provider)
     expect(element.themeOverrides).toBe(themeOverrides)
     expect(element.config).toBe(config)
-    expect(element.backendUrl).toBe(backendUrl)
-    expect(element.fundingVaultAddress).toBe(fundingVaultAddress)
+    expect(element.backendUrl).toBe(elementProps.backendUrl)
+    expect(element.fundingVaultAddress).toBe(elementProps.fundingVaultAddress)
 
     clearHostedWidgetProperties(element)
 

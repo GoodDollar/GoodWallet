@@ -1321,7 +1321,7 @@ __metadata:
 
 "@goodwidget/ai-credits-widget@file:./local-packages/ai-credits-widget.tgz::locator=goodwallet%40workspace%3A.":
   version: 0.1.0
-  resolution: "@goodwidget/ai-credits-widget@file:./local-packages/ai-credits-widget.tgz#./local-packages/ai-credits-widget.tgz::hash=f61487&locator=goodwallet%40workspace%3A."
+  resolution: "@goodwidget/ai-credits-widget@file:./local-packages/ai-credits-widget.tgz#./local-packages/ai-credits-widget.tgz::hash=920230&locator=goodwallet%40workspace%3A."
   dependencies:
     "@goodsdks/citizen-sdk": "npm:1.2.7"
     "@goodwidget/core": "npm:0.1.0"
@@ -1331,7 +1331,7 @@ __metadata:
   peerDependencies:
     react: ">=18.0.0"
     react-dom: ">=18.0.0"
-  checksum: 10c0/672241fe667fd1fae192656f0309a42e0d80f0b9a0dae11c4381d2bdab3f433cb8377d7b1542c456b1482da0b2d9764829129936cdf5ae1ef29355998eb62da7
+  checksum: 10c0/cc94f1b0ceb8b467ab7168637e78dab5d30f176e07141c04e780ee6ef102ede404f4fad3678ded30398a5b2df22bca9183289b1ec2b5fc59c78841bce2bbab2a
   languageName: node
   linkType: hard
 

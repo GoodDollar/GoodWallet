@@ -100,8 +100,7 @@ export const WebComponentWidgetHost = ({
   provider,
   themeOverrides,
   config,
-  backendUrl,
-  fundingVaultAddress,
+  elementProps,
 }: WidgetHostProps & {
   load: WebComponentWidgetLoader
   tagName: string
@@ -146,21 +145,13 @@ export const WebComponentWidgetHost = ({
       provider,
       themeOverrides,
       config,
-      backendUrl,
-      fundingVaultAddress,
+      elementProps,
     })
 
     return () => {
       clearHostedWidgetProperties(element)
     }
-  }, [
-    backendUrl,
-    config,
-    fundingVaultAddress,
-    provider,
-    registeredTagName,
-    themeOverrides,
-  ])
+  }, [config, elementProps, provider, registeredTagName, themeOverrides])
 
   if (loadError) throw loadError
   if (!registeredTagName) return <LoadingSpinner />
