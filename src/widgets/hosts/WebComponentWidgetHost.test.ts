@@ -60,6 +60,50 @@ describe("Custom Element registration", () => {
     ).rejects.toThrow("already registered")
   })
 
+  it("reuses a tag that was already defined before host registration", async () => {
+    const ctor = class {} as CustomElementConstructor
+    vi.stubGlobal("customElements", {
+      define: vi.fn(),
+      get: vi.fn(() => ctor),
+    })
+    const load = vi.fn(async () => ({
+      goodWidgetMetadata: {
+        packageName: "@goodwidget/test-widget",
+        packageVersion: "1.0.0",
+      },
+      register: vi.fn(async (tagName?: string) => tagName ?? "gw-existing"),
+    }))
+
+    await expect(
+      registerElement(load, "gw-existing", "@goodwidget/test-widget", "1.0.0"),
+    ).resolves.toBe("gw-existing")
+    expect(load).not.toHaveBeenCalled()
+  })
+
+  it("treats a define race as success when the tag ends up registered", async () => {
+    const get = vi.fn<() => CustomElementConstructor | undefined>(
+      () => undefined,
+    )
+    vi.stubGlobal("customElements", { define: vi.fn(), get })
+    const load = vi.fn(async () => ({
+      goodWidgetMetadata: {
+        packageName: "@goodwidget/test-widget",
+        packageVersion: "1.0.0",
+      },
+      register: async () => {
+        get.mockReturnValue(class {} as CustomElementConstructor)
+        throw new DOMException(
+          'the name "gw-racy" has already been used with this registry',
+          "NotSupportedError",
+        )
+      },
+    }))
+
+    await expect(
+      registerElement(load, "gw-racy", "@goodwidget/test-widget", "1.0.0"),
+    ).resolves.toBe("gw-racy")
+  })
+
   it("rejects module metadata that does not match the registry", async () => {
     const get = vi.fn(() => undefined)
     vi.stubGlobal("customElements", { define: vi.fn(), get })

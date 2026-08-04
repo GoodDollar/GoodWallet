@@ -3,11 +3,12 @@
   height: 100%;
   background-color: var(--token-bg-overlay);
   position: fixed;
-  top: 0;
-  z-index: 100;
+  inset: 0;
+  z-index: 1100;
   display: flex;
   align-items: center;
-  max-width: 768px;
+  justify-content: center;
+  max-width: none;
 }
 
 .dialogContainer {

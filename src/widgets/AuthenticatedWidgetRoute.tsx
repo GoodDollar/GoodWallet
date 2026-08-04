@@ -15,10 +15,14 @@ export const AuthenticatedWidgetRoute = ({
   widgetId,
   themeOverrides,
   config,
+  backendUrl,
+  fundingVaultAddress,
 }: {
   widgetId: string
   themeOverrides?: WidgetHostProps["themeOverrides"]
   config?: WidgetHostProps["config"]
+  backendUrl?: string
+  fundingVaultAddress?: string
 }) => {
   const { signer, isLoading } = useSessionContext()
   const widget = widgetRegistry.get(widgetId)
@@ -46,6 +50,8 @@ export const AuthenticatedWidgetRoute = ({
         widget={widget}
         themeOverrides={themeOverrides}
         config={config}
+        backendUrl={backendUrl}
+        fundingVaultAddress={fundingVaultAddress}
       />
     </WidgetProvider>
   )
@@ -55,10 +61,14 @@ const MountedWidget = ({
   widget,
   themeOverrides,
   config,
+  backendUrl,
+  fundingVaultAddress,
 }: {
   widget: RegisteredWidget
   themeOverrides?: WidgetHostProps["themeOverrides"]
   config?: WidgetHostProps["config"]
+  backendUrl?: string
+  fundingVaultAddress?: string
 }) => {
   const provider = useWidgetProvider()
 
@@ -68,6 +78,8 @@ const MountedWidget = ({
       provider={provider}
       themeOverrides={themeOverrides}
       config={config}
+      backendUrl={backendUrl}
+      fundingVaultAddress={fundingVaultAddress}
     />
   )
 }

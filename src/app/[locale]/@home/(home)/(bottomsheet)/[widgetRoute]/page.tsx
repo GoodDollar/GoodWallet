@@ -18,5 +18,20 @@ export default async function WidgetRoutePage({
   const widget = getWidgetByRoute(widgetRoute)
   if (!widget) notFound()
 
-  return <AuthenticatedWidgetRoute widgetId={widget.widgetId} />
+  const backendUrl =
+    widget.routeSlug === "ai-credits"
+      ? process.env.NEXT_PUBLIC_AI_CREDITS_BACKEND_URL
+      : undefined
+  const fundingVaultAddress =
+    widget.routeSlug === "ai-credits"
+      ? process.env.NEXT_PUBLIC_AI_CREDITS_FUNDING_VAULT_ADDRESS
+      : undefined
+
+  return (
+    <AuthenticatedWidgetRoute
+      widgetId={widget.widgetId}
+      backendUrl={backendUrl}
+      fundingVaultAddress={fundingVaultAddress}
+    />
+  )
 }

@@ -1,11 +1,10 @@
-import type { ReactNode } from "react"
+import { createElement, type ReactNode } from "react"
 import type { IconName } from "ui"
 
 import { CELO_CHAIN_ID } from "@/chain/chain-ids"
 
-import { AiCreditsIcon } from "./icons/AiCreditsIcon"
-
 import type { ReactWidgetLoader, WebComponentWidgetLoader } from "./hostTypes"
+import { AiCreditsIcon } from "./icons/AiCreditsIcon"
 import {
   WIDGET_EVM_CHAIN_IDS,
   WIDGET_PROVIDER_METHODS,
@@ -155,7 +154,7 @@ const aiCreditsWidget = defineWidget({
   routeSlug: "ai-credits",
   displayName: "AI Credits",
   description: "Purchase AI compute credits with your G$ balance",
-  icon: { kind: "local", render: () => <AiCreditsIcon /> },
+  icon: { kind: "local", render: () => createElement(AiCreditsIcon) },
   integrationMode: "web-component",
   entry: {
     tagName: "ai-credits-widget",
@@ -163,19 +162,20 @@ const aiCreditsWidget = defineWidget({
   },
   providerPolicy: {
     chainIds: [CELO_CHAIN_ID],
-    // eth_getBalance and eth_call are needed for balance checks and contract reads;
-    // eth_sendTransaction is required to submit credit-purchase transactions.
     requiredMethods: [
       "eth_accounts",
+      "eth_requestAccounts",
       "eth_chainId",
+      "wallet_switchEthereumChain",
       "eth_getBalance",
       "eth_call",
+      "personal_sign",
       "eth_sendTransaction",
     ],
   },
 })
 
-
+const testFixtureWidget = defineWidget({
   widgetId: "goodwidget.test-fixture",
   packageName: "@goodwidget/test-fixture",
   packageVersion: "0.0.0",

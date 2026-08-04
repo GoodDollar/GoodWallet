@@ -13,21 +13,29 @@ describe("Web Component host properties", () => {
     const element = {} as HostedWidgetElement
     const themeOverrides = { color: { primary: "#00AFFE" } }
     const config = { environment: "production" }
+    const backendUrl = "https://api.example.com"
+    const fundingVaultAddress = "0xfundingvault"
 
     assignHostedWidgetProperties(element, {
       provider,
       themeOverrides,
       config,
+      backendUrl,
+      fundingVaultAddress,
     })
 
     expect(element.provider).toBe(provider)
     expect(element.themeOverrides).toBe(themeOverrides)
     expect(element.config).toBe(config)
+    expect(element.backendUrl).toBe(backendUrl)
+    expect(element.fundingVaultAddress).toBe(fundingVaultAddress)
 
     clearHostedWidgetProperties(element)
 
     expect(element.provider).toBeNull()
     expect(element.themeOverrides).toBeUndefined()
     expect(element.config).toBeUndefined()
+    expect(element.backendUrl).toBeUndefined()
+    expect(element.fundingVaultAddress).toBeUndefined()
   })
 })

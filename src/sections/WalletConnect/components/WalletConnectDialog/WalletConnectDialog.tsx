@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
+import { createPortal } from "react-dom"
 import { Button } from "ui"
 import { useSnapshot } from "valtio"
 
@@ -15,6 +16,7 @@ import { ErrorDialog } from "./ErrorDialog"
 import { GenericDialog } from "./GenericDialog"
 import { SessionProposalDialog } from "./SessionProposalDialog"
 import { SessionRequestDialog } from "./SessionRequestDialog"
+import styles from "./WalletConnectDialog.module.css"
 
 const renderDialog = (dialog: WalletConnectDialogType) => {
   switch (dialog.type) {
@@ -31,19 +33,27 @@ const renderDialog = (dialog: WalletConnectDialogType) => {
 
 export const WalletConnectDialog = () => {
   const { dialog, status, exiting } = useSnapshot(walletConnectDialogStore)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    document.body.style.overflow = "hidden"
-    return () => {
-      document.body.style.overflow = "auto"
-    }
+    setMounted(true)
+    return () => setMounted(false)
   }, [])
 
-  if (status !== "pending") return null
+  useEffect(() => {
+    if (status !== "pending") return
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    return () => {
+      document.body.style.overflow = previousOverflow
+    }
+  }, [status])
 
-  return (
+  if (!mounted || status !== "pending") return null
+
+  return createPortal(
     <div
-      className={dialogStyles.dialogOverlay}
+      className={styles.dialogOverlay}
       onClick={(e) => {
         updateWalletConnectDialogStatus("rejected")
         e.stopPropagation()
@@ -53,7 +63,9 @@ export const WalletConnectDialog = () => {
         className={[
           dialogStyles.dialogContainer,
           exiting && dialogStyles.dialogContainerExiting,
-        ].join(" ")}
+        ]
+          .filter(Boolean)
+          .join(" ")}
         onClick={(e) => e.stopPropagation()}
       >
         {renderDialog(dialog as WalletConnectDialogType)}
@@ -75,6 +87,7 @@ export const WalletConnectDialog = () => {
           ) : null}
         </div>
       </dialog>
-    </div>
+    </div>,
+    document.body,
   )
 }

@@ -6,6 +6,8 @@ export type WidgetHostProps = {
   provider: RestrictedEip1193Provider
   themeOverrides?: Record<string, unknown>
   config?: Record<string, unknown>
+  backendUrl?: string
+  fundingVaultAddress?: string
 }
 
 export type WidgetModuleMetadata = {
@@ -50,4 +52,6 @@ export type HostedWidgetElement = HTMLElement & {
   provider: RestrictedEip1193Provider | null
   themeOverrides?: Record<string, unknown>
   config?: Record<string, unknown>
+  backendUrl?: string
+  fundingVaultAddress?: string
 }
