@@ -53,7 +53,7 @@ describe("widget registry", () => {
   })
 
   it("accepts web-component and react integration modes", () => {
-    expect(widget.integrationMode).toBeUndefined()
+    expect("integrationMode" in widget).toBe(false)
     expect(reactWidget.integrationMode).toBe("react")
     expect(createWidgetRegistry([widget, reactWidget]).size).toBe(2)
   })
