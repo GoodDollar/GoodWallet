@@ -26,17 +26,36 @@ jobs:
         with:
           node-version: 24
 
+      - name: Enable Corepack
+        run: corepack enable
+
       - name: Run install
-        uses: borales/actions-yarn@v5
-        with:
-          cmd: install
+        run: yarn install --immutable
 
       - name: Run Biome Check
         uses: borales/actions-yarn@v5
         with:
           cmd: biome:verify:all
 
+      - name: Pull Vercel Preview environment
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: npx --yes vercel@latest pull --yes --environment=preview --token="$VERCEL_TOKEN"
+
+      - name: Build Vercel prebuilt artifact
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          NODE_OPTIONS: --max_old_space_size=8192
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: npx --yes vercel@latest build --token="$VERCEL_TOKEN"
+
       - name: Run Build
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.repository
         env:
           NODE_OPTIONS: --max_old_space_size=4096
         run: yarn build
@@ -53,6 +72,15 @@ jobs:
         uses: borales/actions-yarn@v5
         with:
           cmd: test:e2e
+
+      - name: Deploy Vercel prebuilt Preview
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: npx --yes vercel@latest deploy --prebuilt --token="$VERCEL_TOKEN"
+
       - name: Upload Playwright screenshots and failure artifacts
         if: always()
         uses: actions/upload-artifact@v4

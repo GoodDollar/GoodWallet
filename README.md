@@ -93,6 +93,18 @@ Other scripts: `yarn build`, `yarn start`, `yarn test`, `yarn lint`.
 
 Then open http://localhost:3000 in your browser
 
+## Preview deployments
+
+Vercel Git deployments are disabled in `vercel.json`. Pull requests targeting
+`main` are built in GitHub Actions and deployed to Vercel as prebuilt Preview
+artifacts after the checks pass.
+
+The repository needs these GitHub Actions secrets:
+
+- `VERCEL_TOKEN`
+- `VERCEL_ORG_ID`
+- `VERCEL_PROJECT_ID`
+
 ## GoodWidget visibility
 
 Widget routes are registered independently from dashboard buttons. For example,
