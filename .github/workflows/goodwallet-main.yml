@@ -33,20 +33,20 @@ jobs:
         with:
           cmd: biome:verify:all
 
-      - name: Pull Vercel Production environment
+      - name: Pull Vercel Preview environment
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: npx --yes vercel@latest pull --yes --environment=production --token="$VERCEL_TOKEN"
+        run: npx --yes vercel@latest pull --yes --environment=preview --token="$VERCEL_TOKEN"
 
-      - name: Build Vercel prebuilt Production artifact
+      - name: Build Vercel prebuilt Preview artifact
         env:
           NODE_OPTIONS: --max_old_space_size=8192
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: npx --yes vercel@latest build --prod --token="$VERCEL_TOKEN"
+        run: npx --yes vercel@latest build --target=preview --token="$VERCEL_TOKEN"
 
       - name: Run Tests
         uses: borales/actions-yarn@v5
@@ -61,12 +61,12 @@ jobs:
         with:
           cmd: test:e2e
 
-      - name: Deploy Vercel prebuilt Production
+      - name: Deploy Vercel prebuilt Preview
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: npx --yes vercel@latest deploy --prebuilt --prod --token="$VERCEL_TOKEN"
+        run: npx --yes vercel@latest deploy --prebuilt --target=preview --token="$VERCEL_TOKEN"
 
       - name: Upload Playwright screenshots and failure artifacts
         if: always()

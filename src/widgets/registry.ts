@@ -162,7 +162,7 @@ const aiCreditsWidget = defineWidget({
   description: "Purchase AI compute credits with your G$ balance",
   dashboardVisible: readBooleanEnv(
     "NEXT_PUBLIC_AI_CREDITS_WIDGET_DASHBOARD_ENABLED",
-    true,
+    false,
   ),
   icon: { kind: "local", render: () => createElement(AiCreditsIcon) },
   integrationMode: "web-component",

@@ -98,10 +98,10 @@ Then open http://localhost:3000 in your browser
 Vercel Git deployments are disabled in `vercel.json`. Pull requests targeting
 `main` are handled by the Preview workflow and deployed as prebuilt Preview
 artifacts after the checks pass. Pushes to `main` are handled by the main branch
-workflow and deployed as prebuilt Production artifacts. Pushes to `production`
-use a separate release workflow with the same prebuilt Production deployment
-steps, preserving the existing promotion-by-merge process without relying on
-Vercel Git deployments. Domains remain managed by Vercel.
+workflow and deployed as prebuilt Preview artifacts. Pushes to `production` use
+a separate release workflow with prebuilt Production deployment steps,
+preserving the existing promotion-by-merge process without relying on Vercel
+Git deployments. Domains remain managed by Vercel.
 
 The repository needs these GitHub Actions secrets:
 
@@ -112,10 +112,11 @@ The repository needs these GitHub Actions secrets:
 ## GoodWidget visibility
 
 Widget routes are registered independently from dashboard buttons. For example,
-setting `NEXT_PUBLIC_AI_CREDITS_WIDGET_DASHBOARD_ENABLED=false` hides the AI
-Credits button while keeping the authenticated `/{locale}/ai-credits` path
-available. `NEXT_PUBLIC_*` values are read during the Next.js build, so a Vercel
-environment change requires a new deployment/redeploy.
+setting `NEXT_PUBLIC_AI_CREDITS_WIDGET_DASHBOARD_ENABLED=true` shows the AI
+Credits button; it is hidden when unset or set to `false`, while the authenticated
+`/{locale}/ai-credits` path remains available. `NEXT_PUBLIC_*` values are read
+during the Next.js build, so a Vercel environment change requires a new
+deployment/redeploy.
 
 ## GoodWidget local-tarball workflow
 
