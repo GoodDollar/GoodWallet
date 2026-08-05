@@ -33,17 +33,10 @@ export type WebComponentWidgetLoader = () => Promise<WebComponentWidgetModule>
 export const assertWidgetModuleMetadata = (
   module: WidgetModule,
   packageName: string,
-  packageVersion: string,
 ): void => {
   const metadata = module.goodWidgetMetadata
-  if (
-    !metadata ||
-    metadata.packageName !== packageName ||
-    metadata.packageVersion !== packageVersion
-  ) {
-    throw new Error(
-      `Widget module identity mismatch: expected ${packageName}@${packageVersion}`,
-    )
+  if (!metadata || metadata.packageName !== packageName) {
+    throw new Error(`Widget module identity mismatch: expected ${packageName}`)
   }
 }
 

@@ -57,7 +57,7 @@ export const registerElement = (
 
   const promise = load()
     .then(async (module) => {
-      assertWidgetModuleMetadata(module, packageName, packageVersion)
+      assertWidgetModuleMetadata(module, packageName)
       if (customElements.get(tagName)) {
         return tagName
       }

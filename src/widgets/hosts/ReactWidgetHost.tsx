@@ -35,7 +35,7 @@ export const ReactWidgetHost = ({
     load()
       .then((module) => {
         if (!isMounted) return
-        assertWidgetModuleMetadata(module, packageName, packageVersion)
+        assertWidgetModuleMetadata(module, packageName)
         const exportedComponent = resolveReactWidget(module, exportName)
         setComponent(() => exportedComponent)
       })

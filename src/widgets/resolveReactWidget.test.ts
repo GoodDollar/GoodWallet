@@ -40,7 +40,21 @@ describe("React widget export resolution", () => {
     ).toThrow("does not export React component GoodReserveWidget")
   })
 
-  it("rejects module metadata that does not match the registry", () => {
+  it("rejects module metadata whose package name does not match the registry", () => {
+    expect(() =>
+      assertWidgetModuleMetadata(
+        {
+          goodWidgetMetadata: {
+            packageName: "@goodwidget/other-widget",
+            packageVersion: "1.0.0",
+          },
+        },
+        "@goodwidget/react-widget",
+      ),
+    ).toThrow("expected @goodwidget/react-widget")
+  })
+
+  it("allows a version mismatch when the package name matches", () => {
     expect(() =>
       assertWidgetModuleMetadata(
         {
@@ -50,8 +64,7 @@ describe("React widget export resolution", () => {
           },
         },
         "@goodwidget/react-widget",
-        "1.0.0",
       ),
-    ).toThrow("expected @goodwidget/react-widget@1.0.0")
+    ).not.toThrow()
   })
 })
