@@ -150,6 +150,33 @@ describe("widget registry", () => {
     )
   })
 
+  it("registers the Superfluid campaign widget in production", () => {
+    const superfluid = WIDGETS.find(
+      (widget) => widget.widgetId === "goodwidget.superfluid-campaign",
+    )
+    expect(superfluid).toBeDefined()
+    expect(superfluid).toMatchObject({
+      widgetId: "goodwidget.superfluid-campaign",
+      packageName: "@goodwidget/superfluid-campaign-widget",
+      packageVersion: "0.1.2",
+      routeSlug: "superfluid-campaign",
+      entry: { tagName: "gw-superfluid-campaign" },
+      providerPolicy: {
+        chainIds: [42220, 122, 50, 8453],
+      },
+    })
+    const action = widgetDashboardActions.find(
+      (dashboardAction) =>
+        dashboardAction.widgetId === "goodwidget.superfluid-campaign",
+    )
+    if (superfluid?.dashboardVisible === false) {
+      expect(action).toBeUndefined()
+    } else {
+      expect(action).toBeDefined()
+      expect(action?.routeSlug).toBe("superfluid-campaign")
+    }
+  })
+
   describe("AI Credits widget", () => {
     it("is present in the live WIDGETS array with the correct widgetId", () => {
       const aiCredits = WIDGETS.find(

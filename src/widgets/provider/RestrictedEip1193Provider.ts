@@ -115,7 +115,9 @@ export class RestrictedEip1193Provider {
     )
     if (unsupportedMethods.length > 0) {
       throw new Error(
-        `Widget requires unsupported provider methods: ${unsupportedMethods.join(", ")}`,
+        `Widget requires unsupported provider methods: ${unsupportedMethods.join(
+          ", ",
+        )}`,
       )
     }
 

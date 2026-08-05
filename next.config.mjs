@@ -6,6 +6,8 @@ const nextConfig = {
   reactStrictMode: true,
 
   transpilePackages: [
+    "@goodwidget/superfluid-campaign-widget",
+    "@goodwidget/citizen-claim-widget",
     "@goodwidget/ai-credits-widget",
     "@goodwidget/core",
     "@goodwidget/embed",
@@ -41,7 +43,7 @@ const nextConfig = {
   images: {
     minimumCacheTTL: 31536000,
     remotePatterns: [
-       {
+      {
         protocol: "https",
         hostname: "**.amazonaws.com",
         port: "",
@@ -65,8 +67,8 @@ const nextConfig = {
       source: "/privacy-policy",
       destination: "https://gooddollar.org/privacy-policy",
       permanent: true,
-    }
-  ], 
+    },
+  ],
   headers: async () => {
     const headers = [
       {
@@ -76,7 +78,8 @@ const nextConfig = {
         headers: [
           {
             key: "Content-Security-Policy",
-            value: "frame-ancestors 'self' https://delta.app https://*.delta.app;", 
+            value:
+              "frame-ancestors 'self' https://delta.app https://*.delta.app;",
           },
         ],
       },
@@ -90,21 +93,21 @@ const nextConfig = {
           },
         ],
       },
-    ]
+    ];
     if (process.env.VERCEL_NO_INDEX === "true") {
       headers.push({
         headers: [
           {
-            key: 'X-Robots-Tag',
-            value: 'noindex',
+            key: "X-Robots-Tag",
+            value: "noindex",
           },
         ],
-        source: '/:path*',
+        source: "/:path*",
       });
     }
     return headers;
   },
-}
+};
 
 const nextConfigWithSentry = withSentryConfig(nextConfig, {
   // For all available options, see:
@@ -137,9 +140,9 @@ const nextConfigWithSentry = withSentryConfig(nextConfig, {
     automaticVercelMonitors: false,
     treeshake: {
       // Automatically tree-shake Sentry logger statements to reduce bundle size
-      removeDebugLogging: true
-    }
-  }
-})
+      removeDebugLogging: true,
+    },
+  },
+});
 
-export default nextConfigWithSentry
+export default nextConfigWithSentry;

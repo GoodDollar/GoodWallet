@@ -1335,6 +1335,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@goodwidget/citizen-claim-widget@npm:0.2.0":
+  version: 0.2.0
+  resolution: "@goodwidget/citizen-claim-widget@npm:0.2.0"
+  dependencies:
+    "@goodsdks/citizen-sdk": "npm:1.2.7"
+    "@goodwidget/core": "npm:0.1.4"
+    "@goodwidget/embed": "npm:0.1.4"
+    "@goodwidget/ui": "npm:0.1.4"
+    viem: "npm:^2.0.0"
+  peerDependencies:
+    react: ">=18.0.0"
+    react-dom: ">=18.0.0"
+  checksum: 10c0/b3b4ecd308eb922274ba3339c8509aa0e58e403488fb5403a8fdaf2153519395a5ae273e8578f0c22148eca7fe736a6fea6fd005d2d8224eb988ad07b5a869b4
+  languageName: node
+  linkType: hard
+
 "@goodwidget/core@npm:0.1.4":
   version: 0.1.4
   resolution: "@goodwidget/core@npm:0.1.4"
@@ -1367,6 +1383,22 @@ __metadata:
     react: ">=18.0.0"
     react-dom: ">=18.0.0"
   checksum: 10c0/1d6c66804ee2541c180c7311e40dbc462ee0e9928867e50caf9fa48dbf42cbdda37c45f665550b0a592d4c7009ee6515319c9102a29f965d43f724d5c644be57
+  languageName: node
+  linkType: hard
+
+"@goodwidget/superfluid-campaign-widget@npm:0.1.2":
+  version: 0.1.2
+  resolution: "@goodwidget/superfluid-campaign-widget@npm:0.1.2"
+  dependencies:
+    "@goodwidget/citizen-claim-widget": "npm:0.2.0"
+    "@goodwidget/core": "npm:0.1.4"
+    "@goodwidget/embed": "npm:0.1.4"
+    "@goodwidget/ui": "npm:0.1.4"
+    viem: "npm:^2.0.0"
+  peerDependencies:
+    react: ">=18.0.0"
+    react-dom: ">=18.0.0"
+  checksum: 10c0/5e3c5da176c89028bd1a2ebe85ed62f68c611f7b11bc81eea43ab522f8329a2042321ce8b2a5e404d29a2912a2ea0fcc8739e14bf33c582a60603ced9b8e1407
   languageName: node
   linkType: hard
 
@@ -10492,6 +10524,7 @@ __metadata:
     "@goodwidget/ai-credits-widget": "npm:0.1.5"
     "@goodwidget/core": "npm:0.1.4"
     "@goodwidget/embed": "npm:0.1.4"
+    "@goodwidget/superfluid-campaign-widget": "npm:0.1.2"
     "@goodwidget/ui": "npm:0.1.4"
     "@hcaptcha/react-hcaptcha": "npm:^2.0.2"
     "@json-rpc-tools/utils": "npm:^1.7.6"

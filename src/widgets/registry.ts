@@ -1,7 +1,12 @@
 import { createElement, type ReactNode } from "react"
 import type { IconName } from "ui"
 
-import { CELO_CHAIN_ID } from "@/chain/chain-ids"
+import {
+  BASE_CHAIN_ID,
+  CELO_CHAIN_ID,
+  FUSE_CHAIN_ID,
+  XDC_CHAIN_ID,
+} from "@/chain/chain-ids"
 
 import type { ReactWidgetLoader, WebComponentWidgetLoader } from "./hostTypes"
 import { AiCreditsIcon } from "./icons/AiCreditsIcon"
@@ -200,10 +205,39 @@ const testFixtureWidget = defineWidget({
   },
 })
 
+/**
+ * Superfluid Ecosystem Rewards campaign widget.
+ *
+ * The package registers its Custom Element as a side effect when its register
+ * entry is imported.
+ */
+const superfluidCampaignWidget = defineWidget({
+  widgetId: "goodwidget.superfluid-campaign",
+  packageName: "@goodwidget/superfluid-campaign-widget",
+  packageVersion: "0.1.2",
+  routeSlug: "superfluid-campaign",
+  displayName: "Superfluid Rewards",
+  description: "Earn SUP rewards through GoodDollar and ecosystem actions",
+  dashboardVisible: readBooleanEnv(
+    "NEXT_PUBLIC_SUPERFLUID_CAMPAIGN_WIDGET_DASHBOARD_ENABLED",
+    false,
+  ),
+  icon: { kind: "system", name: "Cash" },
+  integrationMode: "web-component",
+  entry: {
+    tagName: "gw-superfluid-campaign",
+    load: () => import("@goodwidget/superfluid-campaign-widget/register"),
+  },
+  providerPolicy: {
+    chainIds: [CELO_CHAIN_ID, FUSE_CHAIN_ID, XDC_CHAIN_ID, BASE_CHAIN_ID],
+    requiredMethods: WIDGET_PROVIDER_METHOD_LIST,
+  },
+})
+
 export const WIDGETS: readonly RegisteredWidget[] =
   process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE === "true"
     ? [testFixtureWidget]
-    : [aiCreditsWidget]
+    : [superfluidCampaignWidget, aiCreditsWidget]
 export const widgetRegistry = createWidgetRegistry(WIDGETS)
 
 export const getWidgetByRoute = (

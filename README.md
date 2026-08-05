@@ -93,6 +93,25 @@ Other scripts: `yarn build`, `yarn start`, `yarn test`, `yarn lint`.
 
 Then open http://localhost:3000 in your browser
 
+### GoodWidget local packages and local testing
+
+The Superfluid campaign widget and its GoodWidget runtime packages are currently
+installed from local tarballs. Build them in a checkout of
+[GoodDollar/GoodWidget](https://github.com/GoodDollar/GoodWidget), then copy or
+pack these packages into `local-packages/`:
+
+```sh
+pnpm --filter @goodwidget/ui pack --pack-destination /path/to/GoodWallet/local-packages
+pnpm --filter @goodwidget/core pack --pack-destination /path/to/GoodWallet/local-packages
+pnpm --filter @goodwidget/embed pack --pack-destination /path/to/GoodWallet/local-packages
+pnpm --filter @goodwidget/citizen-claim-widget pack --pack-destination /path/to/GoodWallet/local-packages
+pnpm --filter @goodwidget/superfluid-campaign-widget pack --pack-destination /path/to/GoodWallet/local-packages
+```
+
+Rename the generated archives to `ui.tgz`, `core.tgz`, `embed.tgz`,
+`citizen-claim-widget.tgz`, and `superfluid-campaign-widget.tgz`, respectively,
+then run `yarn install`. The archives are gitignored.
+
 ## Vercel deployments
 
 Vercel Git deployments are disabled in `vercel.json`. Pull requests targeting
@@ -117,6 +136,10 @@ Credits button; it is hidden when unset or set to `false`, while the authenticat
 `/{locale}/ai-credits` path remains available. `NEXT_PUBLIC_*` values are read
 during the Next.js build, so a Vercel environment change requires a new
 deployment/redeploy.
+
+The Superfluid button follows the same pattern with
+`NEXT_PUBLIC_SUPERFLUID_CAMPAIGN_WIDGET_DASHBOARD_ENABLED`; its authenticated
+`/{locale}/superfluid-campaign` path remains available when the button is hidden.
 
 ## GoodWidget local-tarball workflow
 

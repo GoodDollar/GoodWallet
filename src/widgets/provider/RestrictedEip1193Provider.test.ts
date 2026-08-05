@@ -99,6 +99,37 @@ describe("RestrictedEip1193Provider", () => {
     ).toThrow("unsupported provider methods")
   })
 
+  it("forwards read-only balance and call requests to the active chain RPC", async () => {
+    const { provider, rpcRequest } = createProvider()
+    rpcRequest.mockResolvedValueOnce("0x1bc16d674ec80000")
+
+    await expect(
+      provider.request({
+        method: "eth_getBalance",
+        params: [address, "latest"],
+      }),
+    ).resolves.toBe("0x1bc16d674ec80000")
+
+    rpcRequest.mockResolvedValueOnce("0x")
+    await expect(
+      provider.request({
+        method: "eth_call",
+        params: [{ to: address, data: "0x" }, "latest"],
+      }),
+    ).resolves.toBe("0x")
+
+    expect(rpcRequest).toHaveBeenNthCalledWith(
+      1,
+      1,
+      expect.objectContaining({ method: "eth_getBalance" }),
+    )
+    expect(rpcRequest).toHaveBeenNthCalledWith(
+      2,
+      1,
+      expect.objectContaining({ method: "eth_call" }),
+    )
+  })
+
   it("allows only configured chain switches and emits normalized chain IDs", async () => {
     const { provider } = createProvider()
     const listener = vi.fn()

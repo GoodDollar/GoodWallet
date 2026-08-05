@@ -1,4 +1,10 @@
-import { CELO_CHAIN_ID, ETHEREUM_CHAIN_ID } from "@/chain/chain-ids"
+import {
+  BASE_CHAIN_ID,
+  CELO_CHAIN_ID,
+  ETHEREUM_CHAIN_ID,
+  FUSE_CHAIN_ID,
+  XDC_CHAIN_ID,
+} from "@/chain/chain-ids"
 
 export const WIDGET_PROVIDER_METHOD_LIST = [
   "eth_accounts",
@@ -24,5 +30,8 @@ export const WIDGET_PROVIDER_METHODS = new Set<string>(
 
 export const WIDGET_EVM_CHAIN_IDS = new Set<number>([
   ETHEREUM_CHAIN_ID,
+  BASE_CHAIN_ID,
   CELO_CHAIN_ID,
+  FUSE_CHAIN_ID,
+  XDC_CHAIN_ID,
 ])

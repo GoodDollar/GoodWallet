@@ -16,6 +16,7 @@ describe("Web Component host properties", () => {
     const elementProps = {
       backendUrl: "https://api.example.com",
       fundingVaultAddress: "0xfundingvault",
+      poolAddresses: { 606: "0xpool" },
     }
 
     assignHostedWidgetProperties(element, {
@@ -30,6 +31,7 @@ describe("Web Component host properties", () => {
     expect(element.config).toBe(config)
     expect(element.backendUrl).toBe(elementProps.backendUrl)
     expect(element.fundingVaultAddress).toBe(elementProps.fundingVaultAddress)
+    expect(element.poolAddresses).toBe(elementProps.poolAddresses)
 
     clearHostedWidgetProperties(element)
 
@@ -38,5 +40,6 @@ describe("Web Component host properties", () => {
     expect(element.config).toBeUndefined()
     expect(element.backendUrl).toBeUndefined()
     expect(element.fundingVaultAddress).toBeUndefined()
+    expect(element.poolAddresses).toBeUndefined()
   })
 })
