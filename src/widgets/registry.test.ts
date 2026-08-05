@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest"
 
+import { WIDGET_PROVIDER_METHOD_LIST } from "./provider/policy"
 import {
   coreDashboardActions,
   createWidgetRegistry,
   defineWidget,
+  getWidgetDashboardActions,
   WIDGETS,
+  widgetDashboardActions,
 } from "./registry"
 
 const widget = defineWidget({
@@ -131,17 +134,84 @@ describe("widget registry", () => {
     ])
   })
 
+  it("keeps hidden widget routes available while omitting their dashboard actions", () => {
+    const hiddenWidget = defineWidget({
+      ...widget,
+      widgetId: "goodwidget.hidden",
+      routeSlug: "hidden",
+      dashboardVisible: false,
+    })
+
+    const actions = getWidgetDashboardActions([widget, hiddenWidget])
+
+    expect(actions.map(({ routeSlug }) => routeSlug)).toEqual(["goodreserve"])
+    expect(createWidgetRegistry([hiddenWidget]).get("goodwidget.hidden")).toBe(
+      hiddenWidget,
+    )
+  })
+
   it("registers the Superfluid campaign widget in production", () => {
-    expect(WIDGETS).toHaveLength(1)
-    expect(WIDGETS[0]).toMatchObject({
+    const superfluid = WIDGETS.find(
+      (widget) => widget.widgetId === "goodwidget.superfluid-campaign",
+    )
+    expect(superfluid).toBeDefined()
+    expect(superfluid).toMatchObject({
       widgetId: "goodwidget.superfluid-campaign",
       packageName: "@goodwidget/superfluid-campaign-widget",
-      packageVersion: "0.1.0-beta",
+      packageVersion: "0.1.2",
       routeSlug: "superfluid-campaign",
       entry: { tagName: "gw-superfluid-campaign" },
       providerPolicy: {
         chainIds: [42220, 122, 50, 8453],
       },
+    })
+    expect(widgetDashboardActions).toEqual([
+      expect.objectContaining({ routeSlug: "superfluid-campaign" }),
+    ])
+  })
+
+  describe("AI Credits widget", () => {
+    it("is present in the live WIDGETS array with the correct widgetId", () => {
+      const aiCredits = WIDGETS.find(
+        (w) => w.widgetId === "goodwidget.ai-credits",
+      )
+      expect(aiCredits).toBeDefined()
+      expect(aiCredits?.routeSlug).toBe("ai-credits")
+      expect(aiCredits?.packageName).toBe("@goodwidget/ai-credits-widget")
+    })
+
+    it("passes registry validation (createWidgetRegistry does not throw)", () => {
+      const aiCredits = WIDGETS.find(
+        (w) => w.widgetId === "goodwidget.ai-credits",
+      )
+      expect(aiCredits).toBeDefined()
+      if (!aiCredits) return
+      expect(() => createWidgetRegistry([aiCredits])).not.toThrow()
+    })
+
+    it("appears in widgetDashboardActions", () => {
+      const aiCredits = WIDGETS.find(
+        (w) => w.widgetId === "goodwidget.ai-credits",
+      )
+      const action = widgetDashboardActions.find(
+        (a) => a.widgetId === "goodwidget.ai-credits",
+      )
+      if (aiCredits?.dashboardVisible === false) {
+        expect(action).toBeUndefined()
+      } else {
+        expect(action).toBeDefined()
+        expect(action?.routeSlug).toBe("ai-credits")
+        expect(action?.label).toBe("AI Credits")
+      }
+    })
+
+    it("uses the shared provider method allowlist", () => {
+      const aiCredits = WIDGETS.find(
+        (w) => w.widgetId === "goodwidget.ai-credits",
+      )
+      expect(aiCredits?.providerPolicy.requiredMethods).toEqual([
+        ...WIDGET_PROVIDER_METHOD_LIST,
+      ])
     })
   })
 })

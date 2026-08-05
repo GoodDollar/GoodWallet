@@ -60,7 +60,7 @@ describe("Custom Element registration", () => {
     ).rejects.toThrow("already registered")
   })
 
-  it("reuses a tag registered as an import side effect", async () => {
+  it("reuses a tag that was already defined before host registration", async () => {
     const ctor = class {} as CustomElementConstructor
     vi.stubGlobal("customElements", {
       define: vi.fn(),
@@ -80,7 +80,7 @@ describe("Custom Element registration", () => {
     expect(load).not.toHaveBeenCalled()
   })
 
-  it("treats a registration race as success when the tag exists afterward", async () => {
+  it("treats a define race as success when the tag ends up registered", async () => {
     const get = vi.fn<() => CustomElementConstructor | undefined>(
       () => undefined,
     )
@@ -92,7 +92,10 @@ describe("Custom Element registration", () => {
       },
       register: async () => {
         get.mockReturnValue(class {} as CustomElementConstructor)
-        throw new DOMException("already registered", "NotSupportedError")
+        throw new DOMException(
+          'the name "gw-racy" has already been used with this registry',
+          "NotSupportedError",
+        )
       },
     }))
 
@@ -101,15 +104,41 @@ describe("Custom Element registration", () => {
     ).resolves.toBe("gw-racy")
   })
 
-  it("rejects module metadata that does not match the registry", async () => {
+  it("rejects module metadata whose package name does not match the registry", async () => {
     const get = vi.fn(() => undefined)
+    vi.stubGlobal("customElements", { define: vi.fn(), get })
+    const load = vi.fn(async () => ({
+      goodWidgetMetadata: {
+        packageName: "@goodwidget/other-widget",
+        packageVersion: "1.0.0",
+      },
+      register: async (tagName?: string) => tagName ?? "gw-named-widget",
+    }))
+
+    await expect(
+      registerElement(
+        load,
+        "gw-named-widget",
+        "@goodwidget/test-widget",
+        "1.0.0",
+      ),
+    ).rejects.toThrow("expected @goodwidget/test-widget")
+  })
+
+  it("allows a version mismatch when the package name matches", async () => {
+    const get = vi.fn<() => CustomElementConstructor | undefined>(
+      () => undefined,
+    )
     vi.stubGlobal("customElements", { define: vi.fn(), get })
     const load = vi.fn(async () => ({
       goodWidgetMetadata: {
         packageName: "@goodwidget/test-widget",
         packageVersion: "2.0.0",
       },
-      register: async (tagName?: string) => tagName ?? "gw-versioned-widget",
+      register: async (tagName?: string) => {
+        get.mockReturnValue(class {} as CustomElementConstructor)
+        return tagName ?? "gw-versioned-widget"
+      },
     }))
 
     await expect(
@@ -119,6 +148,6 @@ describe("Custom Element registration", () => {
         "@goodwidget/test-widget",
         "1.0.0",
       ),
-    ).rejects.toThrow("expected @goodwidget/test-widget@1.0.0")
+    ).resolves.toBe("gw-versioned-widget")
   })
 })

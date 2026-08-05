@@ -41,19 +41,17 @@ export const WalletConnectDialog = () => {
   }, [])
 
   useEffect(() => {
-    if (status !== "pending") return
-    const previousOverflow = document.body.style.overflow
     document.body.style.overflow = "hidden"
     return () => {
-      document.body.style.overflow = previousOverflow
+      document.body.style.overflow = "auto"
     }
-  }, [status])
+  }, [])
 
   if (!mounted || status !== "pending") return null
 
   return createPortal(
     <div
-      className={styles.dialogOverlay}
+      className={`${dialogStyles.dialogOverlay} ${styles.aboveWidgets}`}
       onClick={(e) => {
         updateWalletConnectDialogStatus("rejected")
         e.stopPropagation()
@@ -63,9 +61,7 @@ export const WalletConnectDialog = () => {
         className={[
           dialogStyles.dialogContainer,
           exiting && dialogStyles.dialogContainerExiting,
-        ]
-          .filter(Boolean)
-          .join(" ")}
+        ].join(" ")}
         onClick={(e) => e.stopPropagation()}
       >
         {renderDialog(dialog as WalletConnectDialogType)}

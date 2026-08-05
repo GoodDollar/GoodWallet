@@ -1,4 +1,4 @@
-import type { ReactNode } from "react"
+import { createElement, type ReactNode } from "react"
 import type { IconName } from "ui"
 
 import {
@@ -9,6 +9,7 @@ import {
 } from "@/chain/chain-ids"
 
 import type { ReactWidgetLoader, WebComponentWidgetLoader } from "./hostTypes"
+import { AiCreditsIcon } from "./icons/AiCreditsIcon"
 import {
   WIDGET_EVM_CHAIN_IDS,
   WIDGET_PROVIDER_METHOD_LIST,
@@ -29,10 +30,16 @@ export type DashboardAction = {
   widgetId?: string
 }
 
+const readBooleanEnv = (name: string, fallback: boolean): boolean => {
+  const value = process.env[name]
+  if (value === undefined || value === "") return fallback
+  return value === "true" || value === "1"
+}
+
 type RegisteredWidgetBase = {
   widgetId: `goodwidget.${string}`
   packageName: `@goodwidget/${string}`
-  packageVersion: `${number}.${number}.${number}${string}`
+  packageVersion: `${number}.${number}.${number}`
   routeSlug: string
   displayName: string
   description: string
@@ -42,6 +49,8 @@ type RegisteredWidgetBase = {
     requiredMethods: readonly string[]
   }
   elementProps?: Record<string, unknown>
+  /** Controls the dashboard action only; routes remain registry-addressable. */
+  dashboardVisible?: boolean
 }
 
 export type RegisteredWidget = RegisteredWidgetBase &
@@ -62,7 +71,7 @@ export type RegisteredWidget = RegisteredWidgetBase &
 export const defineWidget = <const T extends RegisteredWidget>(widget: T): T =>
   widget
 
-const EXACT_PACKAGE_VERSION = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/
+const EXACT_PACKAGE_VERSION = /^\d+\.\d+\.\d+$/
 const ROUTE_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 const RESERVED_WIDGET_ROUTES = new Set([
   "gooddollar",
@@ -149,6 +158,34 @@ export const createWidgetRegistry = (
   return registry
 }
 
+const aiCreditsWidget = defineWidget({
+  widgetId: "goodwidget.ai-credits",
+  packageName: "@goodwidget/ai-credits-widget",
+  packageVersion: "0.1.2",
+  routeSlug: "ai-credits",
+  displayName: "AI Credits",
+  description: "Purchase AI compute credits with your G$ balance",
+  dashboardVisible: readBooleanEnv(
+    "NEXT_PUBLIC_AI_CREDITS_WIDGET_DASHBOARD_ENABLED",
+    false,
+  ),
+  icon: { kind: "local", render: () => createElement(AiCreditsIcon) },
+  integrationMode: "web-component",
+  entry: {
+    tagName: "ai-credits-widget",
+    load: () => import("@goodwidget/ai-credits-widget/register"),
+  },
+  providerPolicy: {
+    chainIds: [CELO_CHAIN_ID],
+    requiredMethods: WIDGET_PROVIDER_METHOD_LIST,
+  },
+  elementProps: {
+    backendUrl: process.env.NEXT_PUBLIC_AI_CREDITS_BACKEND_URL,
+    fundingVaultAddress:
+      process.env.NEXT_PUBLIC_AI_CREDITS_FUNDING_VAULT_ADDRESS,
+  },
+})
+
 const testFixtureWidget = defineWidget({
   widgetId: "goodwidget.test-fixture",
   packageName: "@goodwidget/test-fixture",
@@ -171,14 +208,13 @@ const testFixtureWidget = defineWidget({
 /**
  * Superfluid Ecosystem Rewards campaign widget.
  *
- * The package currently ships a prerelease version and registers its Custom
- * Element as a side effect when its register entry is imported. The loader
- * supplies the module identity required by GoodWallet's integration boundary.
+ * The package registers its Custom Element as a side effect when its register
+ * entry is imported.
  */
 const superfluidCampaignWidget = defineWidget({
   widgetId: "goodwidget.superfluid-campaign",
   packageName: "@goodwidget/superfluid-campaign-widget",
-  packageVersion: "0.1.0-beta",
+  packageVersion: "0.1.2",
   routeSlug: "superfluid-campaign",
   displayName: "Superfluid Rewards",
   description: "Earn SUP rewards through GoodDollar and ecosystem actions",
@@ -186,18 +222,7 @@ const superfluidCampaignWidget = defineWidget({
   integrationMode: "web-component",
   entry: {
     tagName: "gw-superfluid-campaign",
-    load: async () => {
-      const module = await import(
-        "@goodwidget/superfluid-campaign-widget/register"
-      )
-      return {
-        ...module,
-        goodWidgetMetadata: {
-          packageName: "@goodwidget/superfluid-campaign-widget",
-          packageVersion: "0.1.0-beta",
-        },
-      }
-    },
+    load: () => import("@goodwidget/superfluid-campaign-widget/register"),
   },
   providerPolicy: {
     chainIds: [CELO_CHAIN_ID, FUSE_CHAIN_ID, XDC_CHAIN_ID, BASE_CHAIN_ID],
@@ -208,7 +233,7 @@ const superfluidCampaignWidget = defineWidget({
 export const WIDGETS: readonly RegisteredWidget[] =
   process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE === "true"
     ? [testFixtureWidget]
-    : [superfluidCampaignWidget]
+    : [superfluidCampaignWidget, aiCreditsWidget]
 export const widgetRegistry = createWidgetRegistry(WIDGETS)
 
 export const getWidgetByRoute = (
@@ -255,12 +280,19 @@ export const coreDashboardActions = [
   },
 ] as const satisfies readonly DashboardAction[]
 
-export const widgetDashboardActions = WIDGETS.map(
-  (widget): DashboardAction => ({
-    id: widget.widgetId,
-    widgetId: widget.widgetId,
-    routeSlug: widget.routeSlug,
-    label: widget.displayName,
-    icon: widget.icon,
-  }),
-)
+export const getWidgetDashboardActions = (
+  widgets: readonly RegisteredWidget[],
+): readonly DashboardAction[] =>
+  widgets
+    .filter((widget) => widget.dashboardVisible !== false)
+    .map(
+      (widget): DashboardAction => ({
+        id: widget.widgetId,
+        widgetId: widget.widgetId,
+        routeSlug: widget.routeSlug,
+        label: widget.displayName,
+        icon: widget.icon,
+      }),
+    )
+
+export const widgetDashboardActions = getWidgetDashboardActions(WIDGETS)

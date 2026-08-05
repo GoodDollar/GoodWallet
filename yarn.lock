@@ -1319,27 +1319,43 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@goodwidget/citizen-claim-widget@file:./local-packages/citizen-claim-widget.tgz::locator=goodwallet%40workspace%3A.":
-  version: 0.2.0-beta
-  resolution: "@goodwidget/citizen-claim-widget@file:./local-packages/citizen-claim-widget.tgz#./local-packages/citizen-claim-widget.tgz::hash=f73d38&locator=goodwallet%40workspace%3A."
+"@goodwidget/ai-credits-widget@npm:0.1.5":
+  version: 0.1.5
+  resolution: "@goodwidget/ai-credits-widget@npm:0.1.5"
   dependencies:
     "@goodsdks/citizen-sdk": "npm:1.2.7"
-    "@goodwidget/core": "npm:0.1.0"
-    "@goodwidget/embed": "npm:0.1.0"
-    "@goodwidget/ui": "npm:0.1.0"
+    "@goodwidget/core": "npm:0.1.4"
+    "@goodwidget/embed": "npm:0.1.4"
+    "@goodwidget/ui": "npm:0.1.4"
     viem: "npm:^2.0.0"
   peerDependencies:
     react: ">=18.0.0"
     react-dom: ">=18.0.0"
-  checksum: 10c0/bd95d7d59ba2399e0ca84c5947a983d12c88d6e571ceb859c9154ae7f44aaa02be2ae75141caa97cd7bfcb910da88bf908eda1abf505fb8ff14a3be0c881f23b
+  checksum: 10c0/bbc3b1c91953b2af8fac12996f28e630e24875aaf89ed15aff48c12e2a44edf5320b86436e8727ff8d5443d6d13d7bddbd74144bbfa47ad652cec7340cbbd1f3
   languageName: node
   linkType: hard
 
-"@goodwidget/core@file:./local-packages/core.tgz::locator=goodwallet%40workspace%3A.":
-  version: 0.1.0
-  resolution: "@goodwidget/core@file:./local-packages/core.tgz#./local-packages/core.tgz::hash=849b4a&locator=goodwallet%40workspace%3A."
+"@goodwidget/citizen-claim-widget@npm:0.2.0":
+  version: 0.2.0
+  resolution: "@goodwidget/citizen-claim-widget@npm:0.2.0"
   dependencies:
-    "@goodwidget/ui": "npm:0.1.0"
+    "@goodsdks/citizen-sdk": "npm:1.2.7"
+    "@goodwidget/core": "npm:0.1.4"
+    "@goodwidget/embed": "npm:0.1.4"
+    "@goodwidget/ui": "npm:0.1.4"
+    viem: "npm:^2.0.0"
+  peerDependencies:
+    react: ">=18.0.0"
+    react-dom: ">=18.0.0"
+  checksum: 10c0/b3b4ecd308eb922274ba3339c8509aa0e58e403488fb5403a8fdaf2153519395a5ae273e8578f0c22148eca7fe736a6fea6fd005d2d8224eb988ad07b5a869b4
+  languageName: node
+  linkType: hard
+
+"@goodwidget/core@npm:0.1.4":
+  version: 0.1.4
+  resolution: "@goodwidget/core@npm:0.1.4"
+  dependencies:
+    "@goodwidget/ui": "npm:0.1.4"
     tamagui: "npm:1.121.0"
   peerDependencies:
     react: ">=18.0.0"
@@ -1347,16 +1363,16 @@ __metadata:
   peerDependenciesMeta:
     react-native:
       optional: true
-  checksum: 10c0/19af960116386a79d94e2b0abc706acac29efc9b4eaa233140f2dc5eda5a3fad68e8652041d096a98e69535717c6aa8b0f64b986da706b8b5f72db90db9da3de
+  checksum: 10c0/b1993ef4011f79f318715bcc082054235ecca8ca5fd617531d8e80e5f1cd1aa40953e5123db81591954af2d8b731738e6a9c6825d5d5e27ec46d07df524ee25f
   languageName: node
   linkType: hard
 
-"@goodwidget/embed@file:./local-packages/embed.tgz::locator=goodwallet%40workspace%3A.":
-  version: 0.1.0
-  resolution: "@goodwidget/embed@file:./local-packages/embed.tgz#./local-packages/embed.tgz::hash=70834d&locator=goodwallet%40workspace%3A."
+"@goodwidget/embed@npm:0.1.4":
+  version: 0.1.4
+  resolution: "@goodwidget/embed@npm:0.1.4"
   dependencies:
-    "@goodwidget/core": "npm:0.1.0"
-    "@goodwidget/ui": "npm:0.1.0"
+    "@goodwidget/core": "npm:0.1.4"
+    "@goodwidget/ui": "npm:0.1.4"
     "@r2wc/react-to-web-component": "npm:^2.0.3"
     "@reown/appkit": "npm:^1.8.22"
     "@reown/appkit-adapter-wagmi": "npm:^1.8.22"
@@ -1366,29 +1382,29 @@ __metadata:
   peerDependencies:
     react: ">=18.0.0"
     react-dom: ">=18.0.0"
-  checksum: 10c0/062cd2a4cb2bf80dacf294a74bf142451121baf76eafb1009c40020a5c320e22d39c598ead42342085e79a0359f078d3cd291b2069e47e4b2008371a42e5213e
+  checksum: 10c0/1d6c66804ee2541c180c7311e40dbc462ee0e9928867e50caf9fa48dbf42cbdda37c45f665550b0a592d4c7009ee6515319c9102a29f965d43f724d5c644be57
   languageName: node
   linkType: hard
 
-"@goodwidget/superfluid-campaign-widget@file:./local-packages/superfluid-campaign-widget.tgz::locator=goodwallet%40workspace%3A.":
-  version: 0.1.0-beta
-  resolution: "@goodwidget/superfluid-campaign-widget@file:./local-packages/superfluid-campaign-widget.tgz#./local-packages/superfluid-campaign-widget.tgz::hash=b76205&locator=goodwallet%40workspace%3A."
+"@goodwidget/superfluid-campaign-widget@npm:0.1.2":
+  version: 0.1.2
+  resolution: "@goodwidget/superfluid-campaign-widget@npm:0.1.2"
   dependencies:
-    "@goodwidget/citizen-claim-widget": "npm:0.2.0-beta"
-    "@goodwidget/core": "npm:0.1.0"
-    "@goodwidget/embed": "npm:0.1.0"
-    "@goodwidget/ui": "npm:0.1.0"
+    "@goodwidget/citizen-claim-widget": "npm:0.2.0"
+    "@goodwidget/core": "npm:0.1.4"
+    "@goodwidget/embed": "npm:0.1.4"
+    "@goodwidget/ui": "npm:0.1.4"
     viem: "npm:^2.0.0"
   peerDependencies:
     react: ">=18.0.0"
     react-dom: ">=18.0.0"
-  checksum: 10c0/b0d8ae8200ccd8c6dcd04d166991196ef0b7d695910a3daafd060968adacfba7c2cfe37503825da8495bac8375a5232b282a5ee5a9a9de427d81f67197ed2106
+  checksum: 10c0/5e3c5da176c89028bd1a2ebe85ed62f68c611f7b11bc81eea43ab522f8329a2042321ce8b2a5e404d29a2912a2ea0fcc8739e14bf33c582a60603ced9b8e1407
   languageName: node
   linkType: hard
 
-"@goodwidget/ui@file:./local-packages/ui.tgz::locator=goodwallet%40workspace%3A.":
-  version: 0.1.0
-  resolution: "@goodwidget/ui@file:./local-packages/ui.tgz#./local-packages/ui.tgz::hash=d83882&locator=goodwallet%40workspace%3A."
+"@goodwidget/ui@npm:0.1.4":
+  version: 0.1.4
+  resolution: "@goodwidget/ui@npm:0.1.4"
   dependencies:
     "@tamagui/animations-react-native": "npm:^1.121.0"
     "@tamagui/core": "npm:1.121.0"
@@ -1399,12 +1415,15 @@ __metadata:
     "@react-native-clipboard/clipboard": ">=1.14.0"
     react: ">=18.0.0"
     react-native: ">=0.76.0"
+    react-native-svg: ">=12"
   peerDependenciesMeta:
     "@react-native-clipboard/clipboard":
       optional: true
     react-native:
       optional: true
-  checksum: 10c0/b4ddeca9f24a54093fca5be592cf7ce796fc718193c2216b1716a37eedd2a45cd7e78aab894d7dc85bc15a812d1493705862696deea48e349ae0e97f0536beb5
+    react-native-svg:
+      optional: true
+  checksum: 10c0/72c49ed585adfa5dc04e690e1285082cf3584f941da4752e112bd214d337fa5fd1b14d25d46e83e050b8e1a7451ebb991ccc3f8519b688df7601bdba8311d097
   languageName: node
   linkType: hard
 
@@ -10502,11 +10521,11 @@ __metadata:
     "@bitcoinerlab/secp256k1": "npm:^1.2.0"
     "@electric-sql/pglite": "npm:^0.5.3"
     "@gooddollar/goodprotocol": "npm:^2.2.0"
-    "@goodwidget/citizen-claim-widget": "file:./local-packages/citizen-claim-widget.tgz"
-    "@goodwidget/core": "file:./local-packages/core.tgz"
-    "@goodwidget/embed": "file:./local-packages/embed.tgz"
-    "@goodwidget/superfluid-campaign-widget": "file:./local-packages/superfluid-campaign-widget.tgz"
-    "@goodwidget/ui": "file:./local-packages/ui.tgz"
+    "@goodwidget/ai-credits-widget": "npm:0.1.5"
+    "@goodwidget/core": "npm:0.1.4"
+    "@goodwidget/embed": "npm:0.1.4"
+    "@goodwidget/superfluid-campaign-widget": "npm:0.1.2"
+    "@goodwidget/ui": "npm:0.1.4"
     "@hcaptcha/react-hcaptcha": "npm:^2.0.2"
     "@json-rpc-tools/utils": "npm:^1.7.6"
     "@lifi/sdk": "npm:^4.1.0"

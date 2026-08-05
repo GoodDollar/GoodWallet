@@ -6,19 +6,14 @@ import { setBottomSheetProps } from "@/components/Snippet/BottomSheet/bottomShee
 import { LoadingSpinner } from "@/components/Snippet/LoadingSpinner"
 import { useSessionContext } from "@/login/hooks/context"
 
-import type { WidgetHostProps } from "./hostTypes"
 import { useWidgetProvider, WidgetProvider } from "./provider/WidgetProvider"
 import { type RegisteredWidget, widgetRegistry } from "./registry"
 import { WidgetRenderer } from "./WidgetRenderer"
 
 export const AuthenticatedWidgetRoute = ({
   widgetId,
-  themeOverrides,
-  config,
 }: {
   widgetId: string
-  themeOverrides?: WidgetHostProps["themeOverrides"]
-  config?: WidgetHostProps["config"]
 }) => {
   const { signer, isLoading } = useSessionContext()
   const widget = widgetRegistry.get(widgetId)
@@ -42,32 +37,18 @@ export const AuthenticatedWidgetRoute = ({
       chainIds={widget.providerPolicy.chainIds}
       requiredMethods={widget.providerPolicy.requiredMethods}
     >
-      <MountedWidget
-        widget={widget}
-        themeOverrides={themeOverrides}
-        config={config}
-      />
+      <MountedWidget widget={widget} />
     </WidgetProvider>
   )
 }
 
-const MountedWidget = ({
-  widget,
-  themeOverrides,
-  config,
-}: {
-  widget: RegisteredWidget
-  themeOverrides?: WidgetHostProps["themeOverrides"]
-  config?: WidgetHostProps["config"]
-}) => {
+const MountedWidget = ({ widget }: { widget: RegisteredWidget }) => {
   const provider = useWidgetProvider()
 
   return (
     <WidgetRenderer
       widget={widget}
       provider={provider}
-      themeOverrides={themeOverrides}
-      config={config}
       elementProps={widget.elementProps}
     />
   )

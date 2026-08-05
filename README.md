@@ -93,7 +93,7 @@ Other scripts: `yarn build`, `yarn start`, `yarn test`, `yarn lint`.
 
 Then open http://localhost:3000 in your browser
 
-### GoodWidget local packages
+### GoodWidget local packages and local testing
 
 The Superfluid campaign widget and its GoodWidget runtime packages are currently
 installed from local tarballs. Build them in a checkout of
@@ -111,3 +111,43 @@ pnpm --filter @goodwidget/superfluid-campaign-widget pack --pack-destination /pa
 Rename the generated archives to `ui.tgz`, `core.tgz`, `embed.tgz`,
 `citizen-claim-widget.tgz`, and `superfluid-campaign-widget.tgz`, respectively,
 then run `yarn install`. The archives are gitignored.
+
+## Vercel deployments
+
+Vercel Git deployments are disabled in `vercel.json`. Pull requests targeting
+`main` are handled by the Preview workflow and deployed as prebuilt Preview
+artifacts after the checks pass. Pushes to `main` are handled by the main branch
+workflow and deployed as prebuilt Preview artifacts. Pushes to `production` use
+a separate release workflow with prebuilt Production deployment steps,
+preserving the existing promotion-by-merge process without relying on Vercel
+Git deployments. Domains remain managed by Vercel.
+
+The repository needs these GitHub Actions secrets:
+
+- `VERCEL_TOKEN`
+- `VERCEL_ORG_ID`
+- `VERCEL_PROJECT_ID`
+
+## GoodWidget visibility
+
+Widget routes are registered independently from dashboard buttons. For example,
+setting `NEXT_PUBLIC_AI_CREDITS_WIDGET_DASHBOARD_ENABLED=true` shows the AI
+Credits button; it is hidden when unset or set to `false`, while the authenticated
+`/{locale}/ai-credits` path remains available. `NEXT_PUBLIC_*` values are read
+during the Next.js build, so a Vercel environment change requires a new
+deployment/redeploy.
+
+## GoodWidget local-tarball workflow
+
+Widget packages that are not yet published to npm (e.g. `@goodwidget/ai-credits-widget`)
+must be installed from a local tarball built inside the
+[GoodDollar/GoodWidget](https://github.com/GoodDollar/GoodWidget) monorepo.
+
+1. Clone `GoodDollar/GoodWidget` alongside this repo.
+2. Inside the GoodWidget monorepo, pack the widget:
+   ```sh
+   pnpm --filter @goodwidget/ai-credits-widget pack --pack-destination /path/to/GoodWallet/local-packages
+   ```
+3. The tarball lands at `local-packages/ai-credits-widget.tgz` (already referenced in `package.json`).
+4. Run `yarn install` in this repo to link the tarball.
+5. The path `local-packages/*.tgz` is git-ignored; do **not** commit tarballs.

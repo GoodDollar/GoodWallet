@@ -1,9 +1,4 @@
-import { withSentryConfig } from "@sentry/nextjs";
-
-const reactNativeSvgWeb = new URL(
-  "./src/widgets/reactNativeSvg.web.tsx",
-  import.meta.url
-).pathname;
+import { withSentryConfig } from "@sentry/nextjs"
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -13,6 +8,7 @@ const nextConfig = {
   transpilePackages: [
     "@goodwidget/superfluid-campaign-widget",
     "@goodwidget/citizen-claim-widget",
+    "@goodwidget/ai-credits-widget",
     "@goodwidget/core",
     "@goodwidget/embed",
     "@goodwidget/ui",
@@ -22,7 +18,6 @@ const nextConfig = {
   turbopack: {
     resolveAlias: {
       "react-native": "react-native-web",
-      "react-native-svg": "./src/widgets/reactNativeSvg.web.tsx",
     },
   },
 
@@ -30,16 +25,15 @@ const nextConfig = {
     config.resolve.alias = {
       ...config.resolve.alias,
       "react-native$": "react-native-web",
-      "react-native-svg$": reactNativeSvgWeb,
-    };
+    }
     config.resolve.extensions = [
       ".web.js",
       ".web.jsx",
       ".web.ts",
       ".web.tsx",
       ...(config.resolve.extensions ?? []),
-    ];
-    return config;
+    ]
+    return config
   },
 
   env: {

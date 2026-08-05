@@ -1,7 +1,7 @@
-name: Pull request checks and Preview deployment
+name: Main branch checks and staging deployment
 
 on:
-  pull_request:
+  push:
     branches:
       - main
 
@@ -34,7 +34,6 @@ jobs:
           cmd: biome:verify:all
 
       - name: Pull Vercel Preview environment
-        if: github.event.pull_request.head.repo.full_name == github.repository
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -42,19 +41,12 @@ jobs:
         run: npx --yes vercel@latest pull --yes --environment=preview --token="$VERCEL_TOKEN"
 
       - name: Build Vercel prebuilt Preview artifact
-        if: github.event.pull_request.head.repo.full_name == github.repository
         env:
           NODE_OPTIONS: --max_old_space_size=8192
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: npx --yes vercel@latest build --token="$VERCEL_TOKEN"
-
-      - name: Run Build
-        if: github.event.pull_request.head.repo.full_name != github.repository
-        env:
-          NODE_OPTIONS: --max_old_space_size=4096
-        run: yarn build
+        run: npx --yes vercel@latest build --target=preview --token="$VERCEL_TOKEN"
 
       - name: Run Tests
         uses: borales/actions-yarn@v5
@@ -70,12 +62,11 @@ jobs:
           cmd: test:e2e
 
       - name: Deploy Vercel prebuilt Preview
-        if: github.event.pull_request.head.repo.full_name == github.repository
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: npx --yes vercel@latest deploy --prebuilt --token="$VERCEL_TOKEN"
+        run: npx --yes vercel@latest deploy --prebuilt --target=preview --token="$VERCEL_TOKEN"
 
       - name: Upload Playwright screenshots and failure artifacts
         if: always()

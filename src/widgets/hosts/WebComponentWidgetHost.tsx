@@ -43,6 +43,7 @@ export const registerElement = (
     }
     return cached.promise
   }
+
   if (customElements.get(tagName)) {
     const settled = Promise.resolve(tagName)
     registrationCache.set(tagName, {
@@ -56,7 +57,7 @@ export const registerElement = (
 
   const promise = load()
     .then(async (module) => {
-      assertWidgetModuleMetadata(module, packageName, packageVersion)
+      assertWidgetModuleMetadata(module, packageName)
       if (customElements.get(tagName)) {
         return tagName
       }

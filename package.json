@@ -24,11 +24,11 @@
     "@bitcoinerlab/secp256k1": "^1.2.0",
     "@electric-sql/pglite": "^0.5.3",
     "@gooddollar/goodprotocol": "^2.2.0",
-    "@goodwidget/citizen-claim-widget": "file:./local-packages/citizen-claim-widget.tgz",
-    "@goodwidget/core": "file:./local-packages/core.tgz",
-    "@goodwidget/embed": "file:./local-packages/embed.tgz",
-    "@goodwidget/superfluid-campaign-widget": "file:./local-packages/superfluid-campaign-widget.tgz",
-    "@goodwidget/ui": "file:./local-packages/ui.tgz",
+    "@goodwidget/ai-credits-widget": "0.1.5",
+    "@goodwidget/core": "0.1.4",
+    "@goodwidget/embed": "0.1.4",
+    "@goodwidget/superfluid-campaign-widget": "0.1.2",
+    "@goodwidget/ui": "0.1.4",
     "@hcaptcha/react-hcaptcha": "^2.0.2",
     "@json-rpc-tools/utils": "^1.7.6",
     "@lifi/sdk": "^4.1.0",
@@ -109,10 +109,6 @@
   ],
   "resolutions": {
     "esbuild": "0.25.10",
-    "@polymarket/builder-signing-sdk": "1.0.0",
-    "@goodwidget/core": "file:./local-packages/core.tgz",
-    "@goodwidget/embed": "file:./local-packages/embed.tgz",
-    "@goodwidget/ui": "file:./local-packages/ui.tgz",
-    "@goodwidget/citizen-claim-widget": "file:./local-packages/citizen-claim-widget.tgz"
+    "@polymarket/builder-signing-sdk": "1.0.0"
   }
 }

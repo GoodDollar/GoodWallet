@@ -66,5 +66,6 @@ tsconfig.tsbuildinfo
 # Codex
 codex-resume
 .agents/skills
-.bounties/contributor-bounties
 local-packages/
+.bounties
+.env*
