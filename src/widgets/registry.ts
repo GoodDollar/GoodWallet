@@ -98,7 +98,9 @@ const validateWidget = (widget: RegisteredWidget): void => {
   )
   if (unsupportedChains.length > 0) {
     throw new Error(
-      `Widget ${widget.widgetId} requests unsupported chains: ${unsupportedChains.join(", ")}`,
+      `Widget ${
+        widget.widgetId
+      } requests unsupported chains: ${unsupportedChains.join(", ")}`,
     )
   }
   if (
@@ -112,7 +114,9 @@ const validateWidget = (widget: RegisteredWidget): void => {
   )
   if (unsupportedMethods.length > 0) {
     throw new Error(
-      `Widget ${widget.widgetId} requests unsupported methods: ${unsupportedMethods.join(", ")}`,
+      `Widget ${
+        widget.widgetId
+      } requests unsupported methods: ${unsupportedMethods.join(", ")}`,
     )
   }
 }
