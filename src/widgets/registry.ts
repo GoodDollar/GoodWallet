@@ -25,6 +25,12 @@ export type DashboardAction = {
   widgetId?: string
 }
 
+const readBooleanEnv = (name: string, fallback: boolean): boolean => {
+  const value = process.env[name]
+  if (value === undefined || value === "") return fallback
+  return value === "true" || value === "1"
+}
+
 type RegisteredWidgetBase = {
   widgetId: `goodwidget.${string}`
   packageName: `@goodwidget/${string}`
@@ -38,6 +44,8 @@ type RegisteredWidgetBase = {
     requiredMethods: readonly string[]
   }
   elementProps?: Record<string, unknown>
+  /** Controls the dashboard action only; routes remain registry-addressable. */
+  dashboardVisible?: boolean
 }
 
 export type RegisteredWidget = RegisteredWidgetBase &
@@ -152,6 +160,10 @@ const aiCreditsWidget = defineWidget({
   routeSlug: "ai-credits",
   displayName: "AI Credits",
   description: "Purchase AI compute credits with your G$ balance",
+  dashboardVisible: readBooleanEnv(
+    "NEXT_PUBLIC_AI_CREDITS_WIDGET_DASHBOARD_ENABLED",
+    true,
+  ),
   icon: { kind: "local", render: () => createElement(AiCreditsIcon) },
   integrationMode: "web-component",
   entry: {
@@ -238,12 +250,19 @@ export const coreDashboardActions = [
   },
 ] as const satisfies readonly DashboardAction[]
 
-export const widgetDashboardActions = WIDGETS.map(
-  (widget): DashboardAction => ({
-    id: widget.widgetId,
-    widgetId: widget.widgetId,
-    routeSlug: widget.routeSlug,
-    label: widget.displayName,
-    icon: widget.icon,
-  }),
-)
+export const getWidgetDashboardActions = (
+  widgets: readonly RegisteredWidget[],
+): readonly DashboardAction[] =>
+  widgets
+    .filter((widget) => widget.dashboardVisible !== false)
+    .map(
+      (widget): DashboardAction => ({
+        id: widget.widgetId,
+        widgetId: widget.widgetId,
+        routeSlug: widget.routeSlug,
+        label: widget.displayName,
+        icon: widget.icon,
+      }),
+    )
+
+export const widgetDashboardActions = getWidgetDashboardActions(WIDGETS)

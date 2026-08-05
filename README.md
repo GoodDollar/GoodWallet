@@ -93,6 +93,14 @@ Other scripts: `yarn build`, `yarn start`, `yarn test`, `yarn lint`.
 
 Then open http://localhost:3000 in your browser
 
+## GoodWidget visibility
+
+Widget routes are registered independently from dashboard buttons. For example,
+setting `NEXT_PUBLIC_AI_CREDITS_WIDGET_DASHBOARD_ENABLED=false` hides the AI
+Credits button while keeping the authenticated `/{locale}/ai-credits` path
+available. `NEXT_PUBLIC_*` values are read during the Next.js build, so a Vercel
+environment change requires a new deployment/redeploy.
+
 ## GoodWidget local-tarball workflow
 
 Widget packages that are not yet published to npm (e.g. `@goodwidget/ai-credits-widget`)

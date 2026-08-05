@@ -5,6 +5,7 @@ import {
   coreDashboardActions,
   createWidgetRegistry,
   defineWidget,
+  getWidgetDashboardActions,
   WIDGETS,
   widgetDashboardActions,
 } from "./registry"
@@ -133,6 +134,22 @@ describe("widget registry", () => {
     ])
   })
 
+  it("keeps hidden widget routes available while omitting their dashboard actions", () => {
+    const hiddenWidget = defineWidget({
+      ...widget,
+      widgetId: "goodwidget.hidden",
+      routeSlug: "hidden",
+      dashboardVisible: false,
+    })
+
+    const actions = getWidgetDashboardActions([widget, hiddenWidget])
+
+    expect(actions.map(({ routeSlug }) => routeSlug)).toEqual(["goodreserve"])
+    expect(createWidgetRegistry([hiddenWidget]).get("goodwidget.hidden")).toBe(
+      hiddenWidget,
+    )
+  })
+
   describe("AI Credits widget", () => {
     it("is present in the live WIDGETS array with the correct widgetId", () => {
       const aiCredits = WIDGETS.find(
@@ -153,12 +170,19 @@ describe("widget registry", () => {
     })
 
     it("appears in widgetDashboardActions", () => {
+      const aiCredits = WIDGETS.find(
+        (w) => w.widgetId === "goodwidget.ai-credits",
+      )
       const action = widgetDashboardActions.find(
         (a) => a.widgetId === "goodwidget.ai-credits",
       )
-      expect(action).toBeDefined()
-      expect(action?.routeSlug).toBe("ai-credits")
-      expect(action?.label).toBe("AI Credits")
+      if (aiCredits?.dashboardVisible === false) {
+        expect(action).toBeUndefined()
+      } else {
+        expect(action).toBeDefined()
+        expect(action?.routeSlug).toBe("ai-credits")
+        expect(action?.label).toBe("AI Credits")
+      }
     })
 
     it("uses the shared provider method allowlist", () => {
