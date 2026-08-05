@@ -94,7 +94,9 @@ const validateWidget = (widget: RegisteredWidget): void => {
   )
   if (unsupportedChains.length > 0) {
     throw new Error(
-      `Widget ${widget.widgetId} requests unsupported chains: ${unsupportedChains.join(", ")}`,
+      `Widget ${
+        widget.widgetId
+      } requests unsupported chains: ${unsupportedChains.join(", ")}`,
     )
   }
   if (
@@ -108,7 +110,9 @@ const validateWidget = (widget: RegisteredWidget): void => {
   )
   if (unsupportedMethods.length > 0) {
     throw new Error(
-      `Widget ${widget.widgetId} requests unsupported methods: ${unsupportedMethods.join(", ")}`,
+      `Widget ${
+        widget.widgetId
+      } requests unsupported methods: ${unsupportedMethods.join(", ")}`,
     )
   }
 }
@@ -144,7 +148,7 @@ export const createWidgetRegistry = (
 const aiCreditsWidget = defineWidget({
   widgetId: "goodwidget.ai-credits",
   packageName: "@goodwidget/ai-credits-widget",
-  packageVersion: "0.1.0",
+  packageVersion: "0.1.2",
   routeSlug: "ai-credits",
   displayName: "AI Credits",
   description: "Purchase AI compute credits with your G$ balance",
