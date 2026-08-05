@@ -93,11 +93,15 @@ Other scripts: `yarn build`, `yarn start`, `yarn test`, `yarn lint`.
 
 Then open http://localhost:3000 in your browser
 
-## Preview deployments
+## Vercel deployments
 
 Vercel Git deployments are disabled in `vercel.json`. Pull requests targeting
-`main` are built in GitHub Actions and deployed to Vercel as prebuilt Preview
-artifacts after the checks pass.
+`main` are handled by the Preview workflow and deployed as prebuilt Preview
+artifacts after the checks pass. Pushes to `main` are handled by the main branch
+workflow and deployed as prebuilt Production artifacts. Pushes to `production`
+use a separate release workflow with the same prebuilt Production deployment
+steps, preserving the existing promotion-by-merge process without relying on
+Vercel Git deployments. Domains remain managed by Vercel.
 
 The repository needs these GitHub Actions secrets:
 

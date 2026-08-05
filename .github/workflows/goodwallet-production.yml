@@ -1,9 +1,9 @@
-name: Pull request checks and Preview deployment
+name: Production branch checks and release deployment
 
 on:
-  pull_request:
+  push:
     branches:
-      - main
+      - production
 
 jobs:
   build:
@@ -33,28 +33,20 @@ jobs:
         with:
           cmd: biome:verify:all
 
-      - name: Pull Vercel Preview environment
-        if: github.event.pull_request.head.repo.full_name == github.repository
+      - name: Pull Vercel Production environment
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: npx --yes vercel@latest pull --yes --environment=preview --token="$VERCEL_TOKEN"
+        run: npx --yes vercel@latest pull --yes --environment=production --token="$VERCEL_TOKEN"
 
-      - name: Build Vercel prebuilt Preview artifact
-        if: github.event.pull_request.head.repo.full_name == github.repository
+      - name: Build Vercel prebuilt Production artifact
         env:
           NODE_OPTIONS: --max_old_space_size=8192
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: npx --yes vercel@latest build --token="$VERCEL_TOKEN"
-
-      - name: Run Build
-        if: github.event.pull_request.head.repo.full_name != github.repository
-        env:
-          NODE_OPTIONS: --max_old_space_size=4096
-        run: yarn build
+        run: npx --yes vercel@latest build --prod --token="$VERCEL_TOKEN"
 
       - name: Run Tests
         uses: borales/actions-yarn@v5
@@ -69,13 +61,12 @@ jobs:
         with:
           cmd: test:e2e
 
-      - name: Deploy Vercel prebuilt Preview
-        if: github.event.pull_request.head.repo.full_name == github.repository
+      - name: Deploy Vercel prebuilt Production
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: npx --yes vercel@latest deploy --prebuilt --token="$VERCEL_TOKEN"
+        run: npx --yes vercel@latest deploy --prebuilt --prod --token="$VERCEL_TOKEN"
 
       - name: Upload Playwright screenshots and failure artifacts
         if: always()
