@@ -78,27 +78,23 @@ export default function WalletSection({
   )
 
   useEffect(() => {
-    if (versionSnap.remoteVersion) {
-      const clientVersion = config.vercelConfig.commitSha
-      if (clientVersion == undefined) {
-        console.log("Client version not found")
-        return
-      }
+    const remoteVersion = versionSnap.remoteVersion
+    if (!remoteVersion) return
 
-      if (clientVersion !== pwaVersionStore.remoteVersion) {
-        if (confirm(homeTranslations.pwaConfirmAlert)) {
-          // reload() may reuse the cached HTML document in an installed PWA.
-          // A unique query string makes the browser request the new app shell.
-          const updateUrl = new URL(window.location.href)
-          updateUrl.searchParams.set(
-            "_goodwallet_update",
-            Date.now().toString(),
-          )
-          window.location.replace(updateUrl)
-        }
-      }
+    const clientVersion = config.vercelConfig.commitSha
+    if (!clientVersion || clientVersion === remoteVersion) return
+    if (sessionStorage.getItem("pwa-dismissed-version") === remoteVersion) {
+      return
     }
-  }, [versionSnap.remoteVersion, homeTranslations])
+
+    if (confirm(homeTranslations.pwaConfirmAlert)) {
+      const updateUrl = new URL(window.location.href)
+      updateUrl.searchParams.set("_goodwallet_update", Date.now().toString())
+      window.location.replace(updateUrl)
+    } else {
+      sessionStorage.setItem("pwa-dismissed-version", remoteVersion)
+    }
+  }, [versionSnap.remoteVersion, homeTranslations.pwaConfirmAlert])
 
   useDebouncedEffect(
     () => {
