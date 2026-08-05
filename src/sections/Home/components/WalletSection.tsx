@@ -87,7 +87,14 @@ export default function WalletSection({
 
       if (clientVersion !== pwaVersionStore.remoteVersion) {
         if (confirm(homeTranslations.pwaConfirmAlert)) {
-          window.location.reload()
+          // reload() may reuse the cached HTML document in an installed PWA.
+          // A unique query string makes the browser request the new app shell.
+          const updateUrl = new URL(window.location.href)
+          updateUrl.searchParams.set(
+            "_goodwallet_update",
+            Date.now().toString(),
+          )
+          window.location.replace(updateUrl)
         }
       }
     }
