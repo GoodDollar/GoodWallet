@@ -53,7 +53,7 @@ export const WalletConnectDialog = () => {
 
   return createPortal(
     <div
-      className={styles.dialogOverlay}
+      className={`${dialogStyles.dialogOverlay} ${styles.aboveWidgets}`}
       onClick={(e) => {
         updateWalletConnectDialogStatus("rejected")
         e.stopPropagation()
