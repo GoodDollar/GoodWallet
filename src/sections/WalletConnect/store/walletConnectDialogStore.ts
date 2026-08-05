@@ -44,26 +44,85 @@ export const walletConnectDialogStore = proxy<{
   exiting: boolean
 }>()
 
-export const openWalletConnectDialog = async (args: WalletConnectDialog) => {
-  walletConnectDialogStore.dialog = args
+type QueuedDialog = {
+  args: WalletConnectDialog
+  resolve: (status: WalletConnectDialogStatus) => void
+}
+
+const dialogQueue: QueuedDialog[] = []
+let activeDialog: QueuedDialog | undefined
+let unsubscribeActive: (() => void) | undefined
+
+const settleActiveDialog = (status: WalletConnectDialogStatus): void => {
+  const settledDialog = activeDialog
+  if (!settledDialog) return
+
+  unsubscribeActive?.()
+  unsubscribeActive = undefined
+  activeDialog = undefined
+  settledDialog.resolve(status)
+  openNextDialog()
+}
+
+const openNextDialog = (): void => {
+  if (activeDialog) return
+  const queuedDialog = dialogQueue.shift()
+  if (!queuedDialog) return
+
+  activeDialog = queuedDialog
+  walletConnectDialogStore.dialog = queuedDialog.args
   walletConnectDialogStore.status = "pending"
   walletConnectDialogStore.exiting = false
 
-  await new Promise((resolve) => {
-    subscribe(walletConnectDialogStore, () => {
-      if (walletConnectDialogStore.status !== "pending") {
-        resolve(null)
-      }
-    })
+  unsubscribeActive = subscribe(walletConnectDialogStore, () => {
+    if (walletConnectDialogStore.status === "pending") return
+    settleActiveDialog(walletConnectDialogStore.status)
+  })
+}
+
+export const openWalletConnectDialog = (
+  args: WalletConnectDialog,
+): Promise<WalletConnectDialogStatus> =>
+  new Promise((resolve) => {
+    dialogQueue.push({ args, resolve })
+    openNextDialog()
   })
 
-  return walletConnectDialogStore.status as WalletConnectDialogStatus
+export const resetWalletConnectDialogs = (): void => {
+  const pendingDialogs = activeDialog
+    ? [activeDialog, ...dialogQueue.splice(0)]
+    : dialogQueue.splice(0)
+
+  unsubscribeActive?.()
+  unsubscribeActive = undefined
+  activeDialog = undefined
+  walletConnectDialogStore.status = "rejected"
+  walletConnectDialogStore.exiting = false
+
+  for (const pendingDialog of pendingDialogs) {
+    pendingDialog.resolve("rejected")
+  }
 }
 
 export const updateWalletConnectDialogStatus = async (
   status: WalletConnectDialogStatus,
 ) => {
+  const dialog = activeDialog
+  if (
+    !dialog ||
+    walletConnectDialogStore.status !== "pending" ||
+    walletConnectDialogStore.exiting
+  ) {
+    return
+  }
+
   walletConnectDialogStore.exiting = true
   await new Promise((resolve) => setTimeout(resolve, 200))
+  if (
+    activeDialog !== dialog ||
+    walletConnectDialogStore.status !== "pending"
+  ) {
+    return
+  }
   walletConnectDialogStore.status = status
 }

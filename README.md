@@ -92,3 +92,22 @@ yarn dev
 Other scripts: `yarn build`, `yarn start`, `yarn test`, `yarn lint`.
 
 Then open http://localhost:3000 in your browser
+
+### GoodWidget local packages
+
+The Superfluid campaign widget and its GoodWidget runtime packages are currently
+installed from local tarballs. Build them in a checkout of
+[GoodDollar/GoodWidget](https://github.com/GoodDollar/GoodWidget), then copy or
+pack these packages into `local-packages/`:
+
+```sh
+pnpm --filter @goodwidget/ui pack --pack-destination /path/to/GoodWallet/local-packages
+pnpm --filter @goodwidget/core pack --pack-destination /path/to/GoodWallet/local-packages
+pnpm --filter @goodwidget/embed pack --pack-destination /path/to/GoodWallet/local-packages
+pnpm --filter @goodwidget/citizen-claim-widget pack --pack-destination /path/to/GoodWallet/local-packages
+pnpm --filter @goodwidget/superfluid-campaign-widget pack --pack-destination /path/to/GoodWallet/local-packages
+```
+
+Rename the generated archives to `ui.tgz`, `core.tgz`, `embed.tgz`,
+`citizen-claim-widget.tgz`, and `superfluid-campaign-widget.tgz`, respectively,
+then run `yarn install`. The archives are gitignored.

@@ -24,6 +24,11 @@
     "@bitcoinerlab/secp256k1": "^1.2.0",
     "@electric-sql/pglite": "^0.5.3",
     "@gooddollar/goodprotocol": "^2.2.0",
+    "@goodwidget/citizen-claim-widget": "file:./local-packages/citizen-claim-widget.tgz",
+    "@goodwidget/core": "file:./local-packages/core.tgz",
+    "@goodwidget/embed": "file:./local-packages/embed.tgz",
+    "@goodwidget/superfluid-campaign-widget": "file:./local-packages/superfluid-campaign-widget.tgz",
+    "@goodwidget/ui": "file:./local-packages/ui.tgz",
     "@hcaptcha/react-hcaptcha": "^2.0.2",
     "@json-rpc-tools/utils": "^1.7.6",
     "@lifi/sdk": "^4.1.0",
@@ -41,6 +46,10 @@
     "@solana/webcrypto-ed25519-polyfill": "^6.9.0",
     "@toruslabs/customauth": "^20.4.0",
     "@walletconnect/utils": "^2.23.10",
+    "@x402/core": "^2.19.0",
+    "@x402/evm": "^2.19.0",
+    "@x402/extensions": "^2.19.0",
+    "@x402/svm": "^2.19.0",
     "async-await-mutex-lock": "^1.0.12",
     "async-retry": "^1.3.3",
     "bitcoinjs-lib": "^7.0.1",
@@ -63,6 +72,7 @@
     "react-dom": "^19.2.7",
     "react-icons": "^5.6.0",
     "react-jazzicon": "^1.0.4",
+    "react-native-web": "^0.19.13",
     "swr": "^2.4.2",
     "valtio": "^2.3.2",
     "viem": "^2.54.0",
@@ -77,6 +87,7 @@
     "@types/node": "26.1.1",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
+    "@types/react-native-web": "^0",
     "@vitest/coverage-v8": "4.1.9",
     "autoprefixer": "^10.5.0",
     "babel-plugin-react-compiler": "^1.0.0",
@@ -98,6 +109,10 @@
   ],
   "resolutions": {
     "esbuild": "0.25.10",
-    "@polymarket/builder-signing-sdk": "1.0.0"
+    "@polymarket/builder-signing-sdk": "1.0.0",
+    "@goodwidget/core": "file:./local-packages/core.tgz",
+    "@goodwidget/embed": "file:./local-packages/embed.tgz",
+    "@goodwidget/ui": "file:./local-packages/ui.tgz",
+    "@goodwidget/citizen-claim-widget": "file:./local-packages/citizen-claim-widget.tgz"
   }
 }

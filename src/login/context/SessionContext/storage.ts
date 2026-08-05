@@ -3,6 +3,7 @@ import { proxy, ref } from "valtio"
 
 import { getPrivateKeySession } from "@/login/adapters/privatekey"
 import type { Addresses, ISigner, ISignerSession } from "@/login/types"
+import { resetWalletConnectDialogs } from "@/sections/WalletConnect/store/walletConnectDialogStore"
 
 const SIGNER_SESSION_KEY = "SIGNER_SESSION"
 
@@ -77,6 +78,7 @@ export const setSession = (session: ISignerSession | null) => {
 }
 
 export const logout = () => {
+  resetWalletConnectDialogs()
   setSession(null)
 }
 

@@ -47,7 +47,29 @@ const preparePage = async (page: Page, showOnboarding: boolean) => {
 const login = async (page: Page) => {
   await page.goto("/en?login=master_seed")
   await page.getByRole("button", { name: "Playwright test wallet" }).click()
-  await expect(page.getByText("Playwright test wallet")).toBeVisible()
+  await expect(page.getByTestId("wallet-actions")).toBeVisible()
+}
+
+const openTestFixtureWidget = async (page: Page, testInfo: TestInfo) => {
+  const walletActions = page.getByTestId("wallet-actions")
+  const fixtureLink = walletActions.getByRole("link", { name: "Test Fixture" })
+
+  if (testInfo.project.name === "mobile") {
+    const actionsToggle = page.getByTestId("wallet-actions-toggle")
+    await expect(actionsToggle).toBeVisible()
+    if (!(await fixtureLink.isVisible())) {
+      await actionsToggle.getByRole("button").click()
+    }
+  }
+
+  await expect(fixtureLink).toBeVisible()
+  await expect(fixtureLink).toHaveAttribute("href", "/en/test-fixture")
+  await fixtureLink.click()
+  await page.waitForURL(/\/en\/test-fixture/, { timeout: 60_000 })
+  await expect(page.getByTestId("test-fixture-widget")).toBeVisible({
+    timeout: 30_000,
+  })
+  await expect(page.getByText("Test Fixture Widget")).toBeVisible()
 }
 
 test("captures the locale-aware onboarding and login entry", async ({
@@ -76,6 +98,14 @@ test("captures the authenticated home balance and responsive action grid", async
   await expect(page.getByText("$124.68")).toBeVisible()
   const walletActions = page.getByTestId("wallet-actions")
   await expect(walletActions).toBeVisible()
+  await expect(walletActions.getByRole("link")).toHaveCount(7)
+  await expect(walletActions.getByRole("link").first()).toHaveAttribute(
+    "href",
+    "/en/gooddollar",
+  )
+  await expect(
+    walletActions.getByRole("link", { name: "Test Fixture" }),
+  ).toHaveAttribute("href", "/en/test-fixture")
 
   if (testInfo.project.name === "mobile") {
     const actionsToggle = page.getByTestId("wallet-actions-toggle")
@@ -86,22 +116,40 @@ test("captures the authenticated home balance and responsive action grid", async
   await captureScreenshot(page, testInfo, "home-balances-overflow-en.png")
 })
 
+test("opens the registered test fixture widget from the dashboard", async ({
+  page,
+}, testInfo) => {
+  await preparePage(page, false)
+  await login(page)
+  await openTestFixtureWidget(page, testInfo)
+})
+
+test("rejects unregistered widget routes", async ({ page }) => {
+  await preparePage(page, false)
+  await login(page)
+  await page.goto("/en/not-a-registered-widget")
+  await expect(page.getByRole("heading", { name: "404" })).toBeVisible()
+  await expect(
+    page.getByRole("heading", { name: "This page could not be found." }),
+  ).toBeVisible()
+  await expect(page.getByTestId("test-fixture-widget")).toHaveCount(0)
+})
+
 test("captures the claim verification requirement", async ({
   page,
 }, testInfo) => {
   await preparePage(page, false)
   await login(page)
-  await expect(page.getByRole("link", { name: "GoodDollar" })).toHaveAttribute(
-    "href",
-    "/en/gooddollar",
-  )
-  await page.goto("/en/gooddollar")
+  const goodDollarLink = page.getByRole("link", { name: "GoodDollar" })
+  await expect(goodDollarLink).toHaveAttribute("href", "/en/gooddollar")
+  await goodDollarLink.click()
+  await page.waitForURL(/\/en\/gooddollar/, { timeout: 60_000 })
 
   await expect(
     page.getByText(
       "Before you can start to claim your GoodDollars you first need to pass face verification to whitelist your account.",
     ),
-  ).toBeVisible()
+  ).toBeVisible({ timeout: 30_000 })
   await expect(page.getByRole("button", { name: "Verify" })).toBeVisible()
   await captureScreenshot(page, testInfo, "claim-requires-verification-en.png")
 })
