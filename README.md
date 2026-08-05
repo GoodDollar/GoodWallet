@@ -137,6 +137,10 @@ Credits button; it is hidden when unset or set to `false`, while the authenticat
 during the Next.js build, so a Vercel environment change requires a new
 deployment/redeploy.
 
+The Superfluid button follows the same pattern with
+`NEXT_PUBLIC_SUPERFLUID_CAMPAIGN_WIDGET_DASHBOARD_ENABLED`; its authenticated
+`/{locale}/superfluid-campaign` path remains available when the button is hidden.
+
 ## GoodWidget local-tarball workflow
 
 Widget packages that are not yet published to npm (e.g. `@goodwidget/ai-credits-widget`)

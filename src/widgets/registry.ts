@@ -218,6 +218,10 @@ const superfluidCampaignWidget = defineWidget({
   routeSlug: "superfluid-campaign",
   displayName: "Superfluid Rewards",
   description: "Earn SUP rewards through GoodDollar and ecosystem actions",
+  dashboardVisible: readBooleanEnv(
+    "NEXT_PUBLIC_SUPERFLUID_CAMPAIGN_WIDGET_DASHBOARD_ENABLED",
+    false,
+  ),
   icon: { kind: "system", name: "Cash" },
   integrationMode: "web-component",
   entry: {

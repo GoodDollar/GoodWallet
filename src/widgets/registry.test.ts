@@ -165,9 +165,16 @@ describe("widget registry", () => {
         chainIds: [42220, 122, 50, 8453],
       },
     })
-    expect(widgetDashboardActions).toEqual([
-      expect.objectContaining({ routeSlug: "superfluid-campaign" }),
-    ])
+    const action = widgetDashboardActions.find(
+      (dashboardAction) =>
+        dashboardAction.widgetId === "goodwidget.superfluid-campaign",
+    )
+    if (superfluid?.dashboardVisible === false) {
+      expect(action).toBeUndefined()
+    } else {
+      expect(action).toBeDefined()
+      expect(action?.routeSlug).toBe("superfluid-campaign")
+    }
   })
 
   describe("AI Credits widget", () => {
