@@ -30,7 +30,6 @@ export const registerElement = (
   packageName: string,
   packageVersion: string,
 ): Promise<string> => {
-  const existingDefinition = customElements.get(tagName)
   const cached = registrationCache.get(tagName)
   if (cached) {
     if (
@@ -44,25 +43,40 @@ export const registerElement = (
     }
     return cached.promise
   }
-  if (existingDefinition) {
-    return Promise.reject(
-      new Error(`Custom Element tag ${tagName} is already registered`),
-    )
+
+  if (customElements.get(tagName)) {
+    const settled = Promise.resolve(tagName)
+    registrationCache.set(tagName, {
+      load,
+      packageName,
+      packageVersion,
+      promise: settled,
+    })
+    return settled
   }
 
   const promise = load()
     .then(async (module) => {
       assertWidgetModuleMetadata(module, packageName, packageVersion)
-      const registered = await module.register(tagName)
-      if (registered !== tagName) {
-        throw new Error(
-          `Widget registered ${registered}; expected declared tag ${tagName}`,
-        )
+      if (customElements.get(tagName)) {
+        return tagName
+      }
+      try {
+        const registered = await module.register(tagName)
+        if (registered !== tagName) {
+          throw new Error(
+            `Widget registered ${registered}; expected declared tag ${tagName}`,
+          )
+        }
+      } catch (error: unknown) {
+        if (!customElements.get(tagName)) {
+          throw error
+        }
       }
       if (!customElements.get(tagName)) {
         throw new Error(`Widget did not register Custom Element ${tagName}`)
       }
-      return registered
+      return tagName
     })
     .catch((error: unknown) => {
       registrationCache.delete(tagName)
@@ -86,6 +100,7 @@ export const WebComponentWidgetHost = ({
   provider,
   themeOverrides,
   config,
+  elementProps,
 }: WidgetHostProps & {
   load: WebComponentWidgetLoader
   tagName: string
@@ -130,12 +145,13 @@ export const WebComponentWidgetHost = ({
       provider,
       themeOverrides,
       config,
+      elementProps,
     })
 
     return () => {
       clearHostedWidgetProperties(element)
     }
-  }, [config, provider, registeredTagName, themeOverrides])
+  }, [config, elementProps, provider, registeredTagName, themeOverrides])
 
   if (loadError) throw loadError
   if (!registeredTagName) return <LoadingSpinner />

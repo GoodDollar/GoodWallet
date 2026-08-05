@@ -1,11 +1,13 @@
-import type { ReactNode } from "react"
+import { createElement, type ReactNode } from "react"
 import type { IconName } from "ui"
 
 import { CELO_CHAIN_ID } from "@/chain/chain-ids"
 
 import type { ReactWidgetLoader, WebComponentWidgetLoader } from "./hostTypes"
+import { AiCreditsIcon } from "./icons/AiCreditsIcon"
 import {
   WIDGET_EVM_CHAIN_IDS,
+  WIDGET_PROVIDER_METHOD_LIST,
   WIDGET_PROVIDER_METHODS,
 } from "./provider/policy"
 
@@ -23,6 +25,12 @@ export type DashboardAction = {
   widgetId?: string
 }
 
+const readBooleanEnv = (name: string, fallback: boolean): boolean => {
+  const value = process.env[name]
+  if (value === undefined || value === "") return fallback
+  return value === "true" || value === "1"
+}
+
 type RegisteredWidgetBase = {
   widgetId: `goodwidget.${string}`
   packageName: `@goodwidget/${string}`
@@ -35,6 +43,9 @@ type RegisteredWidgetBase = {
     chainIds: readonly number[]
     requiredMethods: readonly string[]
   }
+  elementProps?: Record<string, unknown>
+  /** Controls the dashboard action only; routes remain registry-addressable. */
+  dashboardVisible?: boolean
 }
 
 export type RegisteredWidget = RegisteredWidgetBase &
@@ -91,7 +102,9 @@ const validateWidget = (widget: RegisteredWidget): void => {
   )
   if (unsupportedChains.length > 0) {
     throw new Error(
-      `Widget ${widget.widgetId} requests unsupported chains: ${unsupportedChains.join(", ")}`,
+      `Widget ${
+        widget.widgetId
+      } requests unsupported chains: ${unsupportedChains.join(", ")}`,
     )
   }
   if (
@@ -105,7 +118,9 @@ const validateWidget = (widget: RegisteredWidget): void => {
   )
   if (unsupportedMethods.length > 0) {
     throw new Error(
-      `Widget ${widget.widgetId} requests unsupported methods: ${unsupportedMethods.join(", ")}`,
+      `Widget ${
+        widget.widgetId
+      } requests unsupported methods: ${unsupportedMethods.join(", ")}`,
     )
   }
 }
@@ -138,6 +153,34 @@ export const createWidgetRegistry = (
   return registry
 }
 
+const aiCreditsWidget = defineWidget({
+  widgetId: "goodwidget.ai-credits",
+  packageName: "@goodwidget/ai-credits-widget",
+  packageVersion: "0.1.2",
+  routeSlug: "ai-credits",
+  displayName: "AI Credits",
+  description: "Purchase AI compute credits with your G$ balance",
+  dashboardVisible: readBooleanEnv(
+    "NEXT_PUBLIC_AI_CREDITS_WIDGET_DASHBOARD_ENABLED",
+    true,
+  ),
+  icon: { kind: "local", render: () => createElement(AiCreditsIcon) },
+  integrationMode: "web-component",
+  entry: {
+    tagName: "ai-credits-widget",
+    load: () => import("@goodwidget/ai-credits-widget/register"),
+  },
+  providerPolicy: {
+    chainIds: [CELO_CHAIN_ID],
+    requiredMethods: WIDGET_PROVIDER_METHOD_LIST,
+  },
+  elementProps: {
+    backendUrl: process.env.NEXT_PUBLIC_AI_CREDITS_BACKEND_URL,
+    fundingVaultAddress:
+      process.env.NEXT_PUBLIC_AI_CREDITS_FUNDING_VAULT_ADDRESS,
+  },
+})
+
 const testFixtureWidget = defineWidget({
   widgetId: "goodwidget.test-fixture",
   packageName: "@goodwidget/test-fixture",
@@ -160,7 +203,7 @@ const testFixtureWidget = defineWidget({
 export const WIDGETS: readonly RegisteredWidget[] =
   process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE === "true"
     ? [testFixtureWidget]
-    : []
+    : [aiCreditsWidget]
 export const widgetRegistry = createWidgetRegistry(WIDGETS)
 
 export const getWidgetByRoute = (
@@ -207,12 +250,19 @@ export const coreDashboardActions = [
   },
 ] as const satisfies readonly DashboardAction[]
 
-export const widgetDashboardActions = WIDGETS.map(
-  (widget): DashboardAction => ({
-    id: widget.widgetId,
-    widgetId: widget.widgetId,
-    routeSlug: widget.routeSlug,
-    label: widget.displayName,
-    icon: widget.icon,
-  }),
-)
+export const getWidgetDashboardActions = (
+  widgets: readonly RegisteredWidget[],
+): readonly DashboardAction[] =>
+  widgets
+    .filter((widget) => widget.dashboardVisible !== false)
+    .map(
+      (widget): DashboardAction => ({
+        id: widget.widgetId,
+        widgetId: widget.widgetId,
+        routeSlug: widget.routeSlug,
+        label: widget.displayName,
+        icon: widget.icon,
+      }),
+    )
+
+export const widgetDashboardActions = getWidgetDashboardActions(WIDGETS)

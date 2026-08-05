@@ -6,6 +6,7 @@ export type WidgetHostProps = {
   provider: RestrictedEip1193Provider
   themeOverrides?: Record<string, unknown>
   config?: Record<string, unknown>
+  elementProps?: Record<string, unknown>
 }
 
 export type WidgetModuleMetadata = {

@@ -92,3 +92,38 @@ yarn dev
 Other scripts: `yarn build`, `yarn start`, `yarn test`, `yarn lint`.
 
 Then open http://localhost:3000 in your browser
+
+## Preview deployments
+
+Vercel Git deployments are disabled in `vercel.json`. Pull requests targeting
+`main` are built in GitHub Actions and deployed to Vercel as prebuilt Preview
+artifacts after the checks pass.
+
+The repository needs these GitHub Actions secrets:
+
+- `VERCEL_TOKEN`
+- `VERCEL_ORG_ID`
+- `VERCEL_PROJECT_ID`
+
+## GoodWidget visibility
+
+Widget routes are registered independently from dashboard buttons. For example,
+setting `NEXT_PUBLIC_AI_CREDITS_WIDGET_DASHBOARD_ENABLED=false` hides the AI
+Credits button while keeping the authenticated `/{locale}/ai-credits` path
+available. `NEXT_PUBLIC_*` values are read during the Next.js build, so a Vercel
+environment change requires a new deployment/redeploy.
+
+## GoodWidget local-tarball workflow
+
+Widget packages that are not yet published to npm (e.g. `@goodwidget/ai-credits-widget`)
+must be installed from a local tarball built inside the
+[GoodDollar/GoodWidget](https://github.com/GoodDollar/GoodWidget) monorepo.
+
+1. Clone `GoodDollar/GoodWidget` alongside this repo.
+2. Inside the GoodWidget monorepo, pack the widget:
+   ```sh
+   pnpm --filter @goodwidget/ai-credits-widget pack --pack-destination /path/to/GoodWallet/local-packages
+   ```
+3. The tarball lands at `local-packages/ai-credits-widget.tgz` (already referenced in `package.json`).
+4. Run `yarn install` in this repo to link the tarball.
+5. The path `local-packages/*.tgz` is git-ignored; do **not** commit tarballs.

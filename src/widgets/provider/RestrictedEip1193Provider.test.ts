@@ -24,6 +24,8 @@ const allTestMethods = [
   "eth_accounts",
   "eth_requestAccounts",
   "eth_chainId",
+  "eth_getBalance",
+  "eth_call",
   "wallet_switchEthereumChain",
   "personal_sign",
   "eth_sendTransaction",
@@ -200,6 +202,33 @@ describe("RestrictedEip1193Provider", () => {
     )
     expect(signer.signTransaction).toHaveBeenCalledWith(
       expect.objectContaining({ to: originalRecipient }),
+    )
+  })
+
+  it("forwards eth_getBalance and eth_call to the RPC client without signing", async () => {
+    const { provider, rpcRequest } = createProvider()
+    rpcRequest.mockResolvedValueOnce("0x1bc16d674ec80000")
+    await expect(
+      provider.request({
+        method: "eth_getBalance",
+        params: [address, "latest"],
+      }),
+    ).resolves.toBe("0x1bc16d674ec80000")
+    expect(rpcRequest).toHaveBeenCalledWith(
+      expect.any(Number),
+      expect.objectContaining({ method: "eth_getBalance" }),
+    )
+
+    rpcRequest.mockResolvedValueOnce("0x")
+    await expect(
+      provider.request({
+        method: "eth_call",
+        params: [{ to: address, data: "0x" }, "latest"],
+      }),
+    ).resolves.toBe("0x")
+    expect(rpcRequest).toHaveBeenCalledWith(
+      expect.any(Number),
+      expect.objectContaining({ method: "eth_call" }),
     )
   })
 

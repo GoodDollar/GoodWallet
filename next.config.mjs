@@ -1,4 +1,3 @@
-// Injected content via Sentry wizard below
 import { withSentryConfig } from "@sentry/nextjs"
 
 /** @type {import('next').NextConfig} */
@@ -6,8 +5,38 @@ const nextConfig = {
   reactCompiler: true,
   reactStrictMode: true,
 
+  transpilePackages: [
+    "@goodwidget/ai-credits-widget",
+    "@goodwidget/core",
+    "@goodwidget/embed",
+    "@goodwidget/ui",
+    "react-native-web",
+  ],
+
+  turbopack: {
+    resolveAlias: {
+      "react-native": "react-native-web",
+    },
+  },
+
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      "react-native$": "react-native-web",
+    }
+    config.resolve.extensions = [
+      ".web.js",
+      ".web.jsx",
+      ".web.ts",
+      ".web.tsx",
+      ...(config.resolve.extensions ?? []),
+    ]
+    return config
+  },
+
   env: {
     NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA: process.env.VERCEL_GIT_COMMIT_SHA,
+    TAMAGUI_TARGET: "web",
   },
   images: {
     minimumCacheTTL: 31536000,
