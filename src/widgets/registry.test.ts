@@ -139,6 +139,9 @@ describe("widget registry", () => {
       packageVersion: "0.1.0-beta",
       routeSlug: "superfluid-campaign",
       entry: { tagName: "gw-superfluid-campaign" },
+      providerPolicy: {
+        chainIds: [42220, 122, 50, 8453],
+      },
     })
   })
 })

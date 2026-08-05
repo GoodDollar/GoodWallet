@@ -1,11 +1,17 @@
 import type { ReactNode } from "react"
 import type { IconName } from "ui"
 
-import { BASE_CHAIN_ID, CELO_CHAIN_ID } from "@/chain/chain-ids"
+import {
+  BASE_CHAIN_ID,
+  CELO_CHAIN_ID,
+  FUSE_CHAIN_ID,
+  XDC_CHAIN_ID,
+} from "@/chain/chain-ids"
 
 import type { ReactWidgetLoader, WebComponentWidgetLoader } from "./hostTypes"
 import {
   WIDGET_EVM_CHAIN_IDS,
+  WIDGET_PROVIDER_METHOD_LIST,
   WIDGET_PROVIDER_METHODS,
 } from "./provider/policy"
 
@@ -35,6 +41,7 @@ type RegisteredWidgetBase = {
     chainIds: readonly number[]
     requiredMethods: readonly string[]
   }
+  elementProps?: Record<string, unknown>
 }
 
 export type RegisteredWidget = RegisteredWidgetBase &
@@ -189,15 +196,8 @@ const superfluidCampaignWidget = defineWidget({
     },
   },
   providerPolicy: {
-    chainIds: [BASE_CHAIN_ID, CELO_CHAIN_ID],
-    requiredMethods: [
-      "eth_accounts",
-      "eth_requestAccounts",
-      "eth_chainId",
-      "wallet_switchEthereumChain",
-      "personal_sign",
-      "eth_sendTransaction",
-    ],
+    chainIds: [CELO_CHAIN_ID, FUSE_CHAIN_ID, XDC_CHAIN_ID, BASE_CHAIN_ID],
+    requiredMethods: WIDGET_PROVIDER_METHOD_LIST,
   },
 })
 

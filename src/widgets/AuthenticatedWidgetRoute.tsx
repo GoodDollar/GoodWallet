@@ -68,6 +68,7 @@ const MountedWidget = ({
       provider={provider}
       themeOverrides={themeOverrides}
       config={config}
+      elementProps={widget.elementProps}
     />
   )
 }
