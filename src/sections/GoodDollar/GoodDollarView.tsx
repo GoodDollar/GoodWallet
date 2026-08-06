@@ -6,10 +6,16 @@ import ClaimView from "./components/Claim/ClaimView"
 import InviteView from "./components/Invite/InviteView"
 import NewsView from "./components/News/NewsView"
 
-export default function GoodDollarView() {
+export type GoodDollarTab = "claim" | "inviteRewards" | "news"
+
+export default function GoodDollarView({
+  initialTab,
+}: {
+  initialTab?: GoodDollarTab
+}) {
   return (
     <div className="h-full px-6 mt-[12px]">
-      <Tabs>
+      <Tabs activeTab={initialTab}>
         <Tab tabPage="gooddollar" tabId="claim">
           <ClaimView />
         </Tab>

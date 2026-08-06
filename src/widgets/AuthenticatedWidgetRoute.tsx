@@ -4,12 +4,13 @@ import { useEffect, useMemo } from "react"
 
 import { setBottomSheetProps } from "@/components/Snippet/BottomSheet/bottomSheetStore"
 import { LoadingSpinner } from "@/components/Snippet/LoadingSpinner"
+import { config } from "@/config"
 import { useSessionContext } from "@/login/hooks/context"
 import type { EVMSigner } from "@/login/types"
 
 import { useWidgetProvider, WidgetProvider } from "./provider/WidgetProvider"
 import { type RegisteredWidget, widgetRegistry } from "./registry"
-import { createSuperfluidCitizenClaimExecution } from "./superfluidClaimExecution"
+// import { createSuperfluidCitizenClaimExecution } from "./superfluidClaimExecution"
 import { WidgetRenderer } from "./WidgetRenderer"
 
 export const AuthenticatedWidgetRoute = ({
@@ -59,7 +60,8 @@ const MountedWidget = ({
 
     return {
       ...widget.elementProps,
-      citizenClaimExecution: createSuperfluidCitizenClaimExecution(evmSigner),
+      citizenClaimEnvironment: config.g$claim.contracts,
+      disableClaim: true,
     }
   }, [evmSigner, widget])
 

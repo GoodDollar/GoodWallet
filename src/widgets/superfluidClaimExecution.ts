@@ -26,16 +26,27 @@ export const createSuperfluidCitizenClaimExecution = (signer: EVMSigner) => {
     if (!chain) continue
 
     const rpcUrl = rpcUrls[String(chainId)] ?? chain.rpcUrls.default.http[0]
-    clientsByChain[chainId] = {
-      publicClient: getViemClient(chainId),
-      walletClient: createWalletClient({
-        account,
-        chain,
-        transport: http(rpcUrl, {
-          retryCount: 3,
-          retryDelay: 1000,
-        }),
+    const walletClient = createWalletClient({
+      account,
+      chain,
+      transport: http(rpcUrl, {
+        retryCount: 3,
+        retryDelay: 1000,
       }),
+    })
+
+    clientsByChain[chainId] = {
+      publicClient: getViemClient(chainId, rpcUrl),
+      // Citizen SDK simulate requests carry the sender as an address string.
+      // Re-attach the LocalAccount here so Viem uses eth_sendRawTransaction,
+      // rather than treating the request as a JSON-RPC account and calling
+      // eth_sendTransaction on the public RPC.
+      walletClient: {
+        ...walletClient,
+        writeContract: (
+          request: Parameters<typeof walletClient.writeContract>[0],
+        ) => walletClient.writeContract({ ...request, account } as never),
+      },
     }
   }
 
