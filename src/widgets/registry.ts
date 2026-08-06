@@ -232,6 +232,16 @@ const superfluidCampaignWidget = defineWidget({
     chainIds: [CELO_CHAIN_ID, FUSE_CHAIN_ID, XDC_CHAIN_ID, BASE_CHAIN_ID],
     requiredMethods: WIDGET_PROVIDER_METHOD_LIST,
   },
+  elementProps: {
+    actionLinks: {
+      "flow-state-vote": "https://ubi.gd/4yVEYY5",
+      "flow-state-funding": "https://ubi.gd/3RNaK8Y",
+      "gardens-donation": "https://ubi.gd/4xpmldD",
+      "gardens-funding": "https://ubi.gd/457CB6R",
+      "invite-users": "https://ubi.gd/4q8oQyw",
+      "claim-ubi": "https://ubi.gd/457CB6R",
+    },
+  },
 })
 
 export const WIDGETS: readonly RegisteredWidget[] =

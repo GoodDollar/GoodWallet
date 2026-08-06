@@ -37,6 +37,7 @@ yarn-error.log*
 
 # vercel
 .vercel
+.env*
 
 .yarn/*
 !.yarn/patches
@@ -67,5 +68,7 @@ tsconfig.tsbuildinfo
 codex-resume
 .agents/skills
 local-packages/
+
+# internal
 .bounties
-.env*
+.prettierignore

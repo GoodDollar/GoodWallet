@@ -3,6 +3,8 @@ import GoodDollarView, {
   type GoodDollarTab,
 } from "@/sections/GoodDollar/GoodDollarView"
 
+export const dynamic = "force-dynamic"
+
 type GoodDollarPageProps = {
   searchParams: Promise<{ tab?: string | string[] }>
 }
