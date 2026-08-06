@@ -30,8 +30,10 @@ export type DashboardAction = {
   widgetId?: string
 }
 
-const readBooleanEnv = (name: string, fallback: boolean): boolean => {
-  const value = process.env[name]
+const readBooleanEnv = (
+  value: string | undefined,
+  fallback: boolean,
+): boolean => {
   if (value === undefined || value === "") return fallback
   return value === "true" || value === "1"
 }
@@ -166,7 +168,7 @@ const aiCreditsWidget = defineWidget({
   displayName: "AI Credits",
   description: "Purchase AI compute credits with your G$ balance",
   dashboardVisible: readBooleanEnv(
-    "NEXT_PUBLIC_AI_CREDITS_WIDGET_DASHBOARD_ENABLED",
+    process.env.NEXT_PUBLIC_AI_CREDITS_WIDGET_DASHBOARD_ENABLED,
     false,
   ),
   icon: { kind: "local", render: () => createElement(AiCreditsIcon) },
@@ -219,7 +221,7 @@ const superfluidCampaignWidget = defineWidget({
   displayName: "Superfluid Rewards",
   description: "Earn SUP rewards through GoodDollar and ecosystem actions",
   dashboardVisible: readBooleanEnv(
-    "NEXT_PUBLIC_SUPERFLUID_CAMPAIGN_WIDGET_DASHBOARD_ENABLED",
+    process.env.NEXT_PUBLIC_SUPERFLUID_CAMPAIGN_WIDGET_DASHBOARD_ENABLED,
     false,
   ),
   icon: { kind: "system", name: "Cash" },
