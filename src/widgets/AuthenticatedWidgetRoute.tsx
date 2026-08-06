@@ -1,13 +1,15 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useMemo } from "react"
 
 import { setBottomSheetProps } from "@/components/Snippet/BottomSheet/bottomSheetStore"
 import { LoadingSpinner } from "@/components/Snippet/LoadingSpinner"
 import { useSessionContext } from "@/login/hooks/context"
+import type { EVMSigner } from "@/login/types"
 
 import { useWidgetProvider, WidgetProvider } from "./provider/WidgetProvider"
 import { type RegisteredWidget, widgetRegistry } from "./registry"
+import { createSuperfluidCitizenClaimExecution } from "./superfluidClaimExecution"
 import { WidgetRenderer } from "./WidgetRenderer"
 
 export const AuthenticatedWidgetRoute = ({
@@ -37,19 +39,35 @@ export const AuthenticatedWidgetRoute = ({
       chainIds={widget.providerPolicy.chainIds}
       requiredMethods={widget.providerPolicy.requiredMethods}
     >
-      <MountedWidget widget={widget} />
+      <MountedWidget widget={widget} evmSigner={signer.EVM} />
     </WidgetProvider>
   )
 }
 
-const MountedWidget = ({ widget }: { widget: RegisteredWidget }) => {
+const MountedWidget = ({
+  widget,
+  evmSigner,
+}: {
+  widget: RegisteredWidget
+  evmSigner: EVMSigner
+}) => {
   const provider = useWidgetProvider()
+  const elementProps = useMemo(() => {
+    if (widget.widgetId !== "goodwidget.superfluid-campaign") {
+      return widget.elementProps
+    }
+
+    return {
+      ...widget.elementProps,
+      citizenClaimExecution: createSuperfluidCitizenClaimExecution(evmSigner),
+    }
+  }, [evmSigner, widget])
 
   return (
     <WidgetRenderer
       widget={widget}
       provider={provider}
-      elementProps={widget.elementProps}
+      elementProps={elementProps}
     />
   )
 }
