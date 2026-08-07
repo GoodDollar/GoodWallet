@@ -241,7 +241,7 @@ const superfluidCampaignWidget = defineWidget({
       "gardens-donation": "https://ubi.gd/4xpmldD",
       "gardens-funding": "https://ubi.gd/457CB6R",
       "invite-users": "https://ubi.gd/4q8oQyw",
-      "claim-ubi": "https://ubi.gd/457CB6R",
+      "claim-ubi": "https://ubi.gd/4fGkU4r",
     },
   },
 })
