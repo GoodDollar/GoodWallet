@@ -27,7 +27,7 @@
     "@goodwidget/ai-credits-widget": "0.1.5",
     "@goodwidget/core": "0.1.4",
     "@goodwidget/embed": "0.1.4",
-    "@goodwidget/superfluid-campaign-widget": "0.1.4",
+    "@goodwidget/superfluid-campaign-widget": "0.1.5",
     "@goodwidget/ui": "0.1.4",
     "@hcaptcha/react-hcaptcha": "^2.0.2",
     "@json-rpc-tools/utils": "^1.7.6",
