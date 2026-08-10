@@ -1386,9 +1386,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@goodwidget/superfluid-campaign-widget@npm:0.1.4":
-  version: 0.1.4
-  resolution: "@goodwidget/superfluid-campaign-widget@npm:0.1.4"
+"@goodwidget/superfluid-campaign-widget@npm:0.1.5":
+  version: 0.1.5
+  resolution: "@goodwidget/superfluid-campaign-widget@npm:0.1.5"
   dependencies:
     "@goodwidget/citizen-claim-widget": "npm:0.2.1"
     "@goodwidget/core": "npm:0.1.4"
@@ -1398,7 +1398,7 @@ __metadata:
   peerDependencies:
     react: ">=18.0.0"
     react-dom: ">=18.0.0"
-  checksum: 10c0/447263912257da74883c535b48d9c8d5b6eeab9e1042a11f8f69e7bccb2b253493bbceef45611ec469ff9ffbdff00385bbd298aad32e9a89c29a11453bc78a8e
+  checksum: 10c0/640ed2112438feb2c0bbcd8a86d28d310a376b7b34ccd4cfe86f1ad91236404736107e24f3b4d86e81581bc0f39a4c13b2c790ccc6cbd6660c1cc888dbe14b58
   languageName: node
   linkType: hard
 
@@ -10524,7 +10524,7 @@ __metadata:
     "@goodwidget/ai-credits-widget": "npm:0.1.5"
     "@goodwidget/core": "npm:0.1.4"
     "@goodwidget/embed": "npm:0.1.4"
-    "@goodwidget/superfluid-campaign-widget": "npm:0.1.4"
+    "@goodwidget/superfluid-campaign-widget": "npm:0.1.5"
     "@goodwidget/ui": "npm:0.1.4"
     "@hcaptcha/react-hcaptcha": "npm:^2.0.2"
     "@json-rpc-tools/utils": "npm:^1.7.6"
