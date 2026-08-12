@@ -221,4 +221,57 @@ describe("widget registry", () => {
       ])
     })
   })
+
+  describe("GoodReserve widget", () => {
+    it("is present in the live WIDGETS array with the correct widgetId", () => {
+      const goodReserve = WIDGETS.find(
+        (w) => w.widgetId === "goodwidget.goodreserve",
+      )
+      expect(goodReserve).toBeDefined()
+      expect(goodReserve).toMatchObject({
+        widgetId: "goodwidget.goodreserve",
+        packageName: "@goodwidget/goodreserve-widget",
+        packageVersion: "0.1.2",
+        routeSlug: "goodreserve",
+        entry: { tagName: "gw-goodreserve-widget" },
+        providerPolicy: {
+          chainIds: [42220, 50],
+        },
+      })
+    })
+
+    it("passes registry validation (createWidgetRegistry does not throw)", () => {
+      const goodReserve = WIDGETS.find(
+        (w) => w.widgetId === "goodwidget.goodreserve",
+      )
+      expect(goodReserve).toBeDefined()
+      if (!goodReserve) return
+      expect(() => createWidgetRegistry([goodReserve])).not.toThrow()
+    })
+
+    it("appears in widgetDashboardActions only when dashboardVisible", () => {
+      const goodReserve = WIDGETS.find(
+        (w) => w.widgetId === "goodwidget.goodreserve",
+      )
+      const action = widgetDashboardActions.find(
+        (a) => a.widgetId === "goodwidget.goodreserve",
+      )
+      if (goodReserve?.dashboardVisible === false) {
+        expect(action).toBeUndefined()
+      } else {
+        expect(action).toBeDefined()
+        expect(action?.routeSlug).toBe("goodreserve")
+        expect(action?.label).toBe("GoodReserve")
+      }
+    })
+
+    it("uses the shared provider method allowlist", () => {
+      const goodReserve = WIDGETS.find(
+        (w) => w.widgetId === "goodwidget.goodreserve",
+      )
+      expect(goodReserve?.providerPolicy.requiredMethods).toEqual([
+        ...WIDGET_PROVIDER_METHOD_LIST,
+      ])
+    })
+  })
 })

@@ -1319,6 +1319,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@goodsdks/good-reserve@npm:^0.1.0":
+  version: 0.1.0
+  resolution: "@goodsdks/good-reserve@npm:0.1.0"
+  dependencies:
+    tsup: "npm:^8.3.5"
+  peerDependencies:
+    viem: "*"
+  checksum: 10c0/0c5d190db380311a9fcfd90c4428f9aff5caa92fef07f1d59584a2ccf7c6ef289f7430c45766a49a9c6af5ae725dc4d390af38dfe6d4ff4820cb749df3e10c64
+  languageName: node
+  linkType: hard
+
 "@goodwidget/ai-credits-widget@npm:0.1.5":
   version: 0.1.5
   resolution: "@goodwidget/ai-credits-widget@npm:0.1.5"
@@ -1383,6 +1394,22 @@ __metadata:
     react: ">=18.0.0"
     react-dom: ">=18.0.0"
   checksum: 10c0/1d6c66804ee2541c180c7311e40dbc462ee0e9928867e50caf9fa48dbf42cbdda37c45f665550b0a592d4c7009ee6515319c9102a29f965d43f724d5c644be57
+  languageName: node
+  linkType: hard
+
+"@goodwidget/goodreserve-widget@npm:0.1.2":
+  version: 0.1.2
+  resolution: "@goodwidget/goodreserve-widget@npm:0.1.2"
+  dependencies:
+    "@goodsdks/good-reserve": "npm:^0.1.0"
+    "@goodwidget/core": "npm:0.1.4"
+    "@goodwidget/embed": "npm:0.1.4"
+    "@goodwidget/ui": "npm:0.1.4"
+    viem: "npm:^2.0.0"
+  peerDependencies:
+    react: ">=18.0.0"
+    react-dom: ">=18.0.0"
+  checksum: 10c0/26c078bb71b8352847296be59fdf2edccb8b59ed1574349a55744014f19c08511c91548c11dbbc2c67fa27ac521281710f77f89d1ef19b26f929b20e4281c16d
   languageName: node
   linkType: hard
 
@@ -10524,6 +10551,7 @@ __metadata:
     "@goodwidget/ai-credits-widget": "npm:0.1.5"
     "@goodwidget/core": "npm:0.1.4"
     "@goodwidget/embed": "npm:0.1.4"
+    "@goodwidget/goodreserve-widget": "npm:0.1.2"
     "@goodwidget/superfluid-campaign-widget": "npm:0.1.5"
     "@goodwidget/ui": "npm:0.1.4"
     "@hcaptcha/react-hcaptcha": "npm:^2.0.2"
@@ -14506,7 +14534,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tsup@npm:^8.4.0":
+"tsup@npm:^8.3.5, tsup@npm:^8.4.0":
   version: 8.5.1
   resolution: "tsup@npm:8.5.1"
   dependencies:

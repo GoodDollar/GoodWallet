@@ -246,10 +246,33 @@ const superfluidCampaignWidget = defineWidget({
   },
 })
 
+const goodReserveWidget = defineWidget({
+  widgetId: "goodwidget.goodreserve",
+  packageName: "@goodwidget/goodreserve-widget",
+  packageVersion: "0.1.2",
+  routeSlug: "goodreserve",
+  displayName: "GoodReserve",
+  description: "Buy and sell G$ through the GoodDollar reserve",
+  dashboardVisible: readBooleanEnv(
+    process.env.NEXT_PUBLIC_GOODRESERVE_WIDGET_DASHBOARD_ENABLED,
+    false,
+  ),
+  icon: { kind: "system", name: "Cash" },
+  integrationMode: "web-component",
+  entry: {
+    tagName: "gw-goodreserve-widget",
+    load: () => import("@goodwidget/goodreserve-widget/register"),
+  },
+  providerPolicy: {
+    chainIds: [CELO_CHAIN_ID, XDC_CHAIN_ID],
+    requiredMethods: WIDGET_PROVIDER_METHOD_LIST,
+  },
+})
+
 export const WIDGETS: readonly RegisteredWidget[] =
   process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE === "true"
     ? [testFixtureWidget]
-    : [superfluidCampaignWidget, aiCreditsWidget]
+    : [superfluidCampaignWidget, aiCreditsWidget, goodReserveWidget]
 export const widgetRegistry = createWidgetRegistry(WIDGETS)
 
 export const getWidgetByRoute = (
