@@ -1397,9 +1397,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@goodwidget/goodreserve-widget@npm:0.1.2":
-  version: 0.1.2
-  resolution: "@goodwidget/goodreserve-widget@npm:0.1.2"
+"@goodwidget/goodreserve-widget@npm:0.1.3":
+  version: 0.1.3
+  resolution: "@goodwidget/goodreserve-widget@npm:0.1.3"
   dependencies:
     "@goodsdks/good-reserve": "npm:^0.1.0"
     "@goodwidget/core": "npm:0.1.4"
@@ -1409,7 +1409,7 @@ __metadata:
   peerDependencies:
     react: ">=18.0.0"
     react-dom: ">=18.0.0"
-  checksum: 10c0/26c078bb71b8352847296be59fdf2edccb8b59ed1574349a55744014f19c08511c91548c11dbbc2c67fa27ac521281710f77f89d1ef19b26f929b20e4281c16d
+  checksum: 10c0/68d5f4f4b1a423ad2993c8d5518922cfa8c9059e13e35395f5494f14076755191a01676eace6163d5cdb04cfad67fe2b99b6ef860f32b351ee1a96f4cc5baa63
   languageName: node
   linkType: hard
 
@@ -10551,7 +10551,7 @@ __metadata:
     "@goodwidget/ai-credits-widget": "npm:0.1.5"
     "@goodwidget/core": "npm:0.1.4"
     "@goodwidget/embed": "npm:0.1.4"
-    "@goodwidget/goodreserve-widget": "npm:0.1.2"
+    "@goodwidget/goodreserve-widget": "npm:0.1.3"
     "@goodwidget/superfluid-campaign-widget": "npm:0.1.5"
     "@goodwidget/ui": "npm:0.1.4"
     "@hcaptcha/react-hcaptcha": "npm:^2.0.2"
