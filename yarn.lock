@@ -587,10 +587,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@electric-sql/pglite@npm:^0.5.3":
-  version: 0.5.3
-  resolution: "@electric-sql/pglite@npm:0.5.3"
-  checksum: 10c0/6e7fbb119d51315fdb1f7afadd2ac34486060c00eeb6436f43d3c282ac9ae69d941de7966526116bf224a050d973826b5687a168988283ffe598e1a277db46d0
+"@electric-sql/pglite@npm:^0.5.5":
+  version: 0.5.5
+  resolution: "@electric-sql/pglite@npm:0.5.5"
+  checksum: 10c0/8b2780bb64c66926e841627b2bf6d5ff7933f5632aa5d371c0969bf475a1c0905ea1007e2a13255843bb4393ac68675108d78e4d396ce7a38893df5035b16fa1
   languageName: node
   linkType: hard
 
@@ -10546,7 +10546,7 @@ __metadata:
     "@bigmi/client": "npm:^0.9.0"
     "@biomejs/biome": "npm:^2.5.3"
     "@bitcoinerlab/secp256k1": "npm:^1.2.0"
-    "@electric-sql/pglite": "npm:^0.5.3"
+    "@electric-sql/pglite": "npm:^0.5.5"
     "@gooddollar/goodprotocol": "npm:^2.2.0"
     "@goodwidget/ai-credits-widget": "npm:0.1.5"
     "@goodwidget/core": "npm:0.1.4"
