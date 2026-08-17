@@ -231,7 +231,7 @@ describe("widget registry", () => {
       expect(goodReserve).toMatchObject({
         widgetId: "goodwidget.goodreserve",
         packageName: "@goodwidget/goodreserve-widget",
-        packageVersion: "0.1.3",
+        packageVersion: "0.1.5",
         routeSlug: "goodreserve",
         entry: { tagName: "gw-goodreserve-widget" },
         providerPolicy: {
