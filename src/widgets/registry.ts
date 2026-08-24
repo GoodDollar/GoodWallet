@@ -80,7 +80,6 @@ const RESERVED_WIDGET_ROUTES = new Set([
   "send",
   "receive",
   "swap",
-  "predictions",
   "walletconnect",
   "options",
   "promo",
@@ -304,12 +303,6 @@ export const coreDashboardActions = [
     routeSlug: "swap",
     label: "Swap",
     icon: { kind: "system", name: "Swap" },
-  },
-  {
-    id: "predictions",
-    routeSlug: "predictions",
-    label: "Predictions",
-    icon: { kind: "system", name: "Predictions" },
   },
   {
     id: "walletconnect",
