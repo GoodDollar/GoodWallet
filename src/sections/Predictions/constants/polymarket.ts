@@ -1,12 +1,11 @@
 // Re-export API URLs from centralized location
 export {
+  BUILDER_PROXY_URL,
   CLOB_API_URL,
   GAMMA_API_URL,
   GEOBLOCK_API_URL,
   POLYGON_RPC_URL,
   POLYMARKET_PROFILE_URL,
-  RELAYER_URL,
-  REMOTE_SIGNING_URL,
 } from "./api"
 
 // Chain configuration

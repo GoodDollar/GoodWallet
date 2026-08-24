@@ -1,13 +1,8 @@
 // biome-ignore-all lint/suspicious/noExplicitAny: need to cast the window
 import { useMemo } from "react"
-import { BuilderConfig } from "@polymarket/builder-signing-sdk"
 import { ClobClient } from "@polymarket/clob-client"
 
-import {
-  CLOB_API_URL,
-  POLYGON_CHAIN_ID,
-  REMOTE_SIGNING_URL,
-} from "../constants/polymarket"
+import { BUILDER_PROXY_URL, POLYGON_CHAIN_ID } from "../constants/polymarket"
 import useSafeDeployment from "../hooks/useSafeDeployment"
 import { useWallet } from "../providers/WalletContext"
 import type { TradingSession } from "../utils/session"
@@ -33,17 +28,11 @@ export default function useClobClient(
       return null
     }
 
-    // Builder config with remote server signing for order attribution
-    const builderConfig = new BuilderConfig({
-      remoteBuilderConfig: {
-        url: REMOTE_SIGNING_URL(),
-      },
-    })
-
     // This is the persisted clobClient instance for creating and posting
-    // orders for the user, with proper builder order attribution
+    // orders for the user. It goes through our own proxy, which adds the
+    // builder credentials for order attribution server-side.
     return new ClobClient(
-      CLOB_API_URL,
+      BUILDER_PROXY_URL("clob"),
       POLYGON_CHAIN_ID,
       ethersSigner as any,
       tradingSession.apiCredentials,
@@ -51,7 +40,6 @@ export default function useClobClient(
       derivedSafeAddressFromEoa,
       undefined, // mandatory placeholder
       false,
-      builderConfig, // Builder order attribution
     )
   }, [
     eoaAddress,

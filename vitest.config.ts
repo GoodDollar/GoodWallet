@@ -14,9 +14,11 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
-      "@/config": path.resolve(__dirname, "./config"),
+      // The more specific "@/config*" entries must precede "@" - aliases are
+      // matched by prefix in order, so "@" would otherwise swallow them
       "@/configServerless": path.resolve(__dirname, "./configServerless"),
+      "@/config": path.resolve(__dirname, "./config"),
+      "@": path.resolve(__dirname, "./src"),
       translations: path.resolve(__dirname, "./src/translations"),
       "ethers-utils": path.resolve(__dirname, "./src/ethers-utils"),
       "ethers-utils/*": path.resolve(__dirname, "./src/ethers-utils"),
