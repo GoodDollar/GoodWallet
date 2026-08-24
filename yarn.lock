@@ -1319,14 +1319,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@goodsdks/good-reserve@npm:^0.1.0":
-  version: 0.1.0
-  resolution: "@goodsdks/good-reserve@npm:0.1.0"
+"@goodsdks/good-reserve@npm:^0.1.3":
+  version: 0.1.3
+  resolution: "@goodsdks/good-reserve@npm:0.1.3"
   dependencies:
     tsup: "npm:^8.3.5"
   peerDependencies:
     viem: "*"
-  checksum: 10c0/0c5d190db380311a9fcfd90c4428f9aff5caa92fef07f1d59584a2ccf7c6ef289f7430c45766a49a9c6af5ae725dc4d390af38dfe6d4ff4820cb749df3e10c64
+  checksum: 10c0/14502652df79f0a7fe51f520f4f2ec102fd3bcdf3b922d41daf6702c45c901d2a40e62baec92465453a12f6915d0b9aba33bb210b769f674cbe425458c01befc
   languageName: node
   linkType: hard
 
@@ -1397,11 +1397,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@goodwidget/goodreserve-widget@npm:0.1.5":
-  version: 0.1.5
-  resolution: "@goodwidget/goodreserve-widget@npm:0.1.5"
+"@goodwidget/goodreserve-widget@npm:0.1.7":
+  version: 0.1.7
+  resolution: "@goodwidget/goodreserve-widget@npm:0.1.7"
   dependencies:
-    "@goodsdks/good-reserve": "npm:^0.1.0"
+    "@goodsdks/good-reserve": "npm:^0.1.3"
     "@goodwidget/core": "npm:0.1.4"
     "@goodwidget/embed": "npm:0.1.4"
     "@goodwidget/ui": "npm:0.1.4"
@@ -1409,7 +1409,7 @@ __metadata:
   peerDependencies:
     react: ">=18.0.0"
     react-dom: ">=18.0.0"
-  checksum: 10c0/7c25ed91e494d0c65aed8d7b3aa32e871aece197eb227577358386b87a7b805e858253c8861a0c6b1b4c4bdbd5d196517e453a0f8c9e325b07c7efd9eb7d2e45
+  checksum: 10c0/9114aca1e94b4249dc5f0054b8cc5e643749ef1caf338d36bf84d005058e3f40171b87761e26aa4398305d55dd887ec9ef29d747ae2f57eb818d17b9f9bd3477
   languageName: node
   linkType: hard
 
@@ -10551,7 +10551,7 @@ __metadata:
     "@goodwidget/ai-credits-widget": "npm:0.1.5"
     "@goodwidget/core": "npm:0.1.4"
     "@goodwidget/embed": "npm:0.1.4"
-    "@goodwidget/goodreserve-widget": "npm:0.1.5"
+    "@goodwidget/goodreserve-widget": "npm:0.1.7"
     "@goodwidget/superfluid-campaign-widget": "npm:0.1.5"
     "@goodwidget/ui": "npm:0.1.4"
     "@hcaptcha/react-hcaptcha": "npm:^2.0.2"

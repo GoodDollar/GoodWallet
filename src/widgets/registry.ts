@@ -249,7 +249,7 @@ const superfluidCampaignWidget = defineWidget({
 const goodReserveWidget = defineWidget({
   widgetId: "goodwidget.goodreserve",
   packageName: "@goodwidget/goodreserve-widget",
-  packageVersion: "0.1.5",
+  packageVersion: "0.1.7",
   routeSlug: "goodreserve",
   displayName: "GoodReserve",
   description: "Buy and sell G$ through the GoodDollar reserve",
