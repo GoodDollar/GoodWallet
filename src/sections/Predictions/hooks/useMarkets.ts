@@ -1,10 +1,8 @@
-// biome-ignore-all lint/suspicious/noExplicitAny: need to cast the window
 import useSWR from "swr"
 
 import type { CategoryId } from "../constants/categories"
 import { getCategoryById } from "../constants/categories"
 import { QUERY_REFETCH_INTERVALS } from "../constants/query"
-import { useTrading } from "../providers/TradingProvider"
 
 export type PolymarketEvent = {
   id: string
@@ -42,10 +40,9 @@ const DEFAULT_CATEGORY_TAG_ID_TRENDING = "0"
 
 export default function useMarkets(options: UseMarketsOptions = {}) {
   const { limit = 10, categoryId = "trending" } = options
-  const { clobClient } = useTrading()
 
   return useSWR(
-    [limit, categoryId, !!clobClient, "high-volume-markets"],
+    [limit, categoryId, "high-volume-markets"],
     async (): Promise<PolymarketEvent[]> => {
       const category = getCategoryById(categoryId)
       const url = `/api/polymarket/events/tags/${category?.tagId || DEFAULT_CATEGORY_TAG_ID_TRENDING}?limit=${limit}`

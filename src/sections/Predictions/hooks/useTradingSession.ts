@@ -1,305 +1,139 @@
 import { useCallback, useEffect, useState } from "react"
+import {
+  createSecureClient,
+  remoteBuilderSigning,
+  type SecureClient,
+  WalletType,
+} from "@polymarket/client"
+import { signerFrom } from "@polymarket/client/viem"
 
 import { AnalyticsEventTypes } from "@/analytics/types"
 import { useAnalytics } from "@/analytics/useAnalytics"
 
+import { BUILDER_SIGNING_URL } from "../constants/polymarket"
 import { useWallet } from "../providers/WalletContext"
-import {
-  clearSession as clearStoredSession,
-  loadSession,
-  type SessionStep,
-  saveSession,
-  type TradingSession,
-} from "../utils/session"
-import useRelayClient from "./useRelayClient"
-import useSafeDeployment from "./useSafeDeployment"
-import useTokenApprovals from "./useTokenApprovals"
-import useUserApiCredentials from "./useUserApiCredentials"
+import { loadSession, saveSession, type TradingSession } from "../utils/session"
+import { deriveSafeAddress } from "../utils/wallet"
 
-// This is the coordination hook that manages the user's trading session
-// It orchestrates the steps for initializing both the clob and relay clients
-// It creates, stores, and loads the user's L2 credentials for the trading session (API credentials)
-// It deploys the Safe and sets token approvals for the CTF Exchange
+// The whole Polymarket session: one SecureClient, plus the two things the welcome
+// flow walks the user through - connecting and setting the trading approvals.
+// createSecureClient covers what used to be three separate steps: it derives or
+// creates the CLOB credentials, resolves the account wallet and deploys it when
+// it does not exist yet.
 
 export default function useTradingSession() {
-  const [currentStep, setCurrentStep] = useState<SessionStep>("idle")
-  const [sessionError, setSessionError] = useState<Error | null>(null)
+  const [client, setClient] = useState<SecureClient | null>(null)
   const [tradingSession, setTradingSession] = useState<TradingSession | null>(
     null,
   )
   const [welcomeLoading, setWelcomeLoading] = useState(false)
-  const [shouldDeriveApiCredentials, setShouldDeriveApiCredentials] =
-    useState(false)
 
-  const { eoaAddress } = useWallet()
-  const { deriveUserApiCredentials, createUserApiCredentials } =
-    useUserApiCredentials()
-  const { checkAllTokenApprovals, setAllTokenApprovals } = useTokenApprovals()
-  const { derivedSafeAddressFromEoa, isSafeDeployed, deploySafe } =
-    useSafeDeployment(eoaAddress)
-  const { relayClient, initializeRelayClient, clearRelayClient } =
-    useRelayClient()
+  const { eoaAddress, walletClient, publicClient } = useWallet()
   const { captureEvent } = useAnalytics()
 
-  // Always check for an existing trading session after wallet is connected by checking
-  // session object from localStorage to track the status of the user's trading session
-  useEffect(() => {
-    ;(async () => {
-      if (!eoaAddress) {
-        setTradingSession(null)
-        setCurrentStep("idle")
-        setSessionError(null)
-        return
-      }
+  const connect = useCallback(async () => {
+    if (!eoaAddress || !walletClient || !publicClient) return
 
-      const stored = loadSession(eoaAddress)
-      if (!stored) {
-        setCurrentStep("idle")
-        setSessionError(null)
-        return
-      }
-
-      // Restore session from localStorage and refresh status checks
-      await initializeTradingSession()
-    })()
-  }, [eoaAddress])
-
-  // Restores the relay client when session exists
-  useEffect(() => {
-    if (tradingSession && !relayClient && eoaAddress) {
-      initializeRelayClient().catch((err) => {
-        console.error("Failed to restore relay client:", err)
-      })
-    }
-  }, [tradingSession, relayClient, eoaAddress, initializeRelayClient])
-
-  // The core function that orchestrates the trading session initialization
-  // Always reads from localStorage directly to avoid React state race conditions
-  const initializeTradingSession = useCallback(async () => {
-    if (!eoaAddress) throw new Error("Wallet address not connected")
-    setCurrentStep("checking")
-    setSessionError(null)
+    // Users who deployed a Safe under the old SDK keep trading from it - it holds
+    // their funds and positions. The new relayer cannot deploy a Safe, so
+    // everyone else gets a Deposit Wallet, which the SDK derives and deploys
+    // itself when `wallet` is omitted.
+    const safeAddress = deriveSafeAddress(eoaAddress)
+    const safeCode = await publicClient.getCode({ address: safeAddress })
+    const stored = loadSession(eoaAddress)
 
     try {
-      // Always load stored session directly from localStorage to get existing credentials
-      const storedSession = loadSession(eoaAddress)
+      const secureClient = await createSecureClient({
+        ...(safeCode && safeCode !== "0x" ? { wallet: safeAddress } : {}),
+        signer: signerFrom(walletClient),
+        apiKey: remoteBuilderSigning({ url: BUILDER_SIGNING_URL }),
+        credentials: stored?.credentials,
+      })
 
-      // Step 1: Initializes relayClient with the ethers signer and
-      // Builder's credentials (via remote signing server) for authentication
-      const relayClient = await initializeRelayClient()
+      captureEvent({
+        type: AnalyticsEventTypes.PolymarketAuthenticationSucceeded,
+        walletType: WalletType[secureClient.account.walletType],
+      })
 
-      // Step 2: Get Safe address (deterministic derivation from EOA)
-      if (!derivedSafeAddressFromEoa) {
-        return
+      const session: TradingSession = {
+        eoaAddress,
+        wallet: secureClient.account.wallet,
+        // Approvals are not readable back from the client, so we trust what we
+        // recorded last time. If they turn out to be missing, order placement
+        // recovers on its own by approving and retrying.
+        hasApprovals: stored?.hasApprovals ?? false,
+        credentials: secureClient.credentials,
       }
 
-      if (!relayClient) {
-        return
-      }
-
-      // Step 3: Check if Safe is deployed
-      const isDeployed = await isSafeDeployed(
-        relayClient,
-        derivedSafeAddressFromEoa,
-      )
-
-      // Step 5: Get User API Credentials (derive or create)
-      // and store them in the trading session object
-      // Read existing credentials from localStorage (storedSession)
-      const existingCreds = storedSession?.apiCredentials
-      const hasApiCredentials = !!(
-        existingCreds?.key &&
-        existingCreds?.secret &&
-        existingCreds?.passphrase
-      )
-
-      const approvalStatus = await checkAllTokenApprovals(
-        derivedSafeAddressFromEoa,
-      )
-
-      let hasApprovals = false
-      if (approvalStatus.allApproved) {
-        hasApprovals = true
-      }
-
-      // Step 7: Create custom session object
-      // Preserve existing apiCredentials from stored session if they exist
-      const newSession: TradingSession = {
-        eoaAddress: eoaAddress,
-        safeAddress: derivedSafeAddressFromEoa,
-        isSafeDeployed: isDeployed,
-        hasApiCredentials,
-        hasApprovals,
-        lastChecked: Date.now(),
-        ...(hasApiCredentials && existingCreds
-          ? { apiCredentials: existingCreds }
-          : {}),
-      }
-
-      setTradingSession(newSession)
-      saveSession(eoaAddress, newSession)
+      setClient(secureClient)
+      setTradingSession(session)
+      saveSession(eoaAddress, session)
     } catch (err) {
-      console.error("Session initialization error:", err)
-      const error = err instanceof Error ? err : new Error("Unknown error")
-      setSessionError(error)
-      setCurrentStep("idle")
-    }
-  }, [
-    eoaAddress,
-    relayClient,
-    derivedSafeAddressFromEoa,
-    isSafeDeployed,
-    createUserApiCredentials,
-    deriveUserApiCredentials,
-  ])
-
-  // This function clears the trading session and resets the state
-  const endTradingSession = useCallback(() => {
-    if (!eoaAddress) return
-
-    clearStoredSession(eoaAddress)
-    setTradingSession(null)
-    clearRelayClient()
-    setCurrentStep("idle")
-    setSessionError(null)
-  }, [eoaAddress, clearRelayClient])
-
-  const handleFirstWelcomeStep = useCallback(async () => {
-    try {
-      // try to create
-      if (!eoaAddress) return
-      if (!tradingSession) return
-      setWelcomeLoading(true)
-      setCurrentStep("authenticating_create")
-      const apiCreds = await createUserApiCredentials()
-
-      const updatedSession = {
-        ...tradingSession,
-        apiCredentials: apiCreds,
-        hasApiCredentials: true,
-        lastChecked: Date.now(),
-      }
-      setTradingSession(updatedSession)
-      saveSession(eoaAddress, updatedSession)
-      setWelcomeLoading(false)
-    } catch (error) {
       captureEvent({
         type: AnalyticsEventTypes.PolymarketAuthenticationFailed,
-        errorReason: error instanceof Error ? error.message : "Unknown error",
+        errorReason: err instanceof Error ? err.message : "Unknown error",
       })
-      setWelcomeLoading(false)
-      setShouldDeriveApiCredentials(true)
+      throw err
     }
-  }, [eoaAddress, tradingSession, createUserApiCredentials])
+  }, [eoaAddress, walletClient, publicClient, captureEvent])
 
-  const handleSecondWelcomeStep = useCallback(async () => {
+  // Returning users reconnect silently - the stored credentials let
+  // createSecureClient skip the signature prompt. Anyone without a stored
+  // session waits for the welcome flow, so opening the tab never prompts the
+  // wallet on its own.
+  useEffect(() => {
+    if (!eoaAddress || !walletClient) {
+      setClient(null)
+      setTradingSession(null)
+      return
+    }
+    if (!loadSession(eoaAddress)) return
+
+    connect().catch((err) => {
+      console.error("Failed to restore trading session:", err)
+    })
+  }, [eoaAddress, walletClient])
+
+  // Step 1: authenticate and resolve (deploying if needed) the account wallet.
+  const handleConnectStep = useCallback(async () => {
+    setWelcomeLoading(true)
     try {
-      // auth
-      if (!eoaAddress) return
-      if (!tradingSession) return
-      if (!shouldDeriveApiCredentials) return
-
-      setWelcomeLoading(true)
-      setCurrentStep("authenticating_derive")
-      const apiCreds = await deriveUserApiCredentials()
-      const updatedSession = {
-        ...tradingSession,
-        apiCredentials: apiCreds,
-        hasApiCredentials: true,
-        lastChecked: Date.now(),
-      }
-      setTradingSession(updatedSession)
-      saveSession(eoaAddress, updatedSession)
+      await connect()
+    } finally {
       setWelcomeLoading(false)
+    }
+  }, [connect])
+
+  // Step 2: approve pUSD and the conditional tokens for the exchange contracts.
+  // setupTradingApprovals submits only what is missing, so it is safe to repeat.
+  const handleApprovalsStep = useCallback(async () => {
+    if (!client || !tradingSession || !eoaAddress) return
+
+    setWelcomeLoading(true)
+    try {
+      await client.setupTradingApprovals()
+      captureEvent({ type: AnalyticsEventTypes.PolymarketAllowTokensSucceeded })
+
+      const session = { ...tradingSession, hasApprovals: true }
+      setTradingSession(session)
+      saveSession(eoaAddress, session)
     } catch (error) {
       captureEvent({
-        type: AnalyticsEventTypes.PolymarketAuthenticationFailed,
+        type: AnalyticsEventTypes.PolymarketAllowTokensFailed,
         errorReason: error instanceof Error ? error.message : "Unknown error",
       })
-      setWelcomeLoading(false)
       throw error
+    } finally {
+      setWelcomeLoading(false)
     }
-  }, [
-    eoaAddress,
-    tradingSession,
-    deriveUserApiCredentials,
-    shouldDeriveApiCredentials,
-  ])
-
-  const handleThirdWelcomeStep = useCallback(async () => {
-    try {
-      // deploy safe
-      if (!eoaAddress) return
-      if (!tradingSession) return
-      if (!relayClient) return
-      setWelcomeLoading(true)
-      setCurrentStep("deploying")
-      await deploySafe(relayClient)
-      const updatedSession = {
-        ...tradingSession,
-        isSafeDeployed: true,
-        lastChecked: Date.now(),
-      }
-      setTradingSession(updatedSession)
-      saveSession(eoaAddress, updatedSession)
-      setWelcomeLoading(false)
-    } catch (error) {
-      setWelcomeLoading(false)
-      throw error
-    }
-  }, [eoaAddress, tradingSession, relayClient, deploySafe])
-
-  const handleFourthWelcomeStep = useCallback(async () => {
-    try {
-      //allow tokens
-      if (!eoaAddress) return
-      if (!tradingSession) return
-      if (!relayClient) return
-      if (!derivedSafeAddressFromEoa) return
-
-      setWelcomeLoading(true)
-      setCurrentStep("approvals")
-      await setAllTokenApprovals(relayClient)
-
-      const updatedSession = {
-        ...tradingSession,
-        hasApprovals: true,
-        lastChecked: Date.now(),
-      }
-      setTradingSession(updatedSession)
-      saveSession(eoaAddress, updatedSession)
-      setWelcomeLoading(false)
-      setCurrentStep("complete")
-    } catch (error) {
-      setWelcomeLoading(false)
-      throw error
-    }
-  }, [
-    eoaAddress,
-    tradingSession,
-    relayClient,
-    checkAllTokenApprovals,
-    derivedSafeAddressFromEoa,
-  ])
+  }, [client, tradingSession, eoaAddress, captureEvent])
 
   return {
+    client,
     tradingSession,
-    currentStep,
-    sessionError,
-    isTradingSessionComplete:
-      (tradingSession?.isSafeDeployed &&
-        tradingSession?.hasApiCredentials &&
-        tradingSession?.hasApprovals) ||
-      false,
-    initializeTradingSession,
-    endTradingSession,
-    relayClient,
-    setCurrentStep,
+    isTradingSessionComplete: !!client && !!tradingSession?.hasApprovals,
     welcomeLoading,
-    shouldDeriveApiCredentials,
-    handleFirstWelcomeStep,
-    handleSecondWelcomeStep,
-    handleThirdWelcomeStep,
-    handleFourthWelcomeStep,
+    handleConnectStep,
+    handleApprovalsStep,
   }
 }

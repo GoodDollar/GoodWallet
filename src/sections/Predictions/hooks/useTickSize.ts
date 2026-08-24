@@ -1,19 +1,20 @@
 import { useCallback, useEffect, useState } from "react"
-import { ClobClient } from "@polymarket/clob-client"
+import { fetchTickSize } from "@polymarket/client/actions"
 
-import { CLOB_API_URL, POLYGON_CHAIN_ID } from "../constants/polymarket.ts"
+import { polymarketPublicClient } from "../utils/publicClient.ts"
 
 export default function useTickSize(tokenId: string | null) {
   const [tickSize, setTickSize] = useState<number>(0.01)
   const [isLoading, setIsLoading] = useState(false)
 
-  const fetchTickSize = useCallback(async () => {
+  // Only the UI needs this, for price stepping and validation - the SDK resolves
+  // tick size itself when it signs an order.
+  const loadTickSize = useCallback(async () => {
     if (!tokenId) return
 
     setIsLoading(true)
     try {
-      const client = new ClobClient(CLOB_API_URL, POLYGON_CHAIN_ID)
-      const result = await client.getTickSize(tokenId)
+      const result = await fetchTickSize(polymarketPublicClient, { tokenId })
       const parsed = typeof result === "string" ? parseFloat(result) : result
       if (parsed && !isNaN(parsed) && parsed > 0) {
         setTickSize(parsed)
@@ -26,8 +27,8 @@ export default function useTickSize(tokenId: string | null) {
   }, [tokenId])
 
   useEffect(() => {
-    fetchTickSize()
-  }, [fetchTickSize])
+    loadTickSize()
+  }, [loadTickSize])
 
-  return { tickSize, isLoading, refetch: fetchTickSize }
+  return { tickSize, isLoading, refetch: loadTickSize }
 }

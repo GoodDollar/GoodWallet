@@ -1,4 +1,4 @@
-import usePolygonBalances from "../../hooks/usePolygonBalances.ts"
+import useCollateralBalance from "../../hooks/useCollateralBalance.ts"
 import { useTrading } from "../../providers/TradingProvider.tsx"
 import { isValidDecimalInput } from "../../utils/validation.ts"
 
@@ -32,8 +32,8 @@ export default function OrderForm({
   decimalPlaces,
   isLoadingTickSize,
 }: OrderFormProps) {
-  const { safeAddress } = useTrading()
-  const { formattedUsdcBalance } = usePolygonBalances(safeAddress)
+  const { walletAddress } = useTrading()
+  const { formattedBalance } = useCollateralBalance(walletAddress)
 
   const handleSizeChange = (value: string) => {
     if (isValidDecimalInput(value)) {
@@ -63,7 +63,7 @@ export default function OrderForm({
               {orderType === "limit" ? "Shares" : "Amount ($)"}
             </span>
             <span className="text-sm text-[var(--text-secondary)]">
-              Balance {formattedUsdcBalance}
+              Balance {formattedBalance}
             </span>
           </div>
           <div className="flex items-center">

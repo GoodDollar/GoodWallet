@@ -254,22 +254,14 @@ const da: TypedTranslations = {
     welcomeFlow: {
       title: "Kom i gang med Prediktioner",
       subtitle:
-        "For at begynde at handle på Polymarket skal du underskrive og gennemføre tre trin",
+        "For at begynde at handle på Polymarket skal du underskrive og gennemføre følgende trin",
       createAccountStep: {
         title: "Opret konto",
         subtitle: "Polymarket skal godkende din wallet",
       },
-      deriveAccountStep: {
-        title: "Eksisterende konto med Polymarket",
-        subtitle: "Bekræft for at godkende",
-      },
-      createSafeStep: {
-        title: "Opret Wallet",
-        subtitle: "Polymarket kræver en Safe wallet",
-      },
       allowTokensStep: {
         title: "Tillad tokens",
-        subtitle: "USDC.e mønter bruges i Polymarket",
+        subtitle: "pUSD er den sikkerhed, der bruges i Polymarket",
       },
     },
     firstTimeDialog: {

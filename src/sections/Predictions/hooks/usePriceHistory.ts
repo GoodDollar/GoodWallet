@@ -1,8 +1,8 @@
-import { type MarketPrice, PriceHistoryInterval } from "@polymarket/clob-client"
+import { PriceHistoryInterval } from "@polymarket/client"
 import useSWR from "swr"
 
 import { QUERY_REFETCH_INTERVALS } from "../constants/query"
-import { useTrading } from "../providers/TradingProvider"
+import { polymarketPublicClient } from "../utils/publicClient"
 import type { PolymarketMarket } from "./useMarkets"
 
 const FIDELITY_BY_INTERVAL: Record<PriceHistoryInterval, number> = {
@@ -17,21 +17,18 @@ export default function usePriceHistory(
   market: PolymarketMarket,
   interval: PriceHistoryInterval,
 ) {
-  const { clobClient } = useTrading()
   const fidelity = FIDELITY_BY_INTERVAL[interval]
+  const tokenId = market.clobTokenIds?.[0]
 
   return useSWR(
-    clobClient ? [`price-history-market-${market.id}`, interval] : null,
+    tokenId ? [`price-history-market-${market.id}`, interval] : null,
     async () => {
-      if (!clobClient) return []
-      const history = await clobClient.getPricesHistory({
-        market: market.clobTokenIds?.[0] ?? "",
+      if (!tokenId) return []
+      return polymarketPublicClient.fetchPriceHistory({
+        tokenId,
         interval,
         fidelity,
       })
-      if (history.length === 0) return []
-      // biome-ignore lint/suspicious/noExplicitAny: getPricesHistory return type is wrong
-      return (history as any).history as MarketPrice[]
     },
     {
       refreshInterval: QUERY_REFETCH_INTERVALS.REALTIME_PRICES_MARKET,

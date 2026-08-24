@@ -1,6 +1,6 @@
 import { useRef, useState } from "react"
 import Image from "next/image"
-import { Side } from "@polymarket/clob-client"
+import { OrderSide } from "@polymarket/client"
 import useSWR from "swr"
 import { Button } from "ui"
 
@@ -13,8 +13,8 @@ import type {
   PolymarketEvent,
   PolymarketMarket,
 } from "../../hooks/useMarkets.ts"
-import { useTrading } from "../../providers/TradingProvider.tsx"
 import { cn } from "../../utils/classNames.ts"
+import { polymarketPublicClient } from "../../utils/publicClient.ts"
 import MarketRow from "./MarketRow.tsx"
 
 export interface EventCardProps {
@@ -25,7 +25,6 @@ export interface EventCardProps {
     outcome: string,
     price: number,
     tokenId: string,
-    negRisk: boolean,
     orderMinSize: number,
   ) => void
   onMarketClick: (market: PolymarketMarket) => void
@@ -43,19 +42,21 @@ export default function EventCard({
 }: EventCardProps) {
   const ref = useRef<HTMLDivElement>(null)
   const isVisible = useInViewport(ref)
-  const { clobClient } = useTrading()
   const [expanded, setExpanded] = useState(false)
 
   // Fetch real-time prices for all token IDs across all markets in this event
   const { data: realtimePrices = {} } = useSWR<RealtimePrices>(
-    clobClient && isVisible ? ["realtime-prices-event", event.id] : null,
+    isVisible ? ["realtime-prices-event", event.id] : null,
     async () => {
-      if (!clobClient) return {}
       const allTokenIds = event.markets.flatMap((m) => m.clobTokenIds)
       const results = await Promise.all(
         allTokenIds.map(async (tokenId: string) => {
-          const askResponse = await clobClient.getPrice(tokenId, Side.SELL)
-          const bidPrice = parseFloat(askResponse.price)
+          const bidPrice = parseFloat(
+            await polymarketPublicClient.fetchPrice({
+              tokenId,
+              side: OrderSide.SELL,
+            }),
+          )
           if (isNaN(bidPrice) || bidPrice <= 0 || bidPrice >= 1) return null
           return { tokenId, bidPrice }
         }),
@@ -120,7 +121,7 @@ export default function EventCard({
             {formatTokenPrice(event.volume, {
               currency: "USD",
               usdExchangeRate: 1,
-              symbol: "USDCe",
+              symbol: "$",
             })}{" "}
             Vol.
           </span>

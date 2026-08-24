@@ -15,53 +15,32 @@ export default function CreateAccountModal({
   const {
     tradingSession,
     welcomeLoading,
-    currentStep,
-    shouldDeriveApiCredentials,
-    handleFirstWelcomeStep: handleCreateApiCredentials,
-    handleSecondWelcomeStep: handleDeriveApiCredentials,
-    handleThirdWelcomeStep: handleDeploySafe,
-    handleFourthWelcomeStep: handleAllowTokens,
+    handleConnectStep,
+    handleApprovalsStep,
   } = useTrading()
   const {
     translations: { swap },
   } = useTranslation()
 
+  // createSecureClient authenticates, resolves the account wallet and deploys it
+  // when needed, so there are only two steps left to walk the user through.
   const handleCreateAccountStep = useCallback(async () => {
     try {
       if (!tradingSession) {
-        setButtonText("Loading session")
+        await handleConnectStep()
         return
       }
-      if (!tradingSession.hasApiCredentials) {
-        if (shouldDeriveApiCredentials) {
-          await handleDeriveApiCredentials()
-        } else {
-          await handleCreateApiCredentials()
-        }
-      } else if (!tradingSession.isSafeDeployed) {
-        await handleDeploySafe()
-      } else if (!tradingSession.hasApprovals) {
-        await handleAllowTokens()
+      if (!tradingSession.hasApprovals) {
+        await handleApprovalsStep()
       }
     } catch (error) {
       console.error(error)
       setButtonText("There was an error, please try again")
     }
-  }, [
-    tradingSession,
-    shouldDeriveApiCredentials,
-    handleCreateApiCredentials,
-    handleDeriveApiCredentials,
-    handleDeploySafe,
-    handleAllowTokens,
-  ])
+  }, [tradingSession, handleConnectStep, handleApprovalsStep])
 
   useEffect(() => {
-    if (
-      tradingSession?.isSafeDeployed &&
-      tradingSession?.hasApprovals &&
-      tradingSession?.hasApiCredentials
-    ) {
+    if (tradingSession?.hasApprovals) {
       setTimeout(() => onComplete(), 2000)
     }
   }, [tradingSession])
@@ -80,36 +59,15 @@ export default function CreateAccountModal({
           stepNumber={1}
           title={swap.welcomeFlow.createAccountStep.title}
           message={swap.welcomeFlow.createAccountStep.subtitle}
-          isCompleted={
-            shouldDeriveApiCredentials ||
-            (tradingSession?.hasApiCredentials ?? false)
-          }
-          isLoading={currentStep === "authenticating_create" && welcomeLoading}
-        />
-        {shouldDeriveApiCredentials && (
-          <RowInCreateAccountModal
-            stepNumber={2}
-            title={swap.welcomeFlow.deriveAccountStep.title}
-            message={swap.welcomeFlow.deriveAccountStep.subtitle}
-            isCompleted={tradingSession?.hasApiCredentials ?? false}
-            isLoading={
-              currentStep === "authenticating_derive" && welcomeLoading
-            }
-          />
-        )}
-        <RowInCreateAccountModal
-          stepNumber={shouldDeriveApiCredentials ? 3 : 2}
-          title={swap.welcomeFlow.createSafeStep.title}
-          message={swap.welcomeFlow.createSafeStep.subtitle}
-          isCompleted={tradingSession?.isSafeDeployed ?? false}
-          isLoading={currentStep === "deploying" && welcomeLoading}
+          isCompleted={!!tradingSession}
+          isLoading={welcomeLoading && !tradingSession}
         />
         <RowInCreateAccountModal
-          stepNumber={shouldDeriveApiCredentials ? 4 : 3}
+          stepNumber={2}
           title={swap.welcomeFlow.allowTokensStep.title}
           message={swap.welcomeFlow.allowTokensStep.subtitle}
           isCompleted={tradingSession?.hasApprovals ?? false}
-          isLoading={currentStep === "approvals" && welcomeLoading}
+          isLoading={welcomeLoading && !!tradingSession}
         />
       </div>
 

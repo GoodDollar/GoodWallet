@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { Side } from "@polymarket/clob-client"
+import { OrderSide } from "@polymarket/client"
 
 import EmptyState from "../../components/EmptyState.tsx"
 import ErrorState from "../../components/ErrorState.tsx"
@@ -9,7 +9,7 @@ import LoadingState from "../../components/LoadingState.tsx"
 import { POLLING_DURATION, POLLING_INTERVAL } from "../../constants/query.ts"
 import { DUST_THRESHOLD } from "../../constants/validation.ts"
 import useClobOrder from "../../hooks/useClobOrder"
-import usePolygonBalances from "../../hooks/usePolygonBalances.ts"
+import useCollateralBalance from "../../hooks/useCollateralBalance.ts"
 import useRedeemPosition from "../../hooks/useRedeemPosition.ts"
 import useUserPositions, {
   type PolymarketPosition,
@@ -21,7 +21,7 @@ import PositionCard from "./PositionCard.tsx"
 import PositionFilters from "./PositionFilters.tsx"
 
 export default function UserPositions() {
-  const { relayClient, safeAddress } = useTrading()
+  const { client, walletAddress } = useTrading()
   const { eoaAddress } = useWallet()
 
   const {
@@ -29,9 +29,9 @@ export default function UserPositions() {
     isLoading,
     mutate: mutateUserPositions,
     error,
-  } = useUserPositions(safeAddress as string | undefined)
+  } = useUserPositions(walletAddress)
 
-  const { mutate: mutatePolygonBalances } = usePolygonBalances(safeAddress)
+  const { mutate: mutateBalance } = useCollateralBalance(walletAddress)
 
   const [hideDust, setHideDust] = useState(true)
   const [redeemingAsset, setRedeemingAsset] = useState<string | null>(null)
@@ -69,8 +69,7 @@ export default function UserPositions() {
       await submitOrder({
         tokenId: position.asset,
         size: position.size,
-        side: Side.SELL,
-        negRisk: position.negativeRisk,
+        side: OrderSide.SELL,
         isMarketOrder: true,
       })
 
@@ -103,26 +102,21 @@ export default function UserPositions() {
   }
 
   const handleRedeem = async (position: PolymarketPosition) => {
-    if (!relayClient) {
-      alert("Relay client not initialized")
+    if (!client) {
+      alert("Polymarket client not initialized")
       return
     }
 
     setRedeemingAsset(position.asset)
     try {
-      await redeemPosition(relayClient, {
-        conditionId: position.conditionId,
-        outcomeIndex: position.outcomeIndex,
-        negativeRisk: position.negativeRisk,
-        size: position.size,
-      })
+      await redeemPosition(client, position.conditionId)
 
-      mutatePolygonBalances()
+      mutateBalance()
       mutateUserPositions()
 
       createPollingInterval(
         () => {
-          mutatePolygonBalances()
+          mutateBalance()
           mutateUserPositions
         },
         POLLING_INTERVAL,
@@ -196,7 +190,7 @@ export default function UserPositions() {
             isRedeeming={redeemingAsset === position.asset}
             isPendingVerification={pendingVerification.has(position.asset)}
             isSubmitting={isSubmitting}
-            canRedeem={!!relayClient}
+            canRedeem={!!client}
           />
         ))}
       </div>

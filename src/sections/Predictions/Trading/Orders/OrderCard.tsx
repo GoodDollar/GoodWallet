@@ -8,7 +8,7 @@ import Badge from "../../components/Badge.tsx"
 import Card from "../../components/Card.tsx"
 import StatDisplay from "../../components/StatDisplay.tsx"
 import { QUERY_REFETCH_INTERVALS } from "../../constants/query.ts"
-import type { PolymarketOrder } from "../../hooks/useActiveOrders.tsx"
+import type { PolymarketOrder } from "../../hooks/useActiveOrders.ts"
 
 interface OrderCardProps {
   order: PolymarketOrder
@@ -24,11 +24,11 @@ export default function OrderCard({
   isSubmitting,
 }: OrderCardProps) {
   const { data: marketInfo } = useSWR(
-    [order.asset_id, "market-info"],
+    [order.tokenId, "market-info"],
     async () => {
       try {
         const response = await fetch(
-          `/api/polymarket/markets/clobTokenIds/${order.asset_id}`,
+          `/api/polymarket/markets/clobTokenIds/${order.tokenId}`,
         )
         if (!response.ok) return null
         return await response.json()
@@ -43,7 +43,7 @@ export default function OrderCard({
   )
 
   const price = parseFloat(order.price)
-  const shares = parseFloat(order.original_size)
+  const shares = parseFloat(order.originalSize)
   const totalValue = shares * price
 
   const getOutcome = () => {
@@ -51,7 +51,7 @@ export default function OrderCard({
     try {
       const outcomes = JSON.parse(marketInfo.outcomes)
       const tokenIds = JSON.parse(marketInfo.clobTokenIds)
-      const outcomeIndex = tokenIds.indexOf(order.asset_id)
+      const outcomeIndex = tokenIds.indexOf(order.tokenId)
       return outcomes[outcomeIndex] || outcomes[0]
     } catch {
       return null
@@ -101,9 +101,9 @@ export default function OrderCard({
       </div>
 
       {/* Created At Timestamp */}
-      {order.created_at && (
+      {order.createdAt && (
         <div className="mt-2 text-xs text-[var(--text-secondary)]">
-          {new Date(order.created_at * 1000).toLocaleString()}
+          {new Date(order.createdAt).toLocaleString()}
         </div>
       )}
 

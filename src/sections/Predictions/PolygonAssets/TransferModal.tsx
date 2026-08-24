@@ -8,10 +8,12 @@ import { AnalyticsEventTypes } from "@/analytics/types.ts"
 import { useAnalytics } from "@/analytics/useAnalytics.ts"
 
 import CloseDialogButton from "../components/CloseDialogButton.tsx"
-import { USDC_E_DECIMALS } from "../constants/tokens"
+import {
+  COLLATERAL_DECIMALS,
+  COLLATERAL_TOKEN_ADDRESS,
+} from "../constants/tokens"
 import { SUCCESS_STYLES } from "../constants/ui"
-import usePolygonBalances from "../hooks/usePolygonBalances"
-import useUsdcTransfer from "../hooks/useUsdcTransfer"
+import useCollateralBalance from "../hooks/useCollateralBalance"
 import Portal from "../Portal"
 import { useTrading } from "../providers/TradingProvider"
 import { useWallet } from "../providers/WalletContext.tsx"
@@ -25,13 +27,13 @@ type TransferModalProps = {
 export default function TransferModal({ isOpen, onClose }: TransferModalProps) {
   const [amount, setAmount] = useState("")
   const [showSuccess, setShowSuccess] = useState(false)
+  const [isTransferring, setIsTransferring] = useState(false)
+  const [error, setError] = useState<Error | null>(null)
 
   const modalRef = useRef<HTMLDivElement>(null)
-  const { relayClient, safeAddress } = useTrading()
-  const { isTransferring, error, transferUsdc } = useUsdcTransfer()
+  const { client, walletAddress } = useTrading()
   const { eoaAddress } = useWallet()
-  const { formattedUsdcBalance, rawUsdcBalance } =
-    usePolygonBalances(safeAddress)
+  const { formattedBalance, rawBalance } = useCollateralBalance(walletAddress)
   const { captureEvent } = useAnalytics()
 
   useEffect(() => {
@@ -63,34 +65,42 @@ export default function TransferModal({ isOpen, onClose }: TransferModalProps) {
   if (!isOpen) return null
 
   const handleTransfer = async () => {
-    if (!relayClient || !amount) return
+    if (!client || !amount) return
 
+    setIsTransferring(true)
+    setError(null)
     try {
-      const amountBigInt = parseUnits(amount, USDC_E_DECIMALS)
-
-      await transferUsdc(relayClient, {
-        recipient: eoaAddress as `0x${string}`,
-        amount: amountBigInt,
+      const transfer = await client.transferErc20({
+        tokenAddress: COLLATERAL_TOKEN_ADDRESS,
+        recipientAddress: eoaAddress as `0x${string}`,
+        amount: parseUnits(amount, COLLATERAL_DECIMALS),
       })
+      await transfer.wait()
+
       captureEvent({
         type: AnalyticsEventTypes.PolymarketWithdraw,
-        usdceAmount: Number(amount),
+        pusdAmount: Number(amount),
       })
       setShowSuccess(true)
       setTimeout(() => onClose(), 2000)
     } catch (err) {
       captureEvent({
         type: AnalyticsEventTypes.PolymarketWithdrawFailed,
-        usdceAmount: Number(amount),
+        pusdAmount: Number(amount),
         errorReason: err instanceof Error ? err.message : "Unknown error",
       })
       console.error("Transfer failed:", err)
+      setError(
+        err instanceof Error ? err : new Error("Failed to transfer pUSD"),
+      )
+    } finally {
+      setIsTransferring(false)
     }
   }
 
   const handleSendMax = () => {
-    if (rawUsdcBalance) {
-      setAmount((Number(rawUsdcBalance) / 10 ** USDC_E_DECIMALS).toString())
+    if (rawBalance) {
+      setAmount((Number(rawBalance) / 10 ** COLLATERAL_DECIMALS).toString())
     }
   }
 
@@ -137,7 +147,7 @@ export default function TransferModal({ isOpen, onClose }: TransferModalProps) {
             <p className="text-xs text-[var(--text-secondary)] mb-1">
               Available Balance
             </p>
-            <p className="text-lg font-bold">{formattedUsdcBalance} USDC.e</p>
+            <p className="text-lg font-bold">{formattedBalance} pUSD</p>
           </div>
 
           {/* Recipient Input */}
@@ -183,14 +193,14 @@ export default function TransferModal({ isOpen, onClose }: TransferModalProps) {
           {/* Send Button */}
           <Button
             onClick={handleTransfer}
-            disabled={isTransferring || !amount || !relayClient}
+            disabled={isTransferring || !amount || !client}
             loading={isTransferring}
             variant="solid"
             full
             text={isTransferring ? "Sending..." : "Withdraw"}
           />
 
-          {!relayClient && (
+          {!client && (
             <p className="text-xs text-[var(--color-warning)] mt-2 text-center">
               Start a trading session first
             </p>

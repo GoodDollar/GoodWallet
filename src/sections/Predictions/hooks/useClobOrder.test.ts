@@ -1,5 +1,5 @@
 // biome-ignore-all lint/suspicious/noExplicitAny: need to cast the window
-import { OrderType, Side } from "@polymarket/clob-client"
+import { OrderSide, OrderType } from "@polymarket/client"
 import { beforeEach, describe, expect, it, type Mock, vi } from "vitest"
 
 // Mock React hooks
@@ -25,16 +25,15 @@ import useActiveOrders from "./useActiveOrders"
 import useClobOrder from "./useClobOrder"
 import useUserPositions from "./useUserPositions"
 
-type MockClobClient = {
-  getFeeRateBps: Mock
-  getPrice: Mock
-  createAndPostMarketOrder: Mock
-  createAndPostOrder: Mock
+type MockSecureClient = {
+  fetchPrice: Mock
+  placeMarketOrder: Mock
+  placeLimitOrder: Mock
   cancelOrder: Mock
 }
 
 describe("useClobOrder", () => {
-  let mockClobClient: MockClobClient
+  let mockClient: MockSecureClient
   let mockMutateActiveOrders: Mock
   let mockMutateUserPositions: Mock
   const walletAddress = "0x1234567890123456789012345678901234567890"
@@ -42,18 +41,17 @@ describe("useClobOrder", () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
-    mockClobClient = {
-      getFeeRateBps: vi.fn().mockResolvedValue(1000),
-      getPrice: vi.fn(),
-      createAndPostMarketOrder: vi.fn(),
-      createAndPostOrder: vi.fn(),
+    mockClient = {
+      fetchPrice: vi.fn(),
+      placeMarketOrder: vi.fn(),
+      placeLimitOrder: vi.fn(),
       cancelOrder: vi.fn(),
     }
 
     mockMutateActiveOrders = vi.fn()
     mockMutateUserPositions = vi.fn()
 
-    vi.mocked(useTrading).mockReturnValue({ clobClient: mockClobClient } as any)
+    vi.mocked(useTrading).mockReturnValue({ client: mockClient } as any)
     vi.mocked(useActiveOrders).mockReturnValue({
       mutate: mockMutateActiveOrders,
     } as any)
@@ -67,26 +65,25 @@ describe("useClobOrder", () => {
       const { submitOrder } = useClobOrder(undefined)
 
       await expect(
-        submitOrder({ tokenId: "1", size: 1, side: Side.BUY }),
+        submitOrder({ tokenId: "1", size: 1, side: OrderSide.BUY }),
       ).rejects.toThrow("Wallet not connected")
     })
 
-    it("should throw if clob client is not initialized", async () => {
-      vi.mocked(useTrading).mockReturnValue({ clobClient: null } as ReturnType<
-        typeof useTrading
-      >)
+    it("should throw if the polymarket client is not initialized", async () => {
+      vi.mocked(useTrading).mockReturnValue({ client: null } as any)
       const { submitOrder } = useClobOrder(walletAddress)
 
       await expect(
-        submitOrder({ tokenId: "1", size: 1, side: Side.BUY }),
-      ).rejects.toThrow("CLOB client not initialized")
+        submitOrder({ tokenId: "1", size: 1, side: OrderSide.BUY }),
+      ).rejects.toThrow("Polymarket client not initialized")
     })
 
     describe("Market Orders", () => {
       beforeEach(() => {
-        mockClobClient.getPrice.mockResolvedValue({ price: "0.5" })
-        mockClobClient.createAndPostMarketOrder.mockResolvedValue({
-          orderID: "order-id-123",
+        mockClient.fetchPrice.mockResolvedValue("0.5")
+        mockClient.placeMarketOrder.mockResolvedValue({
+          ok: true,
+          orderId: "order-id-123",
         })
       })
 
@@ -96,14 +93,14 @@ describe("useClobOrder", () => {
         await submitOrder({
           tokenId: "token-123",
           size: 10,
-          side: Side.BUY,
+          side: OrderSide.BUY,
           isMarketOrder: true,
         })
 
-        expect(mockClobClient.getPrice).toHaveBeenCalledWith(
-          "token-123",
-          Side.SELL,
-        )
+        expect(mockClient.fetchPrice).toHaveBeenCalledWith({
+          tokenId: "token-123",
+          side: OrderSide.SELL,
+        })
       })
 
       it("should fetch the BUY price when placing a SELL market order", async () => {
@@ -112,37 +109,50 @@ describe("useClobOrder", () => {
         await submitOrder({
           tokenId: "token-123",
           size: 10,
-          side: Side.SELL,
+          side: OrderSide.SELL,
           isMarketOrder: true,
         })
 
-        expect(mockClobClient.getPrice).toHaveBeenCalledWith(
-          "token-123",
-          Side.BUY,
-        )
+        expect(mockClient.fetchPrice).toHaveBeenCalledWith({
+          tokenId: "token-123",
+          side: OrderSide.BUY,
+        })
       })
 
-      it("should submit the market order with FOK order type and correct params", async () => {
+      it("should send a BUY market order as a dollar amount", async () => {
         const { submitOrder } = useClobOrder(walletAddress)
 
         await submitOrder({
           tokenId: "token-123",
           size: 10,
-          side: Side.BUY,
+          side: OrderSide.BUY,
           isMarketOrder: true,
         })
 
-        expect(mockClobClient.getFeeRateBps).toHaveBeenCalledWith("token-123")
-        expect(mockClobClient.createAndPostMarketOrder).toHaveBeenCalledWith(
-          expect.objectContaining({
-            tokenID: "token-123",
-            amount: 10,
-            side: Side.BUY,
-            feeRateBps: 1000,
-          }),
-          { negRisk: undefined },
-          OrderType.FOK,
-        )
+        expect(mockClient.placeMarketOrder).toHaveBeenCalledWith({
+          tokenId: "token-123",
+          side: OrderSide.BUY,
+          amount: 10,
+          orderType: OrderType.FOK,
+        })
+      })
+
+      it("should send a SELL market order as a share count", async () => {
+        const { submitOrder } = useClobOrder(walletAddress)
+
+        await submitOrder({
+          tokenId: "token-123",
+          size: 10,
+          side: OrderSide.SELL,
+          isMarketOrder: true,
+        })
+
+        expect(mockClient.placeMarketOrder).toHaveBeenCalledWith({
+          tokenId: "token-123",
+          side: OrderSide.SELL,
+          shares: 10,
+          orderType: OrderType.FOK,
+        })
       })
 
       it("should return success with orderId after placing a market order", async () => {
@@ -151,7 +161,7 @@ describe("useClobOrder", () => {
         const result = await submitOrder({
           tokenId: "token-123",
           size: 10,
-          side: Side.BUY,
+          side: OrderSide.BUY,
           isMarketOrder: true,
         })
 
@@ -164,7 +174,7 @@ describe("useClobOrder", () => {
         await submitOrder({
           tokenId: "token-123",
           size: 10,
-          side: Side.BUY,
+          side: OrderSide.BUY,
           isMarketOrder: true,
         })
 
@@ -173,56 +183,56 @@ describe("useClobOrder", () => {
       })
 
       it("should throw if the fetched market price is not a number", async () => {
-        mockClobClient.getPrice.mockResolvedValue({ price: "invalid" })
+        mockClient.fetchPrice.mockResolvedValue("invalid")
         const { submitOrder } = useClobOrder(walletAddress)
 
         await expect(
           submitOrder({
             tokenId: "1",
             size: 1,
-            side: Side.BUY,
+            side: OrderSide.BUY,
             isMarketOrder: true,
           }),
         ).rejects.toThrow("Unable to get valid market price")
       })
 
       it("should throw if the fetched market price is zero", async () => {
-        mockClobClient.getPrice.mockResolvedValue({ price: "0" })
+        mockClient.fetchPrice.mockResolvedValue("0")
         const { submitOrder } = useClobOrder(walletAddress)
 
         await expect(
           submitOrder({
             tokenId: "1",
             size: 1,
-            side: Side.BUY,
+            side: OrderSide.BUY,
             isMarketOrder: true,
           }),
         ).rejects.toThrow("Unable to get valid market price")
       })
 
       it("should throw if the fetched market price is >= 1", async () => {
-        mockClobClient.getPrice.mockResolvedValue({ price: "1.1" })
+        mockClient.fetchPrice.mockResolvedValue("1.1")
         const { submitOrder } = useClobOrder(walletAddress)
 
         await expect(
           submitOrder({
             tokenId: "1",
             size: 1,
-            side: Side.BUY,
+            side: OrderSide.BUY,
             isMarketOrder: true,
           }),
         ).rejects.toThrow("Unable to get valid market price")
       })
 
       it("should throw if the market price moved more than 0.05 from the expected price", async () => {
-        mockClobClient.getPrice.mockResolvedValue({ price: "0.56" })
+        mockClient.fetchPrice.mockResolvedValue("0.56")
         const { submitOrder } = useClobOrder(walletAddress)
 
         await expect(
           submitOrder({
             tokenId: "1",
             size: 1,
-            side: Side.BUY,
+            side: OrderSide.BUY,
             isMarketOrder: true,
             price: 0.5,
           }),
@@ -230,13 +240,13 @@ describe("useClobOrder", () => {
       })
 
       it("should proceed if the price movement is within the 0.05 tolerance", async () => {
-        mockClobClient.getPrice.mockResolvedValue({ price: "0.55" })
+        mockClient.fetchPrice.mockResolvedValue("0.55")
         const { submitOrder } = useClobOrder(walletAddress)
 
         const result = await submitOrder({
           tokenId: "1",
           size: 1,
-          side: Side.BUY,
+          side: OrderSide.BUY,
           isMarketOrder: true,
           price: 0.5,
         })
@@ -247,33 +257,31 @@ describe("useClobOrder", () => {
 
     describe("Limit Orders", () => {
       beforeEach(() => {
-        mockClobClient.createAndPostOrder.mockResolvedValue({
-          orderID: "limit-id-123",
+        mockClient.placeLimitOrder.mockResolvedValue({
+          ok: true,
+          orderId: "limit-id-123",
         })
       })
 
-      it("should submit the limit order with GTC order type and correct params", async () => {
+      it("should submit the limit order with the tokenId, price, size and side", async () => {
         const { submitOrder } = useClobOrder(walletAddress)
 
         await submitOrder({
           tokenId: "token-123",
           size: 10,
           price: 0.5,
-          side: Side.BUY,
+          side: OrderSide.BUY,
           isMarketOrder: false,
         })
 
-        expect(mockClobClient.createAndPostOrder).toHaveBeenCalledWith(
-          expect.objectContaining({
-            tokenID: "token-123",
-            price: 0.5,
-            size: 10,
-            side: Side.BUY,
-            taker: "0x0000000000000000000000000000000000000000",
-          }),
-          { negRisk: undefined },
-          OrderType.GTC,
-        )
+        // No expiration means Good-Til-Cancelled; tick size, neg risk and fees
+        // are all resolved by the SDK.
+        expect(mockClient.placeLimitOrder).toHaveBeenCalledWith({
+          tokenId: "token-123",
+          price: 0.5,
+          size: 10,
+          side: OrderSide.BUY,
+        })
       })
 
       it("should return success with orderId after placing a limit order", async () => {
@@ -283,7 +291,7 @@ describe("useClobOrder", () => {
           tokenId: "token-123",
           size: 10,
           price: 0.5,
-          side: Side.BUY,
+          side: OrderSide.BUY,
           isMarketOrder: false,
         })
 
@@ -297,7 +305,7 @@ describe("useClobOrder", () => {
           submitOrder({
             tokenId: "1",
             size: 1,
-            side: Side.BUY,
+            side: OrderSide.BUY,
             isMarketOrder: false,
           }),
         ).rejects.toThrow("Price required for limit orders")
@@ -305,36 +313,53 @@ describe("useClobOrder", () => {
     })
 
     describe("Error Handling", () => {
-      it("should normalise insufficient balance errors to a user-friendly message", async () => {
-        mockClobClient.createAndPostOrder.mockRejectedValue(
-          new Error("not enough balance / allowance"),
-        )
-        const { submitOrder } = useClobOrder(walletAddress)
-
-        await expect(
-          submitOrder({ tokenId: "1", size: 1, price: 0.5, side: Side.BUY }),
-        ).rejects.toThrow("Insufficient Funds")
-      })
-
-      it("should throw the backend error message when the response has no orderId", async () => {
-        mockClobClient.createAndPostOrder.mockResolvedValue({
-          error: "Backend error",
+      it("should normalise insufficient balance rejections to a user-friendly message", async () => {
+        mockClient.placeLimitOrder.mockResolvedValue({
+          ok: false,
+          code: "insufficient_balance_or_allowance" as const,
+          message: "not enough balance / allowance",
         })
         const { submitOrder } = useClobOrder(walletAddress)
 
         await expect(
-          submitOrder({ tokenId: "1", size: 1, price: 0.5, side: Side.BUY }),
+          submitOrder({
+            tokenId: "1",
+            size: 1,
+            price: 0.5,
+            side: OrderSide.BUY,
+          }),
+        ).rejects.toThrow("Insufficient Funds")
+      })
+
+      it("should throw the venue's message for any other rejection", async () => {
+        mockClient.placeLimitOrder.mockResolvedValue({
+          ok: false,
+          code: "market_not_ready" as const,
+          message: "Backend error",
+        })
+        const { submitOrder } = useClobOrder(walletAddress)
+
+        await expect(
+          submitOrder({
+            tokenId: "1",
+            size: 1,
+            price: 0.5,
+            side: OrderSide.BUY,
+          }),
         ).rejects.toThrow("Backend error")
       })
 
       it("should rethrow unexpected errors unchanged", async () => {
-        mockClobClient.createAndPostOrder.mockRejectedValue(
-          new Error("Unknown error"),
-        )
+        mockClient.placeLimitOrder.mockRejectedValue(new Error("Unknown error"))
         const { submitOrder } = useClobOrder(walletAddress)
 
         await expect(
-          submitOrder({ tokenId: "1", size: 1, price: 0.5, side: Side.BUY }),
+          submitOrder({
+            tokenId: "1",
+            size: 1,
+            price: 0.5,
+            side: OrderSide.BUY,
+          }),
         ).rejects.toThrow("Unknown error")
       })
     })
@@ -342,7 +367,7 @@ describe("useClobOrder", () => {
 
   describe("cancelOrder", () => {
     beforeEach(() => {
-      mockClobClient.cancelOrder.mockResolvedValue({ success: true })
+      mockClient.cancelOrder.mockResolvedValue({ success: true })
     })
 
     it("should call cancelOrder with the correct orderId", async () => {
@@ -350,8 +375,8 @@ describe("useClobOrder", () => {
 
       await cancelOrder("order-to-cancel")
 
-      expect(mockClobClient.cancelOrder).toHaveBeenCalledWith({
-        orderID: "order-to-cancel",
+      expect(mockClient.cancelOrder).toHaveBeenCalledWith({
+        orderId: "order-to-cancel",
       })
     })
 
@@ -371,14 +396,12 @@ describe("useClobOrder", () => {
       expect(mockMutateActiveOrders).toHaveBeenCalled()
     })
 
-    it("should throw if clob client is not initialized", async () => {
-      vi.mocked(useTrading).mockReturnValue({ clobClient: null } as ReturnType<
-        typeof useTrading
-      >)
+    it("should throw if the polymarket client is not initialized", async () => {
+      vi.mocked(useTrading).mockReturnValue({ client: null } as any)
       const { cancelOrder } = useClobOrder(walletAddress)
 
       await expect(cancelOrder("123")).rejects.toThrow(
-        "CLOB client not initialized",
+        "Polymarket client not initialized",
       )
     })
   })

@@ -6,7 +6,6 @@ interface OutcomeButtonsProps {
   outcomePrices: number[]
   tokenIds: string[]
   isClosed: boolean
-  negRisk: boolean
   marketQuestion: string
   orderMinSize: number
   disabled?: boolean
@@ -15,7 +14,6 @@ interface OutcomeButtonsProps {
     outcome: string,
     price: number,
     tokenId: string,
-    negRisk: boolean,
     orderMinSize: number,
   ) => void
 }
@@ -25,7 +23,6 @@ export default function OutcomeButtons({
   outcomePrices,
   tokenIds,
   isClosed,
-  negRisk,
   marketQuestion,
   disabled = false,
   onOutcomeClick,
@@ -52,7 +49,6 @@ export default function OutcomeButtons({
                   outcome,
                   price,
                   tokenId,
-                  negRisk,
                   orderMinSize,
                 )
               }

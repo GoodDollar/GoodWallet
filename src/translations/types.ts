@@ -162,14 +162,6 @@ export type SwapTranslations = {
       title: string
       subtitle: string
     }
-    deriveAccountStep: {
-      title: string
-      subtitle: string
-    }
-    createSafeStep: {
-      title: string
-      subtitle: string
-    }
     allowTokensStep: {
       title: string
       subtitle: string

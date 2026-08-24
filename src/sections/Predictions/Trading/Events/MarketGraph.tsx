@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { PriceHistoryInterval } from "@polymarket/clob-client"
+import { PriceHistoryInterval } from "@polymarket/client"
 import { createChart, LineSeries, type Time } from "lightweight-charts"
 import { Button } from "ui"
 
@@ -56,7 +56,9 @@ export const MarketGraph = ({ market }: { market: PolymarketMarket }) => {
         }))
         .sort((a, b) => (a.time as number) - (b.time as number))
 
-      formattedData.pop() // the clob client returns a duplicated result for the last history item
+      // The API appends the current spot price off the fidelity grid, which
+      // draws a short ragged final segment. Dropped for a clean line.
+      formattedData.pop()
       lineSeries.setData(formattedData)
       chart.timeScale().fitContent()
 

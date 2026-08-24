@@ -38,7 +38,6 @@ export default function HighVolumeMarkets() {
     outcome: string
     price: number
     tokenId: string
-    negRisk: boolean
     orderMinSize: number
   } | null>(null)
 
@@ -63,7 +62,6 @@ export default function HighVolumeMarkets() {
     outcome: string,
     price: number,
     tokenId: string,
-    negRisk: boolean,
     orderMinSize: number,
   ) => {
     setSelectedOutcome({
@@ -71,7 +69,6 @@ export default function HighVolumeMarkets() {
       outcome,
       price,
       tokenId,
-      negRisk,
       orderMinSize,
     })
     setIsModalOpen(true)
@@ -176,7 +173,6 @@ export default function HighVolumeMarkets() {
           outcome={selectedOutcome.outcome}
           currentPrice={selectedOutcome.price}
           tokenId={selectedOutcome.tokenId}
-          negRisk={selectedOutcome.negRisk}
         />
       )}
     </>

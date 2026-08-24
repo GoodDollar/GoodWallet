@@ -24,7 +24,6 @@ export default function MarketRow({
 }: MarketRowProps) {
   const tokenIds: string[] = market.clobTokenIds
   const outcomes: string[] = market.outcomes ?? []
-  const negRisk = market.negRisk || false
 
   const yesTokenId = tokenIds[0] || ""
   const noTokenId = tokenIds[1] || ""
@@ -64,7 +63,6 @@ export default function MarketRow({
                 outcomes[0] || "Yes",
                 yesPrice,
                 yesTokenId,
-                negRisk,
                 market.orderMinSize,
               )
             }
@@ -81,7 +79,6 @@ export default function MarketRow({
                 outcomes[1] || "No",
                 noPrice,
                 noTokenId,
-                negRisk,
                 market.orderMinSize,
               )
             }

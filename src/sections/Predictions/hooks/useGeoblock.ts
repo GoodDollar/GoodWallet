@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "react"
 import {
   ADDITIONAL_BLOCKED_COUNTRIES,
   GEOBLOCK_API_URL,
-} from "../constants/api"
+} from "../constants/polymarket"
 
 export type GeoblockStatus = {
   blocked: boolean

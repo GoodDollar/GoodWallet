@@ -1,52 +1,28 @@
-// biome-ignore-all lint/suspicious/noExplicitAny: need to cast the window
-import type { ClobClient } from "@polymarket/clob-client"
+import type { OpenOrder, SecureClient } from "@polymarket/client"
 import useSWR from "swr"
 
 import { QUERY_REFETCH_INTERVALS } from "../constants/query"
 
-export type PolymarketOrder = {
-  id: string
-  status: string
-  owner: string
-  maker_address: string
-  market: string
-  asset_id: string
-  side: "BUY" | "SELL"
-  original_size: string
-  size_matched: string
-  price: string
-  associate_trades: string[]
-  outcome: string
-  created_at: number
-  expiration: string
-  order_type: string
-}
+export type PolymarketOrder = OpenOrder
 
 export default function useActiveOrders(
-  clobClient: ClobClient | null,
+  client: SecureClient | null,
   walletAddress: string | undefined,
 ) {
   return useSWR(
-    [walletAddress, clobClient, "active-orders"],
+    [walletAddress, client, "active-orders"],
     async (): Promise<PolymarketOrder[]> => {
-      if (!clobClient || !walletAddress) {
+      if (!client || !walletAddress) {
         return []
       }
 
       try {
-        const allOrders = await clobClient.getOpenOrders()
+        const orders: PolymarketOrder[] = []
+        for await (const page of client.listOpenOrders()) {
+          orders.push(...page.items)
+        }
 
-        const userOrders = allOrders.filter((order: any) => {
-          const orderMaker = (order.maker_address || "").toLowerCase()
-          const userAddr = walletAddress.toLowerCase()
-          return orderMaker === userAddr
-        })
-
-        const activeOrders = userOrders.filter((order: any) => {
-          return order.status === "LIVE"
-        })
-
-        return activeOrders as PolymarketOrder[]
+        return orders.filter((order) => order.status === "LIVE")
       } catch (err) {
         console.error("Error fetching open orders:", err)
         return []

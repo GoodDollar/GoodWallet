@@ -12,16 +12,14 @@ import { useTrading } from "../../providers/TradingProvider.tsx"
 import OrderCard from "./OrderCard.tsx"
 
 export default function ActiveOrders() {
-  const { clobClient, safeAddress } = useTrading()
+  const { client, walletAddress } = useTrading()
   const {
     data: orders,
     isLoading,
     error,
-  } = useActiveOrders(clobClient, safeAddress as `0x${string}` | undefined)
+  } = useActiveOrders(client, walletAddress)
   const [cancellingId, setCancellingId] = useState<string | null>(null)
-  const { cancelOrder, isSubmitting } = useClobOrder(
-    safeAddress as `0x${string}` | undefined,
-  )
+  const { cancelOrder, isSubmitting } = useClobOrder(walletAddress)
 
   const handleCancelOrder = async (orderId: string) => {
     setCancellingId(orderId)

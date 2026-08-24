@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect } from "react"
 import { openDialog } from "ui"
 
 import { setBottomSheetProps } from "@/components/Snippet/BottomSheet/bottomSheetStore"
@@ -23,16 +23,8 @@ export default function PredictionsView() {
     title: predictionsTranslations.title,
     subtitle: predictionsTranslations.subtitle,
   })
-  const { initializeTradingSession, isTradingSessionComplete, isGeoblocked } =
-    useTrading()
-  const { walletClient, eoaAddress } = useWallet()
-  const hasInitialized = useRef(false)
-
-  useEffect(() => {
-    if (!walletClient || hasInitialized.current) return
-    hasInitialized.current = true
-    initializeTradingSession()
-  }, [walletClient, initializeTradingSession])
+  const { isTradingSessionComplete, isGeoblocked } = useTrading()
+  const { eoaAddress } = useWallet()
 
   useEffect(() => {
     if (isTradingSessionComplete) {

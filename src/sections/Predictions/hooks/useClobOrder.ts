@@ -1,38 +1,45 @@
 import { useCallback, useState } from "react"
-import type { UserMarketOrder, UserOrder } from "@polymarket/clob-client"
-import { OrderType, Side } from "@polymarket/clob-client"
+import {
+  type OrderResponseErrorCode,
+  OrderSide,
+  OrderType,
+} from "@polymarket/client"
 
 import { useTrading } from "../providers/TradingProvider"
 import useActiveOrders from "./useActiveOrders"
 import useUserPositions from "./useUserPositions"
 
+// @polymarket/client exports this enum as a type but not as a runtime value, and
+// @polymarket/bindings - where the value lives - is documented as not for direct
+// use. So match the code by the literal the wire actually carries.
+const INSUFFICIENT_BALANCE =
+  "insufficient_balance_or_allowance" as OrderResponseErrorCode
+
 export type OrderParams = {
   tokenId: string
+  // BUY market orders spend this many dollars; everything else sells or bids for
+  // this many shares.
   size: number
   price?: number
-  side: Side
-  negRisk?: boolean
+  side: OrderSide
   isMarketOrder?: boolean
 }
 
 export default function useClobOrder(walletAddress: string | undefined) {
-  const { clobClient } = useTrading()
+  const { client } = useTrading()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<Error | null>(null)
   const [orderId, setOrderId] = useState<string | null>(null)
   const { mutate: mutateUserPositions } = useUserPositions(walletAddress)
-  const { mutate: mutateActiveOrders } = useActiveOrders(
-    clobClient,
-    walletAddress,
-  )
+  const { mutate: mutateActiveOrders } = useActiveOrders(client, walletAddress)
 
   const submitOrder = useCallback(
     async (params: OrderParams) => {
       if (!walletAddress) {
         throw new Error("Wallet not connected")
       }
-      if (!clobClient) {
-        throw new Error("CLOB client not initialized")
+      if (!client) {
+        throw new Error("Polymarket client not initialized")
       }
 
       setIsSubmitting(true)
@@ -40,18 +47,19 @@ export default function useClobOrder(walletAddress: string | undefined) {
       setOrderId(null)
 
       try {
-        const feeRateBps = await clobClient.getFeeRateBps(params.tokenId)
+        // Tick size, neg-risk status, fees and the signing details are all
+        // resolved by the SDK per order, so none of them are passed in here.
         let response
 
         if (params.isMarketOrder) {
-          // For market orders, use createAndPostMarketOrder with FOK
-          // BUY orders need amount in dollars
-          // Get the ask price (price to buy at)
-          const priceResponse = await clobClient.getPrice(
-            params.tokenId,
-            params.side === "BUY" ? Side.SELL : Side.BUY,
-          )
-          const askPrice = parseFloat(priceResponse.price)
+          // Quote against the other side of the book - the price we would have
+          // to cross to get filled.
+          const quote = await client.fetchPrice({
+            tokenId: params.tokenId,
+            side:
+              params.side === OrderSide.BUY ? OrderSide.SELL : OrderSide.BUY,
+          })
+          const askPrice = parseFloat(quote)
 
           if (isNaN(askPrice) || askPrice <= 0 || askPrice >= 1) {
             throw new Error("Unable to get valid market price")
@@ -61,55 +69,50 @@ export default function useClobOrder(walletAddress: string | undefined) {
             throw new Error("Price changed since last fetch")
           }
 
-          const marketOrder: UserMarketOrder = {
-            tokenID: params.tokenId,
-            amount: params.size,
-            side: params.side,
-            feeRateBps,
-          }
-
-          response = await clobClient.createAndPostMarketOrder(
-            marketOrder,
-            { negRisk: params.negRisk },
-            OrderType.FOK, // Fill or Kill for market orders
+          response = await client.placeMarketOrder(
+            params.side === OrderSide.BUY
+              ? {
+                  tokenId: params.tokenId,
+                  side: OrderSide.BUY,
+                  amount: params.size,
+                  orderType: OrderType.FOK,
+                }
+              : {
+                  tokenId: params.tokenId,
+                  side: OrderSide.SELL,
+                  shares: params.size,
+                  orderType: OrderType.FOK,
+                },
           )
         } else {
-          // For limit orders, use createAndPostOrder with GTC
           if (!params.price) {
             throw new Error("Price required for limit orders")
           }
 
-          const limitOrder: UserOrder = {
-            tokenID: params.tokenId,
+          // Omitting `expiration` makes this Good-Til-Cancelled.
+          response = await client.placeLimitOrder({
+            tokenId: params.tokenId,
             price: params.price,
             size: params.size,
             side: params.side,
-            feeRateBps,
-            expiration: 0,
-            taker: "0x0000000000000000000000000000000000000000",
-          }
+          })
+        }
 
-          response = await clobClient.createAndPostOrder(
-            limitOrder,
-            { negRisk: params.negRisk },
-            OrderType.GTC, // Good Till Cancelled for limit orders
+        if (!response.ok) {
+          throw new Error(
+            response.code === INSUFFICIENT_BALANCE
+              ? "Insufficient Funds"
+              : response.message,
           )
         }
 
-        if (response.orderID) {
-          setOrderId(response.orderID)
-          mutateActiveOrders()
-          mutateUserPositions()
-          return { success: true, orderId: response.orderID }
-        } else {
-          throw new Error(response.error)
-        }
+        setOrderId(response.orderId)
+        mutateActiveOrders()
+        mutateUserPositions()
+        return { success: true, orderId: response.orderId }
       } catch (err: unknown) {
-        let error =
+        const error =
           err instanceof Error ? err : new Error("Failed to submit order")
-        if (error.message === "not enough balance / allowance") {
-          error = new Error("Insufficient Funds")
-        }
         console.error("[predictions] order submit failed", {
           tokenId: params.tokenId,
           isMarketOrder: params.isMarketOrder,
@@ -124,20 +127,20 @@ export default function useClobOrder(walletAddress: string | undefined) {
         setIsSubmitting(false)
       }
     },
-    [clobClient, walletAddress, mutateActiveOrders],
+    [client, walletAddress, mutateActiveOrders, mutateUserPositions],
   )
 
   const cancelOrder = useCallback(
     async (orderId: string) => {
-      if (!clobClient) {
-        throw new Error("CLOB client not initialized")
+      if (!client) {
+        throw new Error("Polymarket client not initialized")
       }
 
       setIsSubmitting(true)
       setError(null)
 
       try {
-        await clobClient.cancelOrder({ orderID: orderId })
+        await client.cancelOrder({ orderId })
         mutateActiveOrders()
         return { success: true }
       } catch (err: unknown) {
@@ -149,7 +152,7 @@ export default function useClobOrder(walletAddress: string | undefined) {
         setIsSubmitting(false)
       }
     },
-    [clobClient, walletAddress, mutateActiveOrders],
+    [client, mutateActiveOrders],
   )
 
   return {

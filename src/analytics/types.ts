@@ -50,13 +50,10 @@ export enum AnalyticsEventTypes {
   WalletSignedMessageCancelled = "Wallet_Message_Signed_Cancelled",
   PolymarketAuthenticationSucceeded = "Polymarket_Authentication_Succeeded",
   PolymarketAuthenticationFailed = "Polymarket_Authentication_Failed",
-  PolymarketSafeDeploymentSucceeded = "Polymarket_Safe_Deployment_Succeeded",
-  PolymarketSafeDeploymentFailed = "Polymarket_Safe_Deployment_Failed",
   PolymarketAllowTokensSucceeded = "Polymarket_Allow_Tokens_Succeeded",
   PolymarketAllowTokensFailed = "Polymarket_Allow_Tokens_Failed",
   PolymarketOrderPlacementSucceeded = "Polymarket_Order_Placement_Succeeded",
   PolymarketOrderPlacementFailed = "Polymarket_Order_Placement_Failed",
-  PolymarketWalletFunded = "Polymarket_Wallet_Funded",
   PolymarketWithdraw = "Polymarket_Withdraw",
   PolymarketWithdrawFailed = "Polymarket_Withdraw_Failed",
   PolymarketRedeemPositionSucceeded = "Polymarket_Redeem_Position_Succeeded",
@@ -279,17 +276,12 @@ export type AnalyticsEvent =
     }
   | {
       type: AnalyticsEventTypes.PolymarketAuthenticationSucceeded
+      // EOA | POLY_PROXY | GNOSIS_SAFE | DEPOSIT_WALLET - legacy Safe holders vs
+      // accounts the SDK created a Deposit Wallet for.
+      walletType: string
     }
   | {
       type: AnalyticsEventTypes.PolymarketAuthenticationFailed
-      errorReason: string
-    }
-  | {
-      type: AnalyticsEventTypes.PolymarketSafeDeploymentSucceeded
-      safeAddress: string
-    }
-  | {
-      type: AnalyticsEventTypes.PolymarketSafeDeploymentFailed
       errorReason: string
     }
   | {
@@ -303,8 +295,8 @@ export type AnalyticsEvent =
       type: AnalyticsEventTypes.PolymarketOrderPlacementSucceeded
       orderType: "market" | "limit"
       size: number
-      priceUsdce: number
-      totalCostUsdce: number
+      pricePusd: number
+      totalCostPusd: number
       side: "BUY" | "SELL"
       tokenId: string
       marketTitle: string
@@ -314,16 +306,12 @@ export type AnalyticsEvent =
       errorReason: string
     }
   | {
-      type: AnalyticsEventTypes.PolymarketWalletFunded
-      usdceAmount: number
-    }
-  | {
       type: AnalyticsEventTypes.PolymarketWithdraw
-      usdceAmount: number
+      pusdAmount: number
     }
   | {
       type: AnalyticsEventTypes.PolymarketWithdrawFailed
-      usdceAmount: number
+      pusdAmount: number
       errorReason: string
     }
   | {

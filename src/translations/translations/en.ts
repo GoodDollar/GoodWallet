@@ -263,17 +263,9 @@ const en: TypedTranslations = {
         title: "Create Account",
         subtitle: "Polymarket needs to authenticate your wallet",
       },
-      deriveAccountStep: {
-        title: "Existing account with Polymarket",
-        subtitle: "Confirm to authenticate",
-      },
-      createSafeStep: {
-        title: "Create Wallet",
-        subtitle: "Polymarket requires a Safe wallet",
-      },
       allowTokensStep: {
         title: "Allow Tokens",
-        subtitle: "USDC.e coins are used in Polymarket",
+        subtitle: "pUSD is the collateral used in Polymarket",
       },
     },
     title: "Swap",

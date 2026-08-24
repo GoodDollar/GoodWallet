@@ -1,26 +1,13 @@
+import type { ApiKeyCreds } from "@polymarket/client"
+
 export interface TradingSession {
   eoaAddress: string
-  safeAddress: string
-  isSafeDeployed: boolean
-  hasApiCredentials: boolean
+  // Account wallet the orders are funded from: a legacy Safe for users who
+  // already deployed one, otherwise the SDK-managed Deposit Wallet.
+  wallet: string
   hasApprovals: boolean
-  apiCredentials?: {
-    key: string
-    secret: string
-    passphrase: string
-  }
-  lastChecked: number
+  credentials?: ApiKeyCreds
 }
-
-export type SessionStep =
-  | "idle"
-  | "blocked"
-  | "checking"
-  | "authenticating_create"
-  | "authenticating_derive"
-  | "deploying"
-  | "approvals"
-  | "complete"
 
 export const loadSession = (address: string): TradingSession | null => {
   const stored = localStorage.getItem(

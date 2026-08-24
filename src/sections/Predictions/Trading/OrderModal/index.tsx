@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { Side } from "@polymarket/clob-client"
+import { OrderSide } from "@polymarket/client"
 import { Button, createToast, updateToast } from "ui"
 
 import { useTranslation } from "translations"
@@ -10,7 +10,7 @@ import { useAnalytics } from "@/analytics/useAnalytics.ts"
 
 import CloseDialogButton from "../../components/CloseDialogButton.tsx"
 import useClobOrder from "../../hooks/useClobOrder.ts"
-import usePolygonBalances from "../../hooks/usePolygonBalances.ts"
+import useCollateralBalance from "../../hooks/useCollateralBalance.ts"
 import useTickSize from "../../hooks/useTickSize.ts"
 import Portal from "../../Portal.tsx"
 import { useTrading } from "../../providers/TradingProvider.tsx"
@@ -42,7 +42,6 @@ type OrderPlacementModalProps = {
   orderMinSize: number // taker order minimum is 1$, maker order minimum is 5 shares
   currentPrice: number
   tokenId: string
-  negRisk?: boolean
 }
 
 export default function OrderPlacementModal({
@@ -53,14 +52,13 @@ export default function OrderPlacementModal({
   orderMinSize,
   currentPrice,
   tokenId,
-  negRisk = false,
 }: OrderPlacementModalProps) {
   const [size, setSize] = useState<string>("")
   const [orderType, setOrderType] = useState<"market" | "limit">("market")
   const [limitPrice, setLimitPrice] = useState<string>("")
   const [localError, setLocalError] = useState<string | null>(null)
-  const { safeAddress } = useTrading()
-  const { usdceBalance } = usePolygonBalances(safeAddress)
+  const { walletAddress } = useTrading()
+  const { balance } = useCollateralBalance(walletAddress)
   const { captureEvent } = useAnalytics()
 
   const modalRef = useRef<HTMLDivElement>(null)
@@ -77,7 +75,7 @@ export default function OrderPlacementModal({
     isSubmitting,
     error: orderError,
     orderId,
-  } = useClobOrder(safeAddress)
+  } = useClobOrder(walletAddress)
 
   useEffect(() => {
     if (isOpen) {
@@ -117,12 +115,12 @@ export default function OrderPlacementModal({
     const requestedAmount =
       orderType === "market" ? Number(size) : limitPriceNum * Number(size)
 
-    if (requestedAmount > Number(usdceBalance)) {
+    if (requestedAmount > Number(balance)) {
       setLocalError("Insufficient funds")
     } else {
       setLocalError(null)
     }
-  }, [usdceBalance, size, limitPriceNum, orderType, currentPrice])
+  }, [balance, size, limitPriceNum, orderType, currentPrice])
 
   useEffect(() => {
     if (isOpen && size && orderMinSize) {
@@ -169,16 +167,15 @@ export default function OrderPlacementModal({
         tokenId,
         size: sizeNum,
         price: effectivePrice,
-        side: Side.BUY,
-        negRisk,
+        side: OrderSide.BUY,
         isMarketOrder: orderType === "market",
       })
       captureEvent({
         type: AnalyticsEventTypes.PolymarketOrderPlacementSucceeded,
         orderType,
         size: sizeNum,
-        priceUsdce: limitPriceNum,
-        totalCostUsdce: sizeNum * limitPriceNum,
+        pricePusd: limitPriceNum,
+        totalCostPusd: sizeNum * limitPriceNum,
         side: "BUY",
         tokenId,
         marketTitle,
