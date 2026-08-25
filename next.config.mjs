@@ -9,6 +9,7 @@ const nextConfig = {
     "@goodwidget/superfluid-campaign-widget",
     "@goodwidget/citizen-claim-widget",
     "@goodwidget/ai-credits-widget",
+    "@goodwidget/goodreserve-widget",
     "@goodwidget/core",
     "@goodwidget/embed",
     "@goodwidget/ui",
