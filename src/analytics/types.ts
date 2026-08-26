@@ -64,6 +64,9 @@ export enum AnalyticsEventTypes {
   PredictionsMarketsTabSelected = "Predictions_Markets_Tab_Selected",
   PredictionsOpenOrdersTabSelected = "Predictions_Open_Orders_Tab_Selected",
   PredictionsPositionsTabSelected = "Predictions_Positions_Tab_Selected",
+  AICreditsTabSelected = "AICredits_Tab_Selected",
+  GoodReserveTabSelected = "GoodReserve_Tab_Selected",
+  SuperfluidCampaignTabSelected = "SuperfluidCampaign_Tab_Selected",
 }
 
 export enum AvailableMethodsNames {
@@ -342,4 +345,13 @@ export type AnalyticsEvent =
     }
   | {
       type: AnalyticsEventTypes.PredictionsPositionsTabSelected
+    }
+  | {
+      type: AnalyticsEventTypes.AICreditsTabSelected
+    }
+  | {
+      type: AnalyticsEventTypes.GoodReserveTabSelected
+    }
+  | {
+      type: AnalyticsEventTypes.SuperfluidCampaignTabSelected
     }
