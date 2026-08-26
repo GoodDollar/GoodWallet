@@ -30,12 +30,28 @@ import { postMessageToReactNative } from "@/utils/messageReactNative"
 import { isPwa } from "@/utils/pwa"
 import {
   coreDashboardActions,
+  type DashboardAction,
   widgetDashboardActions,
 } from "@/widgets/registry"
 
 import { Menu } from "./Menu"
 import { ProfileCard } from "./ProfileCard"
 import styles from "./WalletSection.module.css"
+
+// Widget dashboard buttons that should report a click. Core actions
+// (Send/Receive/Swap/...) are intentionally excluded - they only track
+// action completion, not the click itself.
+type WidgetTabSelectedEventType =
+  | AnalyticsEventTypes.AICreditsTabSelected
+  | AnalyticsEventTypes.GoodReserveTabSelected
+  | AnalyticsEventTypes.SuperfluidCampaignTabSelected
+
+const widgetActionEventType: Record<string, WidgetTabSelectedEventType> = {
+  "goodwidget.ai-credits": AnalyticsEventTypes.AICreditsTabSelected,
+  "goodwidget.goodreserve": AnalyticsEventTypes.GoodReserveTabSelected,
+  "goodwidget.superfluid-campaign":
+    AnalyticsEventTypes.SuperfluidCampaignTabSelected,
+}
 
 export default function WalletSection({
   children,
@@ -199,7 +215,10 @@ export default function WalletSection({
     predictions: homeTranslations.predictions,
     walletconnect: homeTranslations.walletConnect,
   }
-  const dashboardActions = [...coreDashboardActions, ...widgetDashboardActions]
+  const dashboardActions: readonly DashboardAction[] = [
+    ...coreDashboardActions,
+    ...widgetDashboardActions,
+  ]
 
   return (
     <>
@@ -242,6 +261,9 @@ export default function WalletSection({
                   : action.id === "walletconnect" && sessions.length > 0
                     ? "connected"
                     : undefined
+              const widgetEventType = action.widgetId
+                ? widgetActionEventType[action.widgetId]
+                : undefined
 
               return (
                 <Link
@@ -249,6 +271,11 @@ export default function WalletSection({
                   href={`/${locale}/${action.routeSlug}`}
                   scroll={false}
                   prefetch={true}
+                  onClick={
+                    widgetEventType
+                      ? () => captureEvent({ type: widgetEventType })
+                      : undefined
+                  }
                 >
                   <RoundButton
                     icon={icon}
