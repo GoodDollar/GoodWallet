@@ -2,7 +2,7 @@
 
 ## 1. Project Overview
 
-GoodWallet V2 is a multi-chain, multi-protocol crypto wallet built on Next.js 16. It spans EVM chains plus Solana, Bitcoin, Dogecoin and XRP, with token management via Alchemy, cross-chain swaps via Li.Fi, prediction-market trading via Polymarket, and WalletConnect (Reown) connectivity. It centers on the GoodDollar (G$) UBI ecosystem.
+GoodWallet V2 is a multi-chain, multi-protocol crypto wallet built on Next.js 16. It spans EVM chains plus Solana, Bitcoin, Dogecoin and XRP, with token management via Alchemy, cross-chain swaps via Li.Fi, and WalletConnect (Reown) connectivity. It centers on the GoodDollar (G$) UBI ecosystem.
 
 ## 2. Core Features
 
@@ -12,8 +12,6 @@ GoodWallet V2 is a multi-chain, multi-protocol crypto wallet built on Next.js 16
   Alchemy-based balance tracking, send/receive, QR code transactions, gasless mode
 - **Swaps**
   Cross-chain and same-chain swaps via Li.Fi (EVM, Solana, Bitcoin providers)
-- **Predictions / Trading**
-  Polymarket prediction markets with on-chain trading and live charts
 - **GoodDollar Ecosystem**
   UBI claims, identity/whitelisting, faucet, referrals
 - **Authentication**
@@ -34,7 +32,6 @@ GoodWallet V2 is a multi-chain, multi-protocol crypto wallet built on Next.js 16
 - **Swaps & Bridging**: Li.Fi SDK v4
 - **Multi-chain Data**: Alchemy, Tatum
 - **Connectivity**: WalletConnect v2 via Reown WalletKit
-- **Predictions**: Polymarket CLOB / builder-relayer clients
 - **Authentication**: Web3Auth/Torus social logins, Auth0 passwordless (hCaptcha)
 - **Analytics**: Sentry, Amplitude
 
@@ -47,7 +44,7 @@ GoodWallet V2 is a multi-chain, multi-protocol crypto wallet built on Next.js 16
 - **GoodDollar**
   UBI claims, identity verification, multi-chain G$ support
 - **Project Structure**
-  `/src/app` (App Router, `[locale]` routes, `/api`), `/src/sections` (feature flows: Home, Send, Receive, Swap, Predictions, GoodDollar, Login, WalletConnect, Qr, Options), `/src/chain`, `/src/tokens`, `/src/stores`, `/src/hooks`, `/src/components`, `/src/ui`
+  `/src/app` (App Router, `[locale]` routes, `/api`), `/src/sections` (feature flows: Home, Send, Receive, Swap, GoodDollar, Login, WalletConnect, Qr, Options), `/src/chain`, `/src/tokens`, `/src/stores`, `/src/hooks`, `/src/components`, `/src/ui`
 
 ## 6. Development Tools
 

@@ -62,7 +62,6 @@ import Swap from "./icons/swap.svg"
 import Gift from "./illustrations/Gift.svg"
 import GoodDollarRain from "./illustrations/GoodDollarRain.png"
 import GoodDollarStack from "./illustrations/GoodDollarStack.png"
-import Predictions from "./illustrations/predictions.svg"
 import Slide1 from "./illustrations/slide1.svg"
 import Slide2 from "./illustrations/slide2.svg"
 import Slide3 from "./illustrations/slide3.svg"
@@ -125,7 +124,6 @@ export const UIIcons = {
   Questionmark: BsFillQuestionCircleFill,
   Support: MdOutlineContactSupport,
   Legacy,
-  Predictions,
   Spinner,
   Swap,
 } as const

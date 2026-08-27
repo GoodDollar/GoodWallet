@@ -196,7 +196,6 @@ export default function WalletSection({
     send: homeTranslations.send,
     receive: homeTranslations.receive,
     swap: homeTranslations.swap,
-    predictions: homeTranslations.predictions,
     walletconnect: homeTranslations.walletConnect,
   }
   const dashboardActions = [...coreDashboardActions, ...widgetDashboardActions]
