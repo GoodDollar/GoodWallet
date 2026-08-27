@@ -123,13 +123,12 @@ describe("widget registry", () => {
     ).toThrow("Duplicate widget Custom Element tag")
   })
 
-  it("keeps the six reviewed core actions ahead of widget actions", () => {
+  it("keeps the five reviewed core actions ahead of widget actions", () => {
     expect(coreDashboardActions.map(({ id }) => id)).toEqual([
       "gooddollar",
       "send",
       "receive",
       "swap",
-      "predictions",
       "walletconnect",
     ])
   })
