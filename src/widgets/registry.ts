@@ -80,7 +80,6 @@ const RESERVED_WIDGET_ROUTES = new Set([
   "send",
   "receive",
   "swap",
-  "predictions",
   "walletconnect",
   "options",
   "promo",
@@ -163,7 +162,7 @@ export const createWidgetRegistry = (
 const aiCreditsWidget = defineWidget({
   widgetId: "goodwidget.ai-credits",
   packageName: "@goodwidget/ai-credits-widget",
-  packageVersion: "0.1.2",
+  packageVersion: "0.1.6",
   routeSlug: "ai-credits",
   displayName: "AI Credits",
   description: "Purchase AI compute credits with your G$ balance",
@@ -304,12 +303,6 @@ export const coreDashboardActions = [
     routeSlug: "swap",
     label: "Swap",
     icon: { kind: "system", name: "Swap" },
-  },
-  {
-    id: "predictions",
-    routeSlug: "predictions",
-    label: "Predictions",
-    icon: { kind: "system", name: "Predictions" },
   },
   {
     id: "walletconnect",

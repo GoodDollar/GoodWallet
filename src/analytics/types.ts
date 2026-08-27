@@ -48,22 +48,9 @@ export enum AnalyticsEventTypes {
   GoodDollarNewsTabSelected = "GoodDollar_News_Tab_Selected",
   WalletSignedMessageConfirmed = "Wallet_Message_Signed_Confirmed",
   WalletSignedMessageCancelled = "Wallet_Message_Signed_Cancelled",
-  PolymarketAuthenticationSucceeded = "Polymarket_Authentication_Succeeded",
-  PolymarketAuthenticationFailed = "Polymarket_Authentication_Failed",
-  PolymarketSafeDeploymentSucceeded = "Polymarket_Safe_Deployment_Succeeded",
-  PolymarketSafeDeploymentFailed = "Polymarket_Safe_Deployment_Failed",
-  PolymarketAllowTokensSucceeded = "Polymarket_Allow_Tokens_Succeeded",
-  PolymarketAllowTokensFailed = "Polymarket_Allow_Tokens_Failed",
-  PolymarketOrderPlacementSucceeded = "Polymarket_Order_Placement_Succeeded",
-  PolymarketOrderPlacementFailed = "Polymarket_Order_Placement_Failed",
-  PolymarketWalletFunded = "Polymarket_Wallet_Funded",
-  PolymarketWithdraw = "Polymarket_Withdraw",
-  PolymarketWithdrawFailed = "Polymarket_Withdraw_Failed",
-  PolymarketRedeemPositionSucceeded = "Polymarket_Redeem_Position_Succeeded",
-  PolymarketRedeemPositionFailed = "Polymarket_Redeem_Position_Failed",
-  PredictionsMarketsTabSelected = "Predictions_Markets_Tab_Selected",
-  PredictionsOpenOrdersTabSelected = "Predictions_Open_Orders_Tab_Selected",
-  PredictionsPositionsTabSelected = "Predictions_Positions_Tab_Selected",
+  AICreditsTabSelected = "AICredits_Tab_Selected",
+  GoodReserveTabSelected = "GoodReserve_Tab_Selected",
+  SuperfluidCampaignTabSelected = "SuperfluidCampaign_Tab_Selected",
 }
 
 export enum AvailableMethodsNames {
@@ -278,68 +265,11 @@ export type AnalyticsEvent =
       methodName: AvailableMethods
     }
   | {
-      type: AnalyticsEventTypes.PolymarketAuthenticationSucceeded
+      type: AnalyticsEventTypes.AICreditsTabSelected
     }
   | {
-      type: AnalyticsEventTypes.PolymarketAuthenticationFailed
-      errorReason: string
+      type: AnalyticsEventTypes.GoodReserveTabSelected
     }
   | {
-      type: AnalyticsEventTypes.PolymarketSafeDeploymentSucceeded
-      safeAddress: string
-    }
-  | {
-      type: AnalyticsEventTypes.PolymarketSafeDeploymentFailed
-      errorReason: string
-    }
-  | {
-      type: AnalyticsEventTypes.PolymarketAllowTokensSucceeded
-    }
-  | {
-      type: AnalyticsEventTypes.PolymarketAllowTokensFailed
-      errorReason: string
-    }
-  | {
-      type: AnalyticsEventTypes.PolymarketOrderPlacementSucceeded
-      orderType: "market" | "limit"
-      size: number
-      priceUsdce: number
-      totalCostUsdce: number
-      side: "BUY" | "SELL"
-      tokenId: string
-      marketTitle: string
-    }
-  | {
-      type: AnalyticsEventTypes.PolymarketOrderPlacementFailed
-      errorReason: string
-    }
-  | {
-      type: AnalyticsEventTypes.PolymarketWalletFunded
-      usdceAmount: number
-    }
-  | {
-      type: AnalyticsEventTypes.PolymarketWithdraw
-      usdceAmount: number
-    }
-  | {
-      type: AnalyticsEventTypes.PolymarketWithdrawFailed
-      usdceAmount: number
-      errorReason: string
-    }
-  | {
-      type: AnalyticsEventTypes.PolymarketRedeemPositionSucceeded
-      conditionId: string
-    }
-  | {
-      type: AnalyticsEventTypes.PolymarketRedeemPositionFailed
-      errorReason: string
-    }
-  | {
-      type: AnalyticsEventTypes.PredictionsMarketsTabSelected
-    }
-  | {
-      type: AnalyticsEventTypes.PredictionsOpenOrdersTabSelected
-    }
-  | {
-      type: AnalyticsEventTypes.PredictionsPositionsTabSelected
+      type: AnalyticsEventTypes.SuperfluidCampaignTabSelected
     }
