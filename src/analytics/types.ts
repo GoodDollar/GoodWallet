@@ -48,6 +48,9 @@ export enum AnalyticsEventTypes {
   GoodDollarNewsTabSelected = "GoodDollar_News_Tab_Selected",
   WalletSignedMessageConfirmed = "Wallet_Message_Signed_Confirmed",
   WalletSignedMessageCancelled = "Wallet_Message_Signed_Cancelled",
+  AICreditsTabSelected = "AICredits_Tab_Selected",
+  GoodReserveTabSelected = "GoodReserve_Tab_Selected",
+  SuperfluidCampaignTabSelected = "SuperfluidCampaign_Tab_Selected",
 }
 
 export enum AvailableMethodsNames {
@@ -260,4 +263,13 @@ export type AnalyticsEvent =
       type: AnalyticsEventTypes.WalletSignedMessageCancelled
       chainName: string
       methodName: AvailableMethods
+    }
+  | {
+      type: AnalyticsEventTypes.AICreditsTabSelected
+    }
+  | {
+      type: AnalyticsEventTypes.GoodReserveTabSelected
+    }
+  | {
+      type: AnalyticsEventTypes.SuperfluidCampaignTabSelected
     }
