@@ -162,7 +162,7 @@ export const createWidgetRegistry = (
 const aiCreditsWidget = defineWidget({
   widgetId: "goodwidget.ai-credits",
   packageName: "@goodwidget/ai-credits-widget",
-  packageVersion: "0.1.2",
+  packageVersion: "0.1.6",
   routeSlug: "ai-credits",
   displayName: "AI Credits",
   description: "Purchase AI compute credits with your G$ balance",
@@ -248,7 +248,7 @@ const superfluidCampaignWidget = defineWidget({
 const goodReserveWidget = defineWidget({
   widgetId: "goodwidget.goodreserve",
   packageName: "@goodwidget/goodreserve-widget",
-  packageVersion: "0.1.5",
+  packageVersion: "0.1.7",
   routeSlug: "goodreserve",
   displayName: "GoodReserve",
   description: "Buy and sell G$ through the GoodDollar reserve",
