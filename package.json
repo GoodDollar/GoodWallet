@@ -24,7 +24,7 @@
     "@bitcoinerlab/secp256k1": "^1.2.0",
     "@electric-sql/pglite": "^0.5.3",
     "@gooddollar/goodprotocol": "^2.2.0",
-    "@goodwidget/ai-credits-widget": "0.1.6",
+    "@goodwidget/ai-credits-widget": "0.1.7",
     "@goodwidget/core": "0.1.4",
     "@goodwidget/embed": "0.1.4",
     "@goodwidget/goodreserve-widget": "0.1.7",
