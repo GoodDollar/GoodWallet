@@ -24,6 +24,7 @@ import { getGoodDollarPrice } from "./onChainGoodDollarPrice"
 import {
   getReserveGoodDollarPrice,
   isConfiguredGoodDollarToken,
+  isInactiveGoodDollarToken,
   isReservePriceEnabled,
 } from "./onChainGoodDollarReservePrice"
 import type { SelectToken, SelectTokens } from "./types"
@@ -73,6 +74,17 @@ export const mutateApplyBlacklistForMarketCap = (tokens: SelectTokens) => {
     })
 
     tokens[chainId] = result
+  }
+}
+
+export const mutateRemoveInactiveGoodDollarPrices = (tokens: SelectTokens) => {
+  for (const chainId of [CELO_CHAIN_ID, XDC_CHAIN_ID]) {
+    const tokensForChain = tokens[chainId] ?? []
+    for (const token of tokensForChain) {
+      if (isInactiveGoodDollarToken(chainId, token.address)) {
+        token.priceUSD = null
+      }
+    }
   }
 }
 
@@ -155,6 +167,19 @@ export const mutateApplyReservePrices = async (tokens: TokensResponse) => {
       )
     }),
   )
+}
+
+export const mutateRemoveInactiveGoodDollarPricesFromLifi = (
+  tokens: TokensResponse,
+) => {
+  for (const chainId of [CELO_CHAIN_ID, XDC_CHAIN_ID]) {
+    const tokensForChain = tokens.tokens[chainId] ?? []
+    for (const token of tokensForChain) {
+      if (isInactiveGoodDollarToken(chainId, token.address)) {
+        token.priceUSD = ""
+      }
+    }
+  }
 }
 
 const getPriceUSDForFallbackToken = async (

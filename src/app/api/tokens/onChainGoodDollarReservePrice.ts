@@ -13,6 +13,15 @@ const EXCHANGE_PROVIDER_ABI = parseAbi([
 
 const ERC20_ABI = parseAbi(["function decimals() view returns (uint8)"])
 
+type Deployment = {
+  networkId?: number
+  GoodDollar?: unknown
+}
+
+const deployments = Object.values(
+  ContractsAddress as Record<string, Deployment>,
+)
+
 const getDeploymentNetwork = (chainId: number) => {
   const contracts = process.env.NEXT_PUBLIC_GOODDOLLAR_CONTRACTS
   if (!contracts) {
@@ -39,6 +48,22 @@ export const isConfiguredGoodDollarToken = (
   } catch {
     return false
   }
+}
+
+export const isInactiveGoodDollarToken = (
+  chainId: number,
+  tokenAddress: string,
+) => {
+  const isKnownGoodDollar = deployments.some(
+    ({ networkId, GoodDollar }) =>
+      networkId === chainId &&
+      typeof GoodDollar === "string" &&
+      GoodDollar.toLowerCase() === tokenAddress.toLowerCase(),
+  )
+
+  return (
+    isKnownGoodDollar && !isConfiguredGoodDollarToken(chainId, tokenAddress)
+  )
 }
 
 export const isReservePriceEnabled = () =>
