@@ -1,7 +1,12 @@
 import type { Token, TokensResponse } from "@lifi/sdk"
 import { getAddress } from "viem"
 
-import { BNB_CHAIN_ID, CELO_CHAIN_ID, DOGE_CHAIN_ID } from "@/chain/chain-ids"
+import {
+  BNB_CHAIN_ID,
+  CELO_CHAIN_ID,
+  DOGE_CHAIN_ID,
+  XDC_CHAIN_ID,
+} from "@/chain/chain-ids"
 import { AVAILABLE_CHAINS } from "@/chain/chains"
 import { getChainProvider } from "@/chain/provider/provider"
 import { EVM_FAMILY } from "@/chain/types"
@@ -16,6 +21,11 @@ import { BLACKLIST_TOKENS } from "./blacklistTokens"
 import { BLACKLIST_TOKENS_MARKETCAP } from "./blacklistTokensMarketCap"
 import { FALLBACK_TOKENS } from "./fallbackTokens"
 import { getGoodDollarPrice } from "./onChainGoodDollarPrice"
+import {
+  getReserveGoodDollarPrice,
+  isConfiguredGoodDollarToken,
+  isReservePriceEnabled,
+} from "./onChainGoodDollarReservePrice"
 import type { SelectToken, SelectTokens } from "./types"
 
 export const mutateApplyBlacklist = (tokens: SelectTokens) => {
@@ -116,11 +126,57 @@ export const addFallbackTokens = async (tokens: TokensResponse) => {
   }
 }
 
+export const mutateApplyReservePrices = async (tokens: TokensResponse) => {
+  if (!isReservePriceEnabled()) {
+    return
+  }
+
+  await Promise.all(
+    [CELO_CHAIN_ID, XDC_CHAIN_ID].map(async (chainId) => {
+      const tokensForChain = tokens.tokens[chainId] ?? []
+      await Promise.all(
+        tokensForChain
+          .filter((token) =>
+            isConfiguredGoodDollarToken(chainId, token.address),
+          )
+          .map(async (token) => {
+            try {
+              token.priceUSD = await getReserveGoodDollarPrice(
+                chainId,
+                token.address,
+              )
+            } catch (err: unknown) {
+              console.warn(
+                `Reserve price for G$ in chain ${chainId} was not found; keeping the current price`,
+                err,
+              )
+            }
+          }),
+      )
+    }),
+  )
+}
+
 const getPriceUSDForFallbackToken = async (
   token: Token,
   tokensLifi: TokensResponse,
 ): Promise<string | undefined> => {
   try {
+    if (isConfiguredGoodDollarToken(token.chainId, token.address)) {
+      if (
+        isReservePriceEnabled() &&
+        (token.chainId === CELO_CHAIN_ID || token.chainId === XDC_CHAIN_ID)
+      ) {
+        try {
+          return await getReserveGoodDollarPrice(token.chainId, token.address)
+        } catch (err: unknown) {
+          console.warn(
+            `Reserve price for G$ in chain ${token.chainId} was not found; using the current price path`,
+            err,
+          )
+        }
+      }
+    }
     if (token.symbol === "G$") {
       return await getGoodDollarPrice()
     } else if (

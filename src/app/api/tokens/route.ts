@@ -12,6 +12,7 @@ import {
   addFallbackTokens,
   mutateApplyBlacklist,
   mutateApplyBlacklistForMarketCap,
+  mutateApplyReservePrices,
   mutateRemoveUnavailableChains,
 } from "./tokenUtils"
 import type {
@@ -81,6 +82,7 @@ const getTokens = async (context: Pick<StorageContext, "getAll">) => {
 const updateTokens = async (context: Pick<StorageContext, "upsert">) => {
   const tokensResponseFromLifi = await getTokensFromLiFi()
   await addFallbackTokens(tokensResponseFromLifi)
+  await mutateApplyReservePrices(tokensResponseFromLifi)
   const upsertTokens = convertFromLiFiToUpsert(tokensResponseFromLifi)
   await context.upsert(upsertTokens)
 }
