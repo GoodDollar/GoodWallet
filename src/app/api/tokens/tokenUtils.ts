@@ -143,29 +143,25 @@ export const mutateApplyReservePrices = async (tokens: TokensResponse) => {
     return
   }
 
+  // XDC uses the Celo pool fallback, like Fuse, until its reserve price is fixed.
   await Promise.all(
-    [CELO_CHAIN_ID, XDC_CHAIN_ID].map(async (chainId) => {
-      const tokensForChain = tokens.tokens[chainId] ?? []
-      await Promise.all(
-        tokensForChain
-          .filter((token) =>
-            isConfiguredGoodDollarToken(chainId, token.address),
-          )
-          .map(async (token) => {
-            try {
-              token.priceUSD = await getReserveGoodDollarPrice(
-                chainId,
-                token.address,
-              )
-            } catch (err: unknown) {
-              console.warn(
-                `Reserve price for G$ in chain ${chainId} was not found; keeping the current price`,
-                err,
-              )
-            }
-          }),
+    (tokens.tokens[CELO_CHAIN_ID] ?? [])
+      .filter((token) =>
+        isConfiguredGoodDollarToken(CELO_CHAIN_ID, token.address),
       )
-    }),
+      .map(async (token) => {
+        try {
+          token.priceUSD = await getReserveGoodDollarPrice(
+            CELO_CHAIN_ID,
+            token.address,
+          )
+        } catch (err: unknown) {
+          console.warn(
+            `Reserve price for G$ in chain ${CELO_CHAIN_ID} was not found; keeping the current price`,
+            err,
+          )
+        }
+      }),
   )
 }
 
@@ -188,10 +184,7 @@ const getPriceUSDForFallbackToken = async (
 ): Promise<string | undefined> => {
   try {
     if (isConfiguredGoodDollarToken(token.chainId, token.address)) {
-      if (
-        isReservePriceEnabled() &&
-        (token.chainId === CELO_CHAIN_ID || token.chainId === XDC_CHAIN_ID)
-      ) {
+      if (isReservePriceEnabled() && token.chainId === CELO_CHAIN_ID) {
         try {
           return await getReserveGoodDollarPrice(token.chainId, token.address)
         } catch (err: unknown) {
