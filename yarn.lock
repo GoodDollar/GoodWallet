@@ -928,9 +928,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@goodwidget/ai-credits-widget@npm:0.1.9":
-  version: 0.1.9
-  resolution: "@goodwidget/ai-credits-widget@npm:0.1.9"
+"@goodwidget/ai-credits-widget@npm:0.1.10":
+  version: 0.1.10
+  resolution: "@goodwidget/ai-credits-widget@npm:0.1.10"
   dependencies:
     "@goodsdks/citizen-sdk": "npm:1.2.7"
     "@goodwidget/core": "npm:0.1.5"
@@ -940,7 +940,7 @@ __metadata:
   peerDependencies:
     react: ">=18.0.0"
     react-dom: ">=18.0.0"
-  checksum: 10c0/3a41277a7cffa4f6da77a18456eeda311f0e68b71349dd3e7d1e4cd7ce8c978c7a62370bde45f78642d8ac4aef3028d02ab1391bbd043130d952411cab5af094
+  checksum: 10c0/f0f7b5c5b8a5a2db75c682db44d2c94d71b52517d96e0e8e2540fa217941333474e64559b9de13fe91b4f712b190aec7c04752585e74dd6418015bd32eca1ae9
   languageName: node
   linkType: hard
 
@@ -10021,7 +10021,7 @@ __metadata:
     "@bitcoinerlab/secp256k1": "npm:^1.2.0"
     "@electric-sql/pglite": "npm:^0.5.3"
     "@gooddollar/goodprotocol": "npm:^2.2.0"
-    "@goodwidget/ai-credits-widget": "npm:0.1.9"
+    "@goodwidget/ai-credits-widget": "npm:0.1.10"
     "@goodwidget/core": "npm:0.1.5"
     "@goodwidget/embed": "npm:0.1.4"
     "@goodwidget/goodreserve-widget": "npm:0.1.7"
