@@ -5,7 +5,7 @@ import type { ChainFamily } from "@/chain/types"
 import { normalizeOwnershipAddress, OwnershipScope } from "./ownershipProtocol"
 
 const POW_CHALLENGE_TTL_MS = 5 * 60 * 1000
-const POW_SESSION_TTL_MS = 30 * 60 * 1000
+const POW_SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000
 const POW_DIFFICULTY_PREFIX = "0000"
 const POW_COOKIE_PREFIX = "gw_owner_v2_"
 
@@ -25,20 +25,52 @@ type PowChallengePayload = {
 
 type PowSessionPayload = PowChallengePayload
 
-export const getOwnershipAudience = () => {
-  const value =
+export class OwnershipOriginError extends Error {}
+
+export const getOwnershipOrigins = () => {
+  const rawValue =
     process.env.API_OWNERSHIP_ORIGIN ??
     (process.env.NODE_ENV !== "production" ? "http://localhost:3000" : "")
-  const url = new URL(value)
-  if (
-    url.origin !== value ||
-    (process.env.NODE_ENV === "production" && url.protocol !== "https:")
-  ) {
-    throw new Error(
-      "Configure API_OWNERSHIP_ORIGIN as the canonical app origin",
-    )
+  const values = rawValue
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean)
+  if (values.length === 0) {
+    throw new Error("Configure API_OWNERSHIP_ORIGIN as canonical app origin(s)")
   }
-  return value
+
+  for (const value of values) {
+    const url = new URL(value)
+    if (
+      url.origin !== value ||
+      (process.env.NODE_ENV === "production" && url.protocol !== "https:")
+    ) {
+      throw new Error(
+        "Configure API_OWNERSHIP_ORIGIN as canonical app origin(s)",
+      )
+    }
+  }
+
+  return [...new Set(values)]
+}
+
+export const isOwnershipOrigin = (origin: string | null | undefined) =>
+  !!origin && getOwnershipOrigins().includes(origin)
+
+export const resolveOwnershipAudience = (requestedOrigin?: string | null) => {
+  const origins = getOwnershipOrigins()
+  if (requestedOrigin) {
+    if (!origins.includes(requestedOrigin)) {
+      throw new OwnershipOriginError(
+        "Requested ownership origin is not allowed",
+      )
+    }
+    return requestedOrigin
+  }
+  if (origins.length !== 1) {
+    throw new OwnershipOriginError("Requested ownership origin is required")
+  }
+  return origins[0]
 }
 
 const encoder = new TextEncoder()
@@ -175,7 +207,7 @@ const parseSignedToken = async <T extends string, P extends object>(
       parsed.expiresAt !== scope.data.issuedAt + ttl ||
       scope.data.issuedAt > Date.now() ||
       parsed.expiresAt <= Date.now() ||
-      scope.data.audience !== getOwnershipAudience()
+      !getOwnershipOrigins().includes(scope.data.audience)
     ) {
       return null
     }
@@ -189,8 +221,10 @@ const parseSignedToken = async <T extends string, P extends object>(
 export const issuePowChallenge = async (
   family: ChainFamily,
   address: string,
+  requestedOrigin?: string | null,
 ) => {
   OwnershipScope.parse({ family, address })
+  const audience = resolveOwnershipAudience(requestedOrigin)
   const normalizedAddress = normalizeOwnershipAddress(family, address)
   const issuedAt = Date.now()
   const challenge = await createSignedToken(
@@ -199,7 +233,7 @@ export const issuePowChallenge = async (
       address: normalizedAddress,
       difficultyPrefix: POW_DIFFICULTY_PREFIX,
       family,
-      audience: getOwnershipAudience(),
+      audience,
       issuedAt,
     } satisfies PowChallengePayload,
     POW_CHALLENGE_TTL_MS,
@@ -218,6 +252,7 @@ export const verifyPowSolution = async (
   address: string,
   challengeToken: string,
   nonce: number,
+  audience?: string,
 ) => {
   const challenge = await parseSignedToken<
     "ownership-challenge-v2",
@@ -225,6 +260,9 @@ export const verifyPowSolution = async (
   >(challengeToken, "ownership-challenge-v2")
 
   if (!challenge || !Number.isSafeInteger(nonce) || nonce < 0) {
+    return false
+  }
+  if (audience !== undefined && challenge.payload.audience !== audience) {
     return false
   }
 

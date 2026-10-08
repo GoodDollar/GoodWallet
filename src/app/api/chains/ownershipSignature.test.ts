@@ -24,7 +24,7 @@ vi.mock("@/login/context/SessionContext/storage", () => ({
 }))
 
 const messageFor = (family: ChainFamily, address: string) =>
-  `GoodWallet API ownership v2\n${JSON.stringify({
+  `GoodWallet wallet login v2\n${JSON.stringify({
     family,
     address,
     nonce: randomBytes(32).toString("hex"),

@@ -5,9 +5,10 @@ import { OwnershipScope, ownershipMessage } from "../../ownershipProtocol"
 import { verifyOwnershipSignature } from "../../ownershipSignature"
 import {
   getAddressSessionCookieName,
-  getOwnershipAudience,
+  isOwnershipOrigin,
   issuePowChallenge,
   issuePowSession,
+  OwnershipOriginError,
   verifyPowSolution,
 } from "../../powSession"
 
@@ -20,8 +21,9 @@ const VerifySchema = OwnershipScope.extend({
 
 const noStore = { "Cache-Control": "private, no-store" }
 
-function checkOrigin(request: NextRequest) {
-  return request.headers.get("origin") === getOwnershipAudience()
+function getAllowedOrigin(request: NextRequest) {
+  const origin = request.headers.get("origin")
+  return origin && isOwnershipOrigin(origin) ? origin : null
 }
 
 export async function GET(request: NextRequest) {
@@ -29,7 +31,11 @@ export async function GET(request: NextRequest) {
     const { family, address } = OwnershipScope.parse(
       Object.fromEntries(request.nextUrl.searchParams),
     )
-    const challenge = await issuePowChallenge(family, address)
+    const challenge = await issuePowChallenge(
+      family,
+      address,
+      request.nextUrl.searchParams.get("origin"),
+    )
 
     return NextResponse.json(challenge, { status: 200, headers: noStore })
   } catch (error) {
@@ -37,14 +43,21 @@ export async function GET(request: NextRequest) {
       {
         message: "Unable to issue ownership challenge",
       },
-      { status: error instanceof z.ZodError ? 400 : 503, headers: noStore },
+      {
+        status:
+          error instanceof z.ZodError || error instanceof OwnershipOriginError
+            ? 400
+            : 503,
+        headers: noStore,
+      },
     )
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    if (!checkOrigin(request))
+    const origin = getAllowedOrigin(request)
+    if (!origin)
       return NextResponse.json(
         { message: "Forbidden" },
         { status: 403, headers: noStore },
@@ -61,6 +74,7 @@ export async function POST(request: NextRequest) {
       parsedBody.address,
       parsedBody.challenge,
       parsedBody.nonce,
+      origin,
     )
 
     if (

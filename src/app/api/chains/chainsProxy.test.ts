@@ -13,7 +13,7 @@ import {
 const ORIGIN = "http://localhost:3000"
 const NOW = Date.UTC(2026, 9, 7, 12)
 const WINDOW = 60_000
-const SESSION_TTL = 30 * 60_000
+const SESSION_TTL = 7 * 24 * 60 * 60_000
 // Ephemeral test-only secret: never persisted or sent to a provider.
 const secret = randomBytes(32).toString("hex")
 

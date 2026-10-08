@@ -97,7 +97,7 @@ const solveProofOfWork = async (
 const createAddressSession = async (family: ChainFamily, address: string) => {
   const normalizedAddress = normalizeOwnershipAddress(family, address)
   const challengeResponse = await fetch(
-    `/api/chains/auth/address?family=${family}&address=${encodeURIComponent(normalizedAddress)}`,
+    `/api/chains/auth/address?family=${family}&address=${encodeURIComponent(normalizedAddress)}&origin=${encodeURIComponent(window.location.origin)}`,
     {
       method: "GET",
       credentials: "same-origin",

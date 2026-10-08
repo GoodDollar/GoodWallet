@@ -89,7 +89,7 @@ const bitcoinSigner = async (keyPair: ECPairInterface, psbt: Psbt) => {
 }
 
 const authMessageBytes = (message: string) => {
-  if (!message.startsWith("GoodWallet API ownership v2\n")) {
+  if (!message.startsWith("GoodWallet wallet login v2\n")) {
     throw new Error("Invalid ownership message domain")
   }
   return toUtf8Bytes(message)

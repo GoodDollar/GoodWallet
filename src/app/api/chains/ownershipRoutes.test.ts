@@ -11,9 +11,11 @@ import {
   ownershipMessage,
 } from "./ownershipProtocol"
 import {
-  getOwnershipAudience,
+  getOwnershipOrigins,
   isProtectedAddressReadPath,
   isTxLookupPath,
+  OwnershipOriginError,
+  resolveOwnershipAudience,
 } from "./powSession"
 
 const ORIGIN = "http://localhost:3000"
@@ -72,7 +74,8 @@ describe("ownership protocol helpers", () => {
 
   it("builds a domain-separated message ending in the exact challenge", () => {
     const message = ownershipMessage("payload.mac")
-    expect(message.startsWith("GoodWallet API ownership v2\n")).toBe(true)
+    expect(message.startsWith("GoodWallet wallet login v2\n")).toBe(true)
+    expect(message).toContain("Use this signature to log in")
     expect(message.endsWith("Challenge: payload.mac")).toBe(true)
   })
 
@@ -129,15 +132,26 @@ describe("path matchers", () => {
   })
 })
 
-describe("getOwnershipAudience", () => {
+describe("ownership origins", () => {
   it("returns the configured canonical origin", () => {
     vi.stubEnv("API_OWNERSHIP_ORIGIN", "https://wallet.example")
-    expect(getOwnershipAudience()).toBe("https://wallet.example")
+    expect(getOwnershipOrigins()).toEqual(["https://wallet.example"])
   })
 
   it("defaults to localhost outside production", () => {
     vi.stubEnv("API_OWNERSHIP_ORIGIN", undefined)
-    expect(getOwnershipAudience()).toBe("http://localhost:3000")
+    expect(getOwnershipOrigins()).toEqual(["http://localhost:3000"])
+  })
+
+  it("supports comma-separated canonical origins", () => {
+    vi.stubEnv(
+      "API_OWNERSHIP_ORIGIN",
+      " https://wallet.example,https://preview.example ,, https://wallet.example ",
+    )
+    expect(getOwnershipOrigins()).toEqual([
+      "https://wallet.example",
+      "https://preview.example",
+    ])
   })
 
   it.each([
@@ -146,25 +160,44 @@ describe("getOwnershipAudience", () => {
     "https://wallet.example?x=1",
     "not a url",
     "",
+    "https://wallet.example,http://preview.example/",
   ])("rejects non-canonical origin %j", (value) => {
     vi.stubEnv("API_OWNERSHIP_ORIGIN", value)
-    expect(() => getOwnershipAudience()).toThrow()
+    expect(() => getOwnershipOrigins()).toThrow()
   })
 
   it("requires an explicit HTTPS origin in production", () => {
     vi.stubEnv("NODE_ENV", "production")
     vi.stubEnv("API_OWNERSHIP_ORIGIN", undefined)
-    expect(() => getOwnershipAudience()).toThrow()
+    expect(() => getOwnershipOrigins()).toThrow()
     vi.stubEnv("API_OWNERSHIP_ORIGIN", "http://wallet.example")
-    expect(() => getOwnershipAudience()).toThrow()
+    expect(() => getOwnershipOrigins()).toThrow()
     vi.stubEnv("API_OWNERSHIP_ORIGIN", "https://wallet.example")
-    expect(getOwnershipAudience()).toBe("https://wallet.example")
+    expect(getOwnershipOrigins()).toEqual(["https://wallet.example"])
+  })
+
+  it("requires explicit origin selection when multiple origins are configured", () => {
+    vi.stubEnv(
+      "API_OWNERSHIP_ORIGIN",
+      "https://wallet.example,https://preview.example",
+    )
+    expect(() => resolveOwnershipAudience()).toThrow(OwnershipOriginError)
+    expect(resolveOwnershipAudience("https://preview.example")).toBe(
+      "https://preview.example",
+    )
+    expect(() => resolveOwnershipAudience("https://other.example")).toThrow(
+      OwnershipOriginError,
+    )
   })
 })
 
 describe("GET challenge endpoint", () => {
   it("issues a no-store challenge bound to the normalized EVM scope", async () => {
-    const response = await getChallenge({ family: "EVM", address: "0xAbCdEf" })
+    const response = await getChallenge({
+      family: "EVM",
+      address: "0xAbCdEf",
+      origin: ORIGIN,
+    })
     expect(response.status).toBe(200)
     expect(response.headers.get("cache-control")).toBe("private, no-store")
     const body = await response.json()
@@ -182,7 +215,11 @@ describe("GET challenge endpoint", () => {
   })
 
   it("preserves the case of non-EVM addresses", async () => {
-    const response = await getChallenge({ family: "SOLANA", address: "AbCdEf" })
+    const response = await getChallenge({
+      family: "SOLANA",
+      address: "AbCdEf",
+      origin: ORIGIN,
+    })
     expect(
       decodeToken((await response.json()).challenge).payload,
     ).toMatchObject({ family: "SOLANA", address: "AbCdEf" })
@@ -209,10 +246,31 @@ describe("GET challenge endpoint", () => {
     ["non-canonical origin", "API_OWNERSHIP_ORIGIN", "http://localhost:3000/"],
   ])("returns 503 for %s", async (_label, name, value) => {
     vi.stubEnv(name, value)
-    const response = await getChallenge({ family: "EVM", address: "0xabc" })
+    const response = await getChallenge({
+      family: "EVM",
+      address: "0xabc",
+      origin: ORIGIN,
+    })
     expect(response.status).toBe(503)
     expect(response.headers.get("cache-control")).toBe("private, no-store")
     expect(response.headers.get("set-cookie")).toBeNull()
+  })
+
+  it("supports multiple configured origins when origin is explicitly requested", async () => {
+    vi.stubEnv(
+      "API_OWNERSHIP_ORIGIN",
+      "https://wallet.example,https://preview.example",
+    )
+    const response = await getChallenge({
+      family: "EVM",
+      address: "0xabc",
+      origin: "https://preview.example",
+    })
+    expect(response.status).toBe(200)
+    const body = await response.json()
+    expect(decodeToken(body.challenge).payload.audience).toBe(
+      "https://preview.example",
+    )
   })
 })
 

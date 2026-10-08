@@ -6,7 +6,7 @@ export async function signOwnershipMessage(
   address: string,
   message: string,
 ): Promise<{ signature: string; publicKey?: string }> {
-  if (!message.startsWith("GoodWallet API ownership v2\n")) {
+  if (!message.startsWith("GoodWallet wallet login v2\n")) {
     throw new Error("Invalid ownership message domain")
   }
 

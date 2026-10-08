@@ -16,4 +16,4 @@ export const normalizeOwnershipAddress = (family: string, address: string) =>
 
 // Both sides construct exactly this message; never sign arbitrary server text.
 export const ownershipMessage = (challenge: string) =>
-  `GoodWallet API ownership v2\nAuthorize wallet-scoped blockchain reads only.\nChallenge: ${challenge}`
+  `GoodWallet wallet login v2\nUse this signature to log in and authorize wallet-scoped blockchain reads.\nChallenge: ${challenge}`

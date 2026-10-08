@@ -12,7 +12,7 @@ const ORIGIN = "https://wallet.example"
 const NOW = Date.UTC(2026, 9, 5, 12)
 const ADDRESS = "0xAbCdEf0123456789AbCdEf0123456789AbCdEf01"
 const NORMALIZED_ADDRESS = ADDRESS.toLowerCase()
-const SESSION_EXPIRY = NOW + 30 * 60_000
+const SESSION_EXPIRY = NOW + 7 * 24 * 60 * 60_000
 const AUTH_URL = "/api/chains/auth/address"
 const signature = "test-ownership-signature"
 const sign = vi.mocked(signOwnershipMessage)
@@ -147,13 +147,13 @@ describe("client ownership session integration", () => {
     expect(fetchMock).toHaveBeenCalledTimes(3)
     expect(fetchMock).toHaveBeenNthCalledWith(
       1,
-      `${AUTH_URL}?family=${family}&address=${encodeURIComponent(normalized)}`,
+      `${AUTH_URL}?family=${family}&address=${encodeURIComponent(normalized)}&origin=${encodeURIComponent(ORIGIN)}`,
       { method: "GET", credentials: "same-origin", cache: "no-store" },
     )
     expect(sign).toHaveBeenCalledExactlyOnceWith(
       family,
       normalized,
-      `GoodWallet API ownership v2\nAuthorize wallet-scoped blockchain reads only.\nChallenge: ${challenge.challenge}`,
+      `GoodWallet wallet login v2\nUse this signature to log in and authorize wallet-scoped blockchain reads.\nChallenge: ${challenge.challenge}`,
     )
     expect(digest).toHaveBeenCalledExactlyOnceWith(
       "SHA-256",
@@ -314,7 +314,7 @@ describe("client ownership session integration", () => {
     expect(fetchMock).toHaveBeenCalledTimes(4)
     expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([
       readUrl(),
-      `${AUTH_URL}?family=EVM&address=${NORMALIZED_ADDRESS}`,
+      `${AUTH_URL}?family=EVM&address=${NORMALIZED_ADDRESS}&origin=${encodeURIComponent(ORIGIN)}`,
       AUTH_URL,
       readUrl(),
     ])

@@ -28,7 +28,7 @@ import {
 const ORIGIN = "http://localhost:3000"
 const ISSUED_AT = Date.UTC(2026, 9, 5, 12)
 const CHALLENGE_TTL = 5 * 60_000
-const SESSION_TTL = 30 * 60_000
+const SESSION_TTL = 7 * 24 * 60 * 60_000
 // Ephemeral test-only credentials: never persisted or sent to a provider.
 const secret = randomBytes(32).toString("hex")
 const wallet = Wallet.createRandom()

@@ -17,7 +17,7 @@ export async function verifyOwnershipSignature(
   publicKey?: string,
 ): Promise<boolean> {
   try {
-    if (!message.startsWith("GoodWallet API ownership v2\n")) return false
+    if (!message.startsWith("GoodWallet wallet login v2\n")) return false
 
     switch (family) {
       case "EVM": {
