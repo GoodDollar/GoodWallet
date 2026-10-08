@@ -1,11 +1,10 @@
 import { NextRequest } from "next/server"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import { proxy } from "./proxy"
+import { proxy, RATE_LIMITS } from "./proxy"
 
 const ORIGIN = "http://localhost:3000"
 const NOW = Date.UTC(2026, 9, 8, 12)
-const WINDOW_MS = 60_000
 
 let ipCounter = 0
 const freshIp = () => `proxy-rl-${++ipCounter}`
@@ -70,28 +69,39 @@ describe("proxy cross-origin protection", () => {
 
 describe("proxy rate limiting", () => {
   it.each([
-    ["balance", 30, "/api/chains/EVM/addresses/0xabc/balance"],
-    ["history", 12, "/api/chains/EVM/addresses/0xabc/history"],
-    ["utxos", 18, "/api/chains/BTC/addresses/bc1qtest/utxos"],
-    ["txLookup", 30, "/api/chains/BTC/transactions/abc123"],
-    ["fee", 60, "/api/chains/BTC/fee"],
-  ])("limits %s endpoint", async (_label, limit, path) => {
+    ["balance", "/api/chains/EVM/addresses/0xabc/balance"],
+    ["history", "/api/chains/EVM/addresses/0xabc/history"],
+    ["utxos", "/api/chains/BTC/addresses/bc1qtest/utxos"],
+    ["txLookup", "/api/chains/BTC/transactions/abc123"],
+    ["fee", "/api/chains/BTC/fee"],
+  ] as const)("limits %s endpoint", async (key, path) => {
+    const { limit, windowMs } = RATE_LIMITS[key]
     const blocked = await exhaust(path, limit)
     expect(blocked.status).toBe(429)
     expect(await blocked.json()).toEqual({ message: "Too many requests" })
-    expect(blocked.headers.get("retry-after")).toBe("60")
+    expect(blocked.headers.get("retry-after")).toBe(
+      String(Math.ceil(windowMs / 1000)),
+    )
   })
 
   it("tracks counters independently per IP", async () => {
     const path = "/api/chains/EVM/addresses/0xabc/history"
-    expect((await exhaust(path, 12, "ip-a")).status).toBe(429)
+    expect(
+      (await exhaust(path, RATE_LIMITS.history.limit, "ip-a")).status,
+    ).toBe(429)
     expect((await call(path, { ip: "ip-b" })).status).toBe(200)
   })
 
   it("tracks counters independently per endpoint", async () => {
     const ip = freshIp()
     expect(
-      (await exhaust("/api/chains/EVM/addresses/0xabc/history", 12, ip)).status,
+      (
+        await exhaust(
+          "/api/chains/EVM/addresses/0xabc/history",
+          RATE_LIMITS.history.limit,
+          ip,
+        )
+      ).status,
     ).toBe(429)
     expect((await call("/api/chains/BTC/fee", { ip })).status).toBe(200)
   })
@@ -99,14 +109,15 @@ describe("proxy rate limiting", () => {
   it("resets counters after the window", async () => {
     const ip = freshIp()
     const path = "/api/chains/EVM/addresses/0xabc/history"
-    expect((await exhaust(path, 12, ip)).status).toBe(429)
+    const { limit, windowMs } = RATE_LIMITS.history
+    expect((await exhaust(path, limit, ip)).status).toBe(429)
 
-    vi.mocked(Date.now).mockReturnValue(NOW + WINDOW_MS - 1)
+    vi.mocked(Date.now).mockReturnValue(NOW + windowMs - 1)
     const stillBlocked = await call(path, { ip })
     expect(stillBlocked.status).toBe(429)
     expect(stillBlocked.headers.get("retry-after")).toBe("1")
 
-    vi.mocked(Date.now).mockReturnValue(NOW + WINDOW_MS)
+    vi.mocked(Date.now).mockReturnValue(NOW + windowMs)
     expect((await call(path, { ip })).status).toBe(200)
   })
 
