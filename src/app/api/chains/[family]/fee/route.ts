@@ -34,6 +34,7 @@ export async function GET(
         headers: {
           "x-api-key": config.apiKey,
         },
+        next: { revalidate: 60 },
       },
     )
     if (!resp.ok) {
