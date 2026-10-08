@@ -2,6 +2,7 @@ import { address, networks, Psbt } from "bitcoinjs-lib"
 import { toOutputScript } from "bitcoinjs-lib/src/address"
 import { type FixedNumber, formatUnits, parseUnits } from "ethers/utils"
 
+import { fetchWithAddressSession } from "@/app/api/chains/clientAddressSession"
 import {
   BITCOIN_FAMILY,
   BITCOIN_TESTNET_FAMILY,
@@ -98,7 +99,8 @@ export const getBitcoinProvider = (
         return amountsForChain
       }
 
-      const res = await fetch(
+      const res = await fetchWithAddressSession(
+        address,
         `/api/chains/${family}/addresses/${address}/balance`,
         {
           method: "GET",
@@ -168,7 +170,7 @@ export const getBitcoinProvider = (
       })
       const fullUrl = `/api/chains/${family}/addresses/${fromAddress}/utxos?${params}`
 
-      const res = await fetch(fullUrl, {
+      const res = await fetchWithAddressSession(fromAddress, fullUrl, {
         method: "GET",
         headers: {
           Accept: "application/json",
@@ -188,8 +190,9 @@ export const getBitcoinProvider = (
 
         switch (txType) {
           case "legacy": {
-            const res = await fetch(
-              `/api/chains/${family}/transactions/${utxo.txHash}`,
+            const res = await fetchWithAddressSession(
+              fromAddress,
+              `/api/chains/${family}/transactions/${utxo.txHash}?address=${encodeURIComponent(fromAddress)}`,
               {
                 method: "GET",
                 headers: {

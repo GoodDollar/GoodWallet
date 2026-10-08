@@ -1,5 +1,6 @@
 import { formatUnits } from "ethers"
 
+import { fetchWithAddressSession } from "@/app/api/chains/clientAddressSession"
 import {
   BITCOIN_CHAIN_ID,
   BITCOIN_TESTNET_CHAIN_ID,
@@ -38,13 +39,17 @@ export const getAllBitcoinTransactions = async (
   address: string,
 ) => {
   //preburn the balance (1 credits)
-  let res = await fetch(`/api/chains/${family}/addresses/${address}/balance`, {
-    method: "GET",
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
+  let res = await fetchWithAddressSession(
+    address,
+    `/api/chains/${family}/addresses/${address}/balance`,
+    {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
     },
-  })
+  )
   const resJson = (await res.json()) as ParsedBalanceSchema
 
   if (resJson.incoming <= 0) {
@@ -54,13 +59,17 @@ export const getAllBitcoinTransactions = async (
   //Fetch history (20 credits)
   const txs: Tx[] = []
 
-  res = await fetch(`/api/chains/${family}/addresses/${address}/history`, {
-    method: "GET",
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
+  res = await fetchWithAddressSession(
+    address,
+    `/api/chains/${family}/addresses/${address}/history`,
+    {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
     },
-  })
+  )
 
   const tatumTxs = await res.json()
   for (const tatumTx of tatumTxs) {

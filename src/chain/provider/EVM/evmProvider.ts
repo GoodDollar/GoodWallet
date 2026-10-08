@@ -3,6 +3,7 @@ import { isAddress } from "viem"
 
 import { AnalyticsEventTypes } from "@/analytics/types"
 import { captureEvent } from "@/analytics/useAnalytics"
+import { fetchWithAddressSession } from "@/app/api/chains/clientAddressSession"
 import { ETHEREUM_CHAIN_ID } from "@/chain/chain-ids"
 import { EVM_FAMILY } from "@/chain/types"
 import { config } from "@/config"
@@ -89,7 +90,8 @@ export const getEVMProvider = (): EVMProvider => {
     // call this from the client, move the switch server side
     getTransactions: async (chainId, address) => {
       try {
-        const res = await fetch(
+        const res = await fetchWithAddressSession(
+          address,
           `/api/chains/EVM/addresses/${address}/history?chainId=${chainId}`,
         )
         if (res.status === 200) {

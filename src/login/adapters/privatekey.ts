@@ -2,6 +2,8 @@ import * as ecc from "@bitcoinerlab/secp256k1"
 import { networks, type Psbt, payments } from "bitcoinjs-lib"
 import ECPairFactory, { type ECPairInterface } from "ecpair"
 import { derivePath, getPublicKey } from "ed25519-hd-key"
+import { sha256 } from "ethers/crypto"
+import { getBytes, toUtf8Bytes } from "ethers/utils"
 import { Wallet } from "ethers/wallet"
 import { createKeyPairSignerFromBytes } from "gill"
 import HDKey from "hdkey"
@@ -86,6 +88,20 @@ const bitcoinSigner = async (keyPair: ECPairInterface, psbt: Psbt) => {
   return psbt.extractTransaction(true).toHex()
 }
 
+const authMessageBytes = (message: string) => {
+  if (!message.startsWith("GoodWallet wallet login v2\n")) {
+    throw new Error("Invalid ownership message domain")
+  }
+  return toUtf8Bytes(message)
+}
+
+// Auth-only protocol, not Bitcoin Signed Message or BIP322. Hash the text here;
+// never accept a caller-provided transaction digest for raw signing.
+const signBitcoinAuthMessage = async (
+  keyPair: ECPairInterface,
+  message: string,
+) => toHex(keyPair.sign(getBytes(sha256(authMessageBytes(message)))))
+
 const hasEd25519Support = (async () => {
   try {
     await crypto.subtle.importKey(
@@ -148,11 +164,14 @@ export const getPrivateKeySession = async (
     BTC: {
       address: await getBitcoinAddress(btcKeyPair, networks.bitcoin, "p2wpkh"),
       signPsbt: async (psbt: Psbt) => bitcoinSigner(btcKeyPair, psbt),
+      signAuthMessage: (message) => signBitcoinAuthMessage(btcKeyPair, message),
       publicKey: toHex(btcKeyPair.publicKey),
     },
     DOGE: {
       address: await getBitcoinAddress(dogeKeyPair, dogeNetwork, "p2pkh"),
       signPsbt: async (psbt: Psbt) => bitcoinSigner(dogeKeyPair, psbt),
+      signAuthMessage: (message) =>
+        signBitcoinAuthMessage(dogeKeyPair, message),
       publicKey: toHex(dogeKeyPair.publicKey),
     },
     SOLANA: solanaKeyPairSigner,
@@ -173,6 +192,8 @@ export const getPrivateKeySession = async (
         "p2wpkh",
       ),
       signPsbt: async (psbt: Psbt) => bitcoinSigner(btcTestnetKeyPair, psbt),
+      signAuthMessage: (message) =>
+        signBitcoinAuthMessage(btcTestnetKeyPair, message),
       publicKey: toHex(btcTestnetKeyPair.publicKey),
     }
 
@@ -190,6 +211,8 @@ export const getPrivateKeySession = async (
         "p2pkh",
       ),
       signPsbt: async (psbt: Psbt) => bitcoinSigner(dogeTestKeyPair, psbt),
+      signAuthMessage: (message) =>
+        signBitcoinAuthMessage(dogeTestKeyPair, message),
     }
 
     // SOL
@@ -236,6 +259,8 @@ const getXrpPair = async (
   return {
     address: deriveAddress(publicKey),
     publicKey,
+    signAuthMessage: async (message: string) =>
+      sign(toHex(authMessageBytes(message)), privateKey),
     sign: async (tx: Transaction) => {
       const txToSignAndEncode = { ...tx }
       txToSignAndEncode.SigningPubKey = publicKey

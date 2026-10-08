@@ -13,22 +13,39 @@ export default defineConfig({
     },
   },
   resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
-      "@/config": path.resolve(__dirname, "./config"),
-      "@/configServerless": path.resolve(__dirname, "./configServerless"),
-      translations: path.resolve(__dirname, "./src/translations"),
-      "ethers-utils": path.resolve(__dirname, "./src/ethers-utils"),
-      "ethers-utils/*": path.resolve(__dirname, "./src/ethers-utils"),
-      gooddollar: path.resolve(__dirname, "./src/gooddollar"),
-      "gooddollar/*": path.resolve(__dirname, "./src/gooddollar"),
+    // Array order matters: specific "@/config*" entries must precede the "@" catch-all.
+    alias: [
+      {
+        find: "@/config",
+        replacement: path.resolve(__dirname, "./config"),
+      },
+      {
+        find: "@/configServerless",
+        replacement: path.resolve(__dirname, "./configServerless"),
+      },
+      { find: "@", replacement: path.resolve(__dirname, "./src") },
+      {
+        find: "translations",
+        replacement: path.resolve(__dirname, "./src/translations"),
+      },
+      {
+        find: "ethers-utils",
+        replacement: path.resolve(__dirname, "./src/ethers-utils"),
+      },
+      {
+        find: "gooddollar",
+        replacement: path.resolve(__dirname, "./src/gooddollar"),
+      },
       // Mock the AI Credits widget register module in tests since the package
       // is installed via local tarball and its side-effect registration is not
       // needed during unit tests.
-      "@goodwidget/ai-credits-widget/register": path.resolve(
-        __dirname,
-        "./src/widgets/fixtures/aiCreditsWidgetRegisterMock.ts",
-      ),
-    },
+      {
+        find: "@goodwidget/ai-credits-widget/register",
+        replacement: path.resolve(
+          __dirname,
+          "./src/widgets/fixtures/aiCreditsWidgetRegisterMock.ts",
+        ),
+      },
+    ],
   },
 })
