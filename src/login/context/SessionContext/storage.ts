@@ -2,6 +2,7 @@ import type { Jsonify } from "type-fest"
 import { proxy, ref } from "valtio"
 
 import { getPrivateKeySession } from "@/login/adapters/privatekey"
+import { disconnectReown, getReownSession } from "@/login/reown"
 import type { Addresses, ISigner, ISignerSession } from "@/login/types"
 import { resetWalletConnectDialogs } from "@/sections/WalletConnect/store/walletConnectDialogStore"
 
@@ -35,6 +36,21 @@ const fromJSON = async (
         authProvider ?? "NA",
         userName,
         profileImage,
+      )
+    }
+    case "REOWN": {
+      const { authProvider, address } = sessionJSON
+      if (!address) {
+        return null
+      }
+
+      return await getReownSession(
+        "localStorage",
+        authProvider ?? "existing_wallet",
+        {
+          interactive: false,
+          expectedAddress: address,
+        },
       )
     }
   }
@@ -79,7 +95,14 @@ export const setSession = (session: ISignerSession | null) => {
 
 export const logout = () => {
   resetWalletConnectDialogs()
+  const previousSession = sessionState.session
   setSession(null)
+
+  if (previousSession?.type === "REOWN") {
+    disconnectReown().catch((error) => {
+      console.error("Failed to disconnect Reown session", error)
+    })
+  }
 }
 
 if (typeof window !== "undefined") {

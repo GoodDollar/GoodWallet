@@ -552,12 +552,10 @@ function ClaimViewContent() {
           if (!signer) {
             throw new Error("No signer provided")
           }
-          if (!userName) {
-            throw new Error("No userName provided")
-          }
+
           const link = await generateGoodIDLink(
             signer.EVM,
-            userName,
+            userName ?? "",
             invitedChainId,
           )
           window.open(link, "_self")

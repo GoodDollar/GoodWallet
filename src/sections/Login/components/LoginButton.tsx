@@ -8,6 +8,7 @@ import { config } from "@/config"
 import {
   Captcha,
   usePKeyLogin,
+  useReownLogin,
   useTriggerTorusAggregateLogin,
   useTriggerTorusLogin,
 } from "@/login"
@@ -113,6 +114,25 @@ export const PrivateKeyLoginButton: FC<{
       full
       text={userName}
       onClick={onClick}
+    />
+  )
+}
+
+export const ExistingWalletLoginButton: FC<{ isDefault?: boolean }> = ({
+  isDefault,
+}) => {
+  const { locale, translations } = useTranslation()
+  const onClick = useReownLogin()
+
+  return (
+    <Button
+      variant={isDefault ? "solid" : "outlined"}
+      full
+      text={translations.login.existingWallet}
+      onClick={() => {
+        saveLocaleToSession(locale)
+        onClick()
+      }}
     />
   )
 }

@@ -39,6 +39,8 @@
     "@lottiefiles/react-lottie-player": "^3.6.0",
     "@neondatabase/serverless": "^1.1.0",
     "@react-hookz/web": "^25.2.0",
+    "@reown/appkit": "1.8.23",
+    "@reown/appkit-adapter-ethers": "1.8.23",
     "@reown/walletkit": "^1.5.6",
     "@sentry/nextjs": "^10.56.0",
     "@solana-name-service/sns-sdk-kit": "^0.10.0",
