@@ -2056,6 +2056,26 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@reown/appkit-adapter-ethers@npm:1.8.23":
+  version: 1.8.23
+  resolution: "@reown/appkit-adapter-ethers@npm:1.8.23"
+  dependencies:
+    "@reown/appkit": "npm:1.8.23"
+    "@reown/appkit-common": "npm:1.8.23"
+    "@reown/appkit-controllers": "npm:1.8.23"
+    "@reown/appkit-polyfills": "npm:1.8.23"
+    "@reown/appkit-scaffold-ui": "npm:1.8.23"
+    "@reown/appkit-utils": "npm:1.8.23"
+    "@reown/appkit-wallet": "npm:1.8.23"
+    "@walletconnect/universal-provider": "npm:2.23.7"
+    valtio: "npm:2.1.7"
+  peerDependencies:
+    "@ethersproject/sha2": 5.8.0
+    ethers: ">=6"
+  checksum: 10c0/91846406c98fec02d68796df650f8929635032b6197b1a7fbdf1fb58519fc225e33de134b4d8f1f37405ab20c9da8c227ebe77de684a88f088cb16ad1887ddd6
+  languageName: node
+  linkType: hard
+
 "@reown/appkit-adapter-wagmi@npm:^1.8.22":
   version: 1.8.23
   resolution: "@reown/appkit-adapter-wagmi@npm:1.8.23"
@@ -10062,6 +10082,8 @@ __metadata:
     "@neondatabase/serverless": "npm:^1.1.0"
     "@playwright/test": "npm:1.61.1"
     "@react-hookz/web": "npm:^25.2.0"
+    "@reown/appkit": "npm:1.8.23"
+    "@reown/appkit-adapter-ethers": "npm:1.8.23"
     "@reown/walletkit": "npm:^1.5.6"
     "@sentry/nextjs": "npm:^10.56.0"
     "@solana-name-service/sns-sdk-kit": "npm:^0.10.0"

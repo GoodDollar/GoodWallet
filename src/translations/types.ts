@@ -6,6 +6,7 @@ export type LoginTranslations = {
   google: string
   facebook: string
   pwdless: string
+  existingWallet: string
   legalText: {
     preText: string
     terms: string

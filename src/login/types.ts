@@ -61,7 +61,7 @@ export type ISignerSession = {
   authProvider?: string
   userName?: string
   profileImage?: string
-} & (IBrowserSession | IPrivateKeySession)
+} & (IBrowserSession | IPrivateKeySession | IReownSession)
 
 type IBrowserSession = {
   type: "BROWSER"
@@ -70,4 +70,9 @@ type IBrowserSession = {
 type IPrivateKeySession = {
   type: "PRIVATE_KEY"
   masterSeed: string
+}
+
+type IReownSession = {
+  type: "REOWN"
+  address: string
 }
