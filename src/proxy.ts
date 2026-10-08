@@ -29,13 +29,15 @@ type RateLimitEntry = {
 }
 
 const rateLimitStore = new Map<string, RateLimitEntry>()
+const RATE_LIMIT_CLEANUP_INTERVAL_MS = 120 * 60 * 1000 // 2 hours
+let nextRateLimitCleanupAt = 0
 
 const RATE_LIMITS = {
-  balance: { limit: 30, windowMs: 60 * 1000 },
-  history: { limit: 12, windowMs: 60 * 1000 },
-  utxos: { limit: 18, windowMs: 60 * 1000 },
-  txLookup: { limit: 30, windowMs: 60 * 1000 },
-  fee: { limit: 60, windowMs: 60 * 1000 },
+  balance: { limit: 60, windowMs: 3600 * 1000 },
+  history: { limit: 60, windowMs: 3600 * 1000 },
+  utxos: { limit: 60, windowMs: 3600 * 1000 },
+  txLookup: { limit: 60, windowMs: 3600 * 1000 },
+  fee: { limit: 60, windowMs: 3600 * 1000 },
 } satisfies Record<string, RateLimitPolicy>
 
 function isCrossOrigin(request: NextRequest): boolean {
@@ -67,12 +69,23 @@ function getClientIp(request: NextRequest) {
   )
 }
 
+function cleanupExpiredRateLimitEntries(now: number) {
+  if (now < nextRateLimitCleanupAt) {
+    return
+  }
+
+  rateLimitStore.clear()
+
+  nextRateLimitCleanupAt = now + RATE_LIMIT_CLEANUP_INTERVAL_MS
+}
+
 function applyRateLimit(
   request: NextRequest,
   key: string,
   policy: RateLimitPolicy,
 ) {
   const now = Date.now()
+  cleanupExpiredRateLimitEntries(now)
   const clientIp = getClientIp(request)
   const compositeKey = `${clientIp}:${key}`
   const current = rateLimitStore.get(compositeKey)
@@ -105,6 +118,8 @@ function applyRateLimit(
 
 function getPolicyForPath(request: NextRequest) {
   const pathname = request.nextUrl.pathname
+
+  if (!pathname.startsWith("/api")) return null
 
   if (pathname.endsWith("/balance")) {
     return { key: "balance", policy: RATE_LIMITS.balance }

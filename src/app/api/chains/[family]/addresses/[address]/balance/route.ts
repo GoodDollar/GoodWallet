@@ -8,6 +8,12 @@ import { BalanceSchema } from "../../../../../schemas/schemas"
 import { getChainName } from "../../../../../utils/tatumUtils"
 import { throwIfQueryParamIsNull } from "../../../../../utils/throwIfQueryParamIsNull"
 
+// cache balance for 5 seconds
+const headers = {
+  headers: {
+    "Cache-Control": `public, max-age=${5}`,
+  },
+}
 export async function GET(
   _request: NextRequest,
   context: {
@@ -47,7 +53,8 @@ export async function GET(
         `Failed to parse balance for ${address} on ${family} : ${parsedResp.error}`,
       )
     }
-    return Response.json(parsedResp.data)
+
+    return Response.json(parsedResp.data, headers)
   } catch (e: unknown) {
     console.error(e)
     return Response.json({ message: "Failed to process request", error: e })
