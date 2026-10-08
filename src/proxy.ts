@@ -32,7 +32,7 @@ const rateLimitStore = new Map<string, RateLimitEntry>()
 const RATE_LIMIT_CLEANUP_INTERVAL_MS = 120 * 60 * 1000 // 2 hours
 let nextRateLimitCleanupAt = 0
 
-const RATE_LIMITS = {
+export const RATE_LIMITS = {
   balance: { limit: 60, windowMs: 3600 * 1000 },
   history: { limit: 60, windowMs: 3600 * 1000 },
   utxos: { limit: 60, windowMs: 3600 * 1000 },
