@@ -8,6 +8,7 @@ import {
   xrpToDrops,
 } from "xrpl"
 
+import { fetchWithAddressSession } from "@/app/api/chains/clientAddressSession"
 import { XRP_CHAIN_ID, XRP_TESTNET_CHAIN_ID } from "@/chain/chain-ids"
 import { XRP_FAMILY, XRP_TESTNET_FAMILY } from "@/chain/types"
 import { config } from "@/config"
@@ -82,7 +83,8 @@ export const getXrpProvider = (family: SUPPORTED_XRP_FAMILIES): XRPProvider => {
       try {
         const family =
           chainId === XRP_CHAIN_ID ? XRP_FAMILY : XRP_TESTNET_FAMILY
-        const res = await fetch(
+        const res = await fetchWithAddressSession(
+          address,
           `/api/chains/${family}/addresses/${address}/history`,
         )
         if (res.status === 200) {

@@ -27,6 +27,7 @@ import {
   TOKEN_PROGRAM_ADDRESS,
 } from "gill/programs/token"
 
+import { fetchWithAddressSession } from "@/app/api/chains/clientAddressSession"
 import { SOLANA_CHAIN_ID, SOLANA_DEVNET_CHAIN_ID } from "@/chain/chain-ids"
 import { SOLANA_DEVNET_FAMILY, SOLANA_FAMILY } from "@/chain/types"
 import { config } from "@/config"
@@ -131,7 +132,8 @@ export const getSolanaProvider = (
     },
     getTransactions: async (_, address) => {
       try {
-        const res = await fetch(
+        const res = await fetchWithAddressSession(
+          address,
           `/api/chains/${family}/addresses/${address}/history`,
         )
         if (res.status === 200) return await res.json()

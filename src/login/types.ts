@@ -17,6 +17,8 @@ export type EVMSigner = Pick<
 
 export type BTCSigner = {
   signPsbt: (psbt: bitcoin.Psbt) => Promise<string>
+  /** Internal ownership auth only: compact ECDSA over SHA256(UTF8(message)), not BIP322. */
+  signAuthMessage?: (message: string) => Promise<string>
   publicKey: string
 } & Address
 
@@ -34,6 +36,8 @@ export type SVMSigner = Pick<KeyPairSigner, "signMessages"> & {
 
 export type XRPSigner = {
   sign: (tx: Transaction) => Promise<{ tx_blob: string; hash: string }>
+  /** Internal ownership auth only; accepts domain-prefixed text, never a transaction. */
+  signAuthMessage?: (message: string) => Promise<string>
   publicKey: string
 } & Address
 
