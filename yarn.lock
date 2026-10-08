@@ -928,19 +928,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@goodwidget/ai-credits-widget@npm:0.1.6":
-  version: 0.1.6
-  resolution: "@goodwidget/ai-credits-widget@npm:0.1.6"
+"@goodwidget/ai-credits-widget@npm:0.1.11":
+  version: 0.1.11
+  resolution: "@goodwidget/ai-credits-widget@npm:0.1.11"
   dependencies:
     "@goodsdks/citizen-sdk": "npm:1.2.7"
-    "@goodwidget/core": "npm:0.1.4"
+    "@goodwidget/core": "npm:0.1.5"
     "@goodwidget/embed": "npm:0.1.4"
-    "@goodwidget/ui": "npm:0.1.4"
+    "@goodwidget/ui": "npm:0.1.6"
     viem: "npm:^2.0.0"
   peerDependencies:
     react: ">=18.0.0"
     react-dom: ">=18.0.0"
-  checksum: 10c0/0ac6d99d041e769a0228c68eb9a98d37927530aae31cb157ce91189fe786f4c2010f5d58f2008c66c8e5f1b31aed32d34b1736f03ffb3cfed66d3574cbe0e926
+  checksum: 10c0/df0c01c82266156c8a8be162029183cbd1456c8117767115d079a934dfab4eeb0f0022d8e31141d0e436b2c24a9d4648b17748e068b27665bf0988ad86895ef9
   languageName: node
   linkType: hard
 
@@ -973,6 +973,23 @@ __metadata:
     react-native:
       optional: true
   checksum: 10c0/b1993ef4011f79f318715bcc082054235ecca8ca5fd617531d8e80e5f1cd1aa40953e5123db81591954af2d8b731738e6a9c6825d5d5e27ec46d07df524ee25f
+  languageName: node
+  linkType: hard
+
+"@goodwidget/core@npm:0.1.5":
+  version: 0.1.5
+  resolution: "@goodwidget/core@npm:0.1.5"
+  dependencies:
+    "@goodwidget/ui": "npm:0.1.5"
+    tamagui: "npm:1.121.0"
+    viem: "npm:^2.0.0"
+  peerDependencies:
+    react: ">=18.0.0"
+    react-native: ">=0.76.0"
+  peerDependenciesMeta:
+    react-native:
+      optional: true
+  checksum: 10c0/45f3f7d9db15fe008dac5ef07a22979a38877736cb4ccdbf258010c182e9af3ee89d67e6281da8aae4d2fbc2b412fbcc1aebc1173040d6ed8f46341a16a64477
   languageName: node
   linkType: hard
 
@@ -1011,19 +1028,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@goodwidget/superfluid-campaign-widget@npm:0.1.5":
-  version: 0.1.5
-  resolution: "@goodwidget/superfluid-campaign-widget@npm:0.1.5"
+"@goodwidget/superfluid-campaign-widget@npm:0.1.7":
+  version: 0.1.7
+  resolution: "@goodwidget/superfluid-campaign-widget@npm:0.1.7"
   dependencies:
     "@goodwidget/citizen-claim-widget": "npm:0.2.1"
-    "@goodwidget/core": "npm:0.1.4"
+    "@goodwidget/core": "npm:0.1.5"
     "@goodwidget/embed": "npm:0.1.4"
-    "@goodwidget/ui": "npm:0.1.4"
+    "@goodwidget/ui": "npm:0.1.6"
     viem: "npm:^2.0.0"
   peerDependencies:
     react: ">=18.0.0"
     react-dom: ">=18.0.0"
-  checksum: 10c0/640ed2112438feb2c0bbcd8a86d28d310a376b7b34ccd4cfe86f1ad91236404736107e24f3b4d86e81581bc0f39a4c13b2c790ccc6cbd6660c1cc888dbe14b58
+  checksum: 10c0/e84e3a8b6818a896dd23c3cf1184281b83e0d0137abe3c28286e994593d268e0722f6bbe0c669103f88e45db98e47b2944c79c0ea080e07eed1e7dce42125e6f
   languageName: node
   linkType: hard
 
@@ -1049,6 +1066,56 @@ __metadata:
     react-native-svg:
       optional: true
   checksum: 10c0/72c49ed585adfa5dc04e690e1285082cf3584f941da4752e112bd214d337fa5fd1b14d25d46e83e050b8e1a7451ebb991ccc3f8519b688df7601bdba8311d097
+  languageName: node
+  linkType: hard
+
+"@goodwidget/ui@npm:0.1.5":
+  version: 0.1.5
+  resolution: "@goodwidget/ui@npm:0.1.5"
+  dependencies:
+    "@tamagui/animations-react-native": "npm:^1.121.0"
+    "@tamagui/core": "npm:1.121.0"
+    "@tamagui/lucide-icons": "npm:1.121.0"
+    "@tamagui/themes": "npm:1.121.0"
+    tamagui: "npm:1.121.0"
+  peerDependencies:
+    "@react-native-clipboard/clipboard": ">=1.14.0"
+    react: ">=18.0.0"
+    react-native: ">=0.76.0"
+    react-native-svg: ">=12"
+  peerDependenciesMeta:
+    "@react-native-clipboard/clipboard":
+      optional: true
+    react-native:
+      optional: true
+    react-native-svg:
+      optional: true
+  checksum: 10c0/e4fc4dcb255dc7216b33a10a1742a664ee44206e687a42dab81489715e84c2b2da09428ec3f493ed92fe5516d5c97af7a73359e1d5f323f1aac5a6c16d93ba10
+  languageName: node
+  linkType: hard
+
+"@goodwidget/ui@npm:0.1.6":
+  version: 0.1.6
+  resolution: "@goodwidget/ui@npm:0.1.6"
+  dependencies:
+    "@tamagui/animations-react-native": "npm:^1.121.0"
+    "@tamagui/core": "npm:1.121.0"
+    "@tamagui/lucide-icons": "npm:1.121.0"
+    "@tamagui/themes": "npm:1.121.0"
+    tamagui: "npm:1.121.0"
+  peerDependencies:
+    "@react-native-clipboard/clipboard": ">=1.14.0"
+    react: ">=18.0.0"
+    react-native: ">=0.76.0"
+    react-native-svg: ">=12"
+  peerDependenciesMeta:
+    "@react-native-clipboard/clipboard":
+      optional: true
+    react-native:
+      optional: true
+    react-native-svg:
+      optional: true
+  checksum: 10c0/7d4e87ccfa5264fd1ec9c5053b8e998b8b1c4ad5135bc1086cc7319d8b886c742e87a1b683eee8d1270fb18973dfaf1b49470fab35bb7d2bcbc28f958706a469
   languageName: node
   linkType: hard
 
@@ -9979,12 +10046,12 @@ __metadata:
     "@bitcoinerlab/secp256k1": "npm:^1.2.0"
     "@electric-sql/pglite": "npm:^0.5.3"
     "@gooddollar/goodprotocol": "npm:^2.2.0"
-    "@goodwidget/ai-credits-widget": "npm:0.1.6"
-    "@goodwidget/core": "npm:0.1.4"
+    "@goodwidget/ai-credits-widget": "npm:0.1.11"
+    "@goodwidget/core": "npm:0.1.5"
     "@goodwidget/embed": "npm:0.1.4"
     "@goodwidget/goodreserve-widget": "npm:0.1.7"
-    "@goodwidget/superfluid-campaign-widget": "npm:0.1.5"
-    "@goodwidget/ui": "npm:0.1.4"
+    "@goodwidget/superfluid-campaign-widget": "npm:0.1.7"
+    "@goodwidget/ui": "npm:0.1.6"
     "@hcaptcha/react-hcaptcha": "npm:^2.0.2"
     "@json-rpc-tools/utils": "npm:^1.7.6"
     "@lifi/sdk": "npm:^4.1.0"
