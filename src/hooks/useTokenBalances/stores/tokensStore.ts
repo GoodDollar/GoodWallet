@@ -3,6 +3,8 @@ import { proxy } from "valtio"
 import type { Tokens } from "@/tokens/types"
 
 import { getTokens } from "../fetchers/tokens"
+import { focusStore } from "./focusStore"
+import { inactivityStore } from "./inactivityStore"
 
 const TOKENS_REFRESH_INTERVAL_MS = 1000 * 60 * 60
 
@@ -37,4 +39,9 @@ export const tokensStore = proxy<TokensStore>({
 })
 
 refreshTokens()
-setInterval(refreshTokens, TOKENS_REFRESH_INTERVAL_MS)
+setInterval(() => {
+  if (!focusStore.isWalletInFocus || !inactivityStore.isActive) {
+    return
+  }
+  refreshTokens()
+}, TOKENS_REFRESH_INTERVAL_MS)
