@@ -555,7 +555,8 @@ function ClaimViewContent() {
 
           const link = await generateGoodIDLink(
             signer.EVM,
-            userName ?? "",
+            // Connected-wallet sessions only have an address, not a name.
+            type === "REOWN" ? "" : (userName ?? ""),
             invitedChainId,
           )
           window.open(link, "_self")

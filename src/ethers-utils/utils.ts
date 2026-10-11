@@ -48,6 +48,37 @@ export const encodeMethodCall = async (
   return { contractAddress, data }
 }
 const replacementFeeMultipler = BigInt(2)
+const SUBMITTED_TX_POLL_MS = 1500
+const SUBMITTED_TX_MAX_ATTEMPTS = 40
+
+const getSubmittedTransaction = async (
+  provider: AbstractProvider,
+  hash: string,
+): Promise<TransactionResponse> => {
+  for (let attempt = 0; attempt < SUBMITTED_TX_MAX_ATTEMPTS; attempt++) {
+    const txResponse = await provider.getTransaction(hash)
+    if (txResponse) return txResponse
+    await new Promise((resolve) => setTimeout(resolve, SUBMITTED_TX_POLL_MS))
+  }
+  throw new Error(`Transaction ${hash} was not found on chain`)
+}
+
+// The wallet picks nonce and fees and broadcasts once; we only track the hash.
+const submitWithWallet = async (
+  submit: NonNullable<EVMSigner["submitTransaction"]>,
+  signer: EVMSigner,
+  gasLimit: bigint,
+  broadcastRequest: BroadcastRequest,
+) => {
+  const hash = await submit({
+    ...broadcastRequest,
+    from: signer.address,
+    gasLimit,
+  })
+  const provider = getEthersProvider(broadcastRequest.chainId)
+  return { hash, txResponse: getSubmittedTransaction(provider, hash) }
+}
+
 export const sendTx = async (
   signer: EVMSigner,
   gasLimit: bigint,
@@ -58,6 +89,19 @@ export const sendTx = async (
   hash: string
   trxMinedPromise: Promise<TransactionReceipt | null>
 }> => {
+  if (signer.submitTransaction) {
+    const { hash, txResponse } = await submitWithWallet(
+      signer.submitTransaction,
+      signer,
+      gasLimit,
+      broadcastRequest,
+    )
+    const trxMinedPromise = txResponse.then((trx) =>
+      waitForMinedStatus(trx, broadcastRequest, signer),
+    )
+    return { hash, trxMinedPromise }
+  }
+
   const from = signer.address
   const provider = getEthersProvider(broadcastRequest.chainId)
   await lock.acquire(broadcastRequest.chainId)
@@ -85,6 +129,22 @@ export const sendTxWaitForMining = async (
   broadcastOptions: BroadcastOptions,
   usePendingNonce: boolean = false,
 ): Promise<BroadcastResult> => {
+  if (signer.submitTransaction) {
+    const submitted = await submitWithWallet(
+      signer.submitTransaction,
+      signer,
+      gasLimit,
+      broadcastRequest,
+    )
+    const txResponse = await submitted.txResponse
+    const txReceipt = await waitForMinedStatus(
+      txResponse,
+      broadcastRequest,
+      signer,
+    )
+    return { txResponse, txReceipt }
+  }
+
   const from = signer.address
   const provider = getEthersProvider(broadcastRequest.chainId)
   await lock.acquire(broadcastRequest.chainId)

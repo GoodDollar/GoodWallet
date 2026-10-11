@@ -34,6 +34,14 @@ export class WalletWrapper extends AbstractSigner {
     return this.#signer.signTransaction(tx)
   }
 
+  // External wallets broadcast themselves; local keys sign and broadcast here.
+  async sendTransactionHash(tx: TransactionRequest): Promise<string> {
+    if (this.#signer.submitTransaction) {
+      return await this.#signer.submitTransaction({ ...tx, from: this.address })
+    }
+    return (await this.sendTransaction(tx)).hash
+  }
+
   signMessage(message: string | Uint8Array): Promise<string> {
     return this.#signer.signMessage(message)
   }

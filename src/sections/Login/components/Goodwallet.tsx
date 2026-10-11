@@ -7,6 +7,7 @@ import { Button, Icon } from "ui"
 
 import { useTranslation } from "translations"
 import { config } from "@/config"
+import { useSessionContext } from "@/login"
 import { isDeltaMobile } from "@/utils/getClientEnvironment"
 import { postMessageToReactNative } from "@/utils/messageReactNative"
 
@@ -22,23 +23,28 @@ import { Onboarding } from "./Onboarding"
 
 export default function LoginDefault() {
   const { translations } = useTranslation()
+  const { reconnectReason } = useSessionContext()
   const [showOthers, setShowOthers] = useState(false)
   const { defaultLoginMethod } = useDefaultLoginMethod()
   const showWelcomeDialog = useLocalStorageValue<boolean>("ShowWelcomeDialog", {
     defaultValue: true,
   })
   const loginTranslations = translations.login
+  const isExistingWalletEnabled =
+    config.enabledLoginOptions.existingWallet && config.walletConnectEnabled
+  const showReconnect = !!reconnectReason && isExistingWalletEnabled
+  const defaultMethod = showReconnect
+    ? "existingwallet"
+    : defaultLoginMethod.value
 
   const btns = useMemo(() => {
-    const { google, facebook, pwless, existingWallet, testLogin } =
-      config.enabledLoginOptions
+    const { google, facebook, pwless, testLogin } = config.enabledLoginOptions
 
-    const isFacebookDefault = defaultLoginMethod.value === "facebook"
-    const isGoogleDefault = defaultLoginMethod.value === "google"
-    const isPwlessDefault = defaultLoginMethod.value === "pwless"
-    const isExistingWalletDefault =
-      defaultLoginMethod.value === "existingwallet"
-    const isTestLoginDefault = defaultLoginMethod.value === "testlogin"
+    const isFacebookDefault = defaultMethod === "facebook"
+    const isGoogleDefault = defaultMethod === "google"
+    const isPwlessDefault = defaultMethod === "pwless"
+    const isExistingWalletDefault = defaultMethod === "existingwallet"
+    const isTestLoginDefault = defaultMethod === "testlogin"
 
     return [
       {
@@ -65,7 +71,7 @@ export default function LoginDefault() {
           <ExistingWalletLoginButton isDefault={isExistingWalletDefault} />
         ),
         isDefault: isExistingWalletDefault,
-        isEnabled: existingWallet,
+        isEnabled: isExistingWalletEnabled,
       },
       {
         method: "testLogin",
@@ -82,7 +88,7 @@ export default function LoginDefault() {
           testLogin.enabled && testLogin.masterSeed && testLogin.userName,
       },
     ]
-  }, [defaultLoginMethod.value])
+  }, [defaultMethod, isExistingWalletEnabled])
 
   if (showWelcomeDialog.value)
     return (
@@ -120,6 +126,14 @@ export default function LoginDefault() {
             <h2 className="mb-6 text-center font-semibold">
               {loginTranslations.signinText}
             </h2>
+
+            {showReconnect && (
+              <p role="status" className="text-center">
+                {reconnectReason === "accountChanged"
+                  ? loginTranslations.existingWalletAccountChanged
+                  : loginTranslations.existingWalletRestoreFailed}
+              </p>
+            )}
 
             {/* Default method */}
             {btns.find((btn) => btn.isEnabled && btn.isDefault)?.element}

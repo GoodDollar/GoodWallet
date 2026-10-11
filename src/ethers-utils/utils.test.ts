@@ -8,6 +8,7 @@ const {
   mockAcquire,
   mockRelease,
   mockBroadcastTransaction,
+  mockGetTransaction,
   mockGetTransactionCount,
   mockSubmitReferral,
   mockSetDivviMarked,
@@ -15,6 +16,7 @@ const {
   mockAcquire: vi.fn(),
   mockRelease: vi.fn(),
   mockBroadcastTransaction: vi.fn(),
+  mockGetTransaction: vi.fn(),
   mockGetTransactionCount: vi.fn(),
   mockSubmitReferral: vi.fn(),
   mockSetDivviMarked: vi.fn(),
@@ -32,6 +34,7 @@ vi.mock("async-await-mutex-lock", () => ({
 vi.mock("./ethersProviders", () => ({
   getEthersProvider: vi.fn(() => ({
     broadcastTransaction: mockBroadcastTransaction,
+    getTransaction: mockGetTransaction,
     getTransactionCount: mockGetTransactionCount,
   })),
 }))
@@ -364,6 +367,90 @@ describe("ethers-utils", () => {
       ).rejects.toThrow("broadcast failed")
 
       expect(mockRelease).toHaveBeenCalledWith(request.chainId)
+    })
+  })
+
+  // ── external wallet (submitTransaction) ───────────────────────────────
+
+  describe("external wallet", () => {
+    const createWalletSigner = () => ({
+      ...createSigner(),
+      submitTransaction: vi.fn().mockResolvedValue(TX_HASH),
+    })
+
+    let walletSigner: ReturnType<typeof createWalletSigner>
+
+    beforeEach(() => {
+      walletSigner = createWalletSigner()
+      mockGetTransaction.mockResolvedValue(txResponse)
+    })
+
+    it("sendTx submits through the wallet without signing, locking, or broadcasting", async () => {
+      request = createRequest({ data: "0xcalldata" })
+
+      const result = await sendTx(
+        walletSigner as never,
+        DEFAULT_GAS_LIMIT,
+        request,
+        options,
+      )
+
+      expect(result.hash).toBe(TX_HASH)
+      expect(walletSigner.submitTransaction).toHaveBeenCalledWith({
+        ...request,
+        from: walletSigner.address,
+        gasLimit: DEFAULT_GAS_LIMIT,
+      })
+      expect(walletSigner.signTransaction).not.toHaveBeenCalled()
+      expect(mockAcquire).not.toHaveBeenCalled()
+      expect(mockBroadcastTransaction).not.toHaveBeenCalled()
+      expect(mockGetTransactionCount).not.toHaveBeenCalled()
+      await expect(result.trxMinedPromise).resolves.toEqual({ hash: TX_HASH })
+      expect(mockGetTransaction).toHaveBeenCalledWith(TX_HASH)
+    })
+
+    it("sendTx does not pass wallet-managed fees or nonce", async () => {
+      await sendTx(walletSigner as never, DEFAULT_GAS_LIMIT, request, options)
+
+      const submitted = walletSigner.submitTransaction.mock.calls[0][0]
+      expect(submitted).not.toHaveProperty("nonce")
+      expect(submitted).not.toHaveProperty("gasPrice")
+      expect(submitted).not.toHaveProperty("maxFeePerGas")
+    })
+
+    it("sendTxWaitForMining returns the response and receipt and keeps divvi tracking", async () => {
+      request = createRequest({ data: "0xcalldata_DIVVI_SUFFIX" })
+
+      const result = await sendTxWaitForMining(
+        walletSigner as never,
+        DEFAULT_GAS_LIMIT,
+        request,
+        options,
+      )
+
+      expect(result.txResponse.hash).toBe(TX_HASH)
+      expect(result.txReceipt).toEqual({ hash: TX_HASH })
+      expect(mockBroadcastTransaction).not.toHaveBeenCalled()
+      expect(mockSubmitReferral).toHaveBeenCalledWith({
+        txHash: TX_HASH,
+        chainId: request.chainId,
+      })
+    })
+
+    it("propagates wallet rejection", async () => {
+      walletSigner.submitTransaction.mockRejectedValue(
+        new Error("User rejected"),
+      )
+
+      await expect(
+        sendTxWaitForMining(
+          walletSigner as never,
+          DEFAULT_GAS_LIMIT,
+          request,
+          options,
+        ),
+      ).rejects.toThrow("User rejected")
+      expect(mockBroadcastTransaction).not.toHaveBeenCalled()
     })
   })
 })
