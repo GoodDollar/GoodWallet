@@ -18,7 +18,7 @@ const updateInactivityStore = () => {
     inactivityStore.isActive = true
   }
 
-  if (!window) {
+  if (typeof window === "undefined") {
     return () => {}
   }
 
