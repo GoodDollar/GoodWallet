@@ -10,6 +10,7 @@ import type { Tokens } from "@/tokens/types"
 
 import type { NormalizedAddressMap } from "../NormalizedAddressMap"
 import { focusStore } from "./focusStore"
+import { inactivityStore } from "./inactivityStore"
 import { tokensStore } from "./tokensStore"
 
 const AMOUNTS_REFRESH_INTERVAL_MS = 1000 * 60 * 3
@@ -99,7 +100,8 @@ subscribeKey(sessionState, "addresses", (addresses) => {
 setInterval(() => {
   const now = Date.now()
 
-  if (!focusStore.isWalletInFocus) {
+  // Skip if not focused OR inactive
+  if (!focusStore.isWalletInFocus || !inactivityStore.isActive) {
     return
   }
 

@@ -1,10 +1,14 @@
 import { proxy } from "valtio"
+import { subscribeKey } from "valtio/utils"
 
 import type { Tokens } from "@/tokens/types"
 
 import { getTokens } from "../fetchers/tokens"
+import { focusStore } from "./focusStore"
+import { inactivityStore } from "./inactivityStore"
 
 const TOKENS_REFRESH_INTERVAL_MS = 1000 * 60 * 60
+let nextRefreshAt = Date.now() + TOKENS_REFRESH_INTERVAL_MS
 
 type TokensStore = {
   tokens: Tokens | undefined
@@ -37,4 +41,18 @@ export const tokensStore = proxy<TokensStore>({
 })
 
 refreshTokens()
-setInterval(refreshTokens, TOKENS_REFRESH_INTERVAL_MS)
+const refreshTokensIfDue = () => {
+  if (!focusStore.isWalletInFocus || !inactivityStore.isActive) {
+    return
+  }
+
+  const now = Date.now()
+  if (now < nextRefreshAt) return
+
+  nextRefreshAt = now + TOKENS_REFRESH_INTERVAL_MS
+  refreshTokens()
+}
+
+setInterval(refreshTokensIfDue, TOKENS_REFRESH_INTERVAL_MS)
+subscribeKey(focusStore, "isWalletInFocus", refreshTokensIfDue)
+subscribeKey(inactivityStore, "isActive", refreshTokensIfDue)
