@@ -41,6 +41,7 @@ import {
 import { FaCaretDown, FaCaretUp } from "react-icons/fa"
 import { HiDotsHorizontal } from "react-icons/hi"
 import { IoDocumentOutline } from "react-icons/io5"
+import { LuSparkles } from "react-icons/lu"
 import { MdOutlineContactSupport, MdOutlinePrivacyTip } from "react-icons/md"
 import { RiArrowDownLine, RiArrowUpLine } from "react-icons/ri"
 import { TbCube3dSphere, TbLogout } from "react-icons/tb"
@@ -119,6 +120,7 @@ export const UIIcons = {
   AccountsIcon: TbCube3dSphere,
   Cash: BsCashStack,
   Legal: IoDocumentOutline,
+  Sparkles: LuSparkles,
   Logout: TbLogout,
   Privacy: MdOutlinePrivacyTip,
   Questionmark: BsFillQuestionCircleFill,
