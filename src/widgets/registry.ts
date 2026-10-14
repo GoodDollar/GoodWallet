@@ -1,4 +1,4 @@
-import { createElement, type ReactNode } from "react"
+import type { ReactNode } from "react"
 import type { IconName } from "ui"
 
 import {
@@ -9,7 +9,6 @@ import {
 } from "@/chain/chain-ids"
 
 import type { ReactWidgetLoader, WebComponentWidgetLoader } from "./hostTypes"
-import { AiCreditsIcon } from "./icons/AiCreditsIcon"
 import {
   WIDGET_EVM_CHAIN_IDS,
   WIDGET_PROVIDER_METHOD_LIST,
@@ -170,7 +169,7 @@ const aiCreditsWidget = defineWidget({
     process.env.NEXT_PUBLIC_AI_CREDITS_WIDGET_DASHBOARD_ENABLED,
     false,
   ),
-  icon: { kind: "local", render: () => createElement(AiCreditsIcon) },
+  icon: { kind: "system", name: "Sparkles" },
   integrationMode: "web-component",
   entry: {
     tagName: "ai-credits-widget",
