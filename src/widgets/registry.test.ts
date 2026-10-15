@@ -283,7 +283,7 @@ describe("widget registry", () => {
       expect(streaming).toMatchObject({
         widgetId: "goodwidget.streaming",
         packageName: "@goodwidget/streaming-widget",
-        packageVersion: "0.1.0",
+        packageVersion: "0.1.1",
         routeSlug: "streaming",
         entry: { tagName: "gw-streaming" },
         providerPolicy: {

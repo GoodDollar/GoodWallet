@@ -7,7 +7,8 @@
  */
 export const goodWidgetMetadata = {
   packageName: "@goodwidget/streaming-widget",
-  packageVersion: "0.1.0",
+  packageVersion: "0.1.1",
 }
 
-export const register = (tagName?: string): string => tagName ?? "gw-streaming"
+export const register = async (tagName?: string): Promise<string> =>
+  tagName ?? "gw-streaming"

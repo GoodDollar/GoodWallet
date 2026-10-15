@@ -1041,9 +1041,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@goodwidget/streaming-widget@npm:0.1.0":
-  version: 0.1.0
-  resolution: "@goodwidget/streaming-widget@npm:0.1.0"
+"@goodwidget/streaming-widget@npm:0.1.1":
+  version: 0.1.1
+  resolution: "@goodwidget/streaming-widget@npm:0.1.1"
   dependencies:
     "@goodsdks/streaming-sdk": "npm:1.1.0"
     "@goodwidget/core": "npm:0.1.5"
@@ -1053,7 +1053,7 @@ __metadata:
   peerDependencies:
     react: ">=18.0.0"
     react-dom: ">=18.0.0"
-  checksum: 10c0/44bf404bb201e97b5352bcb63b64869a1d306c91fa917f4ba0c13d695f2a6d5adf0f31421d540932151e22ce5dc1b334ab3c3c5b1a9e4d4448d5cc6868b95ea3
+  checksum: 10c0/736eed474360e938a07e8a4d27dafabe0baa49e0dcd9323da2370cd73a719a01f1ade4363a7e2d72a635cc85de309baa3e40b00a96b79702e2657e20d70f98bd
   languageName: node
   linkType: hard
 
@@ -10109,7 +10109,7 @@ __metadata:
     "@goodwidget/core": "npm:0.1.5"
     "@goodwidget/embed": "npm:0.1.4"
     "@goodwidget/goodreserve-widget": "npm:0.1.7"
-    "@goodwidget/streaming-widget": "npm:0.1.0"
+    "@goodwidget/streaming-widget": "npm:0.1.1"
     "@goodwidget/superfluid-campaign-widget": "npm:0.1.7"
     "@goodwidget/ui": "npm:0.1.6"
     "@hcaptcha/react-hcaptcha": "npm:^2.0.2"
