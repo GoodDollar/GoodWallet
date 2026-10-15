@@ -26,7 +26,7 @@ export default function OptionsView() {
   const [expanded, setExpanded] = useState(false)
   const [selectedChainType, setSelectedChainType] = useState<keyof ISigner>()
   const handleCopyPrivateKey = async () => {
-    if (!selectedChainType) return
+    if (!selectedChainType || type !== "PRIVATE_KEY") return
     const session = await getSessionFromLocalStorage()
     if (!session || session.type !== "PRIVATE_KEY") return
 

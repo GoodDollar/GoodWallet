@@ -13,6 +13,7 @@ import {
 } from "viem/chains"
 
 import { config } from "@/config"
+import type { Addresses } from "@/login/types"
 
 import {
   BASE_CHAIN_ID,
@@ -447,6 +448,20 @@ export const AVAILABLE_EVM_CHAINS = new Map<number, Chain>(
 export const AVAILABLE_CHAINS_IDS = Array.from(AVAILABLE_CHAINS.values())
   .sort((a, b) => b.tvl - a.tvl)
   .map((c) => c.id)
+
+// Chains the session can use, i.e. it holds an address for the chain family.
+export const isChainAvailableForAddresses = (
+  chainId: number,
+  addresses: Addresses | undefined,
+) => {
+  const family = AVAILABLE_CHAINS.get(chainId)?.family
+  return !!family && !!addresses?.has(family)
+}
+
+export const getAvailableChainIds = (addresses: Addresses | undefined) =>
+  AVAILABLE_CHAINS_IDS.filter((chainId) =>
+    isChainAvailableForAddresses(chainId, addresses),
+  )
 
 export const getChainName = (chainId: number): string => {
   const chain = AVAILABLE_CHAINS.get(chainId)
