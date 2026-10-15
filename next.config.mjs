@@ -10,6 +10,7 @@ const nextConfig = {
     "@goodwidget/citizen-claim-widget",
     "@goodwidget/ai-credits-widget",
     "@goodwidget/goodreserve-widget",
+    "@goodwidget/streaming-widget",
     "@goodwidget/core",
     "@goodwidget/embed",
     "@goodwidget/ui",

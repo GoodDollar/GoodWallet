@@ -928,6 +928,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@goodsdks/streaming-sdk@npm:1.1.0":
+  version: 1.1.0
+  resolution: "@goodsdks/streaming-sdk@npm:1.1.0"
+  dependencies:
+    "@sfpro/sdk": "npm:^0.1.0"
+    graphql: "npm:^16.9.0"
+    graphql-request: "npm:^7.1.2"
+  peerDependencies:
+    viem: "*"
+  checksum: 10c0/ed7236e787a47474308d0950342c67c9cfdc9d68bc7aa01464e7bd0bbc08ee97c6f880a2e7e9355dd09d2824885eef0a7e3868f5b7607c7aa6773b0fc8658538
+  languageName: node
+  linkType: hard
+
 "@goodwidget/ai-credits-widget@npm:0.1.12":
   version: 0.1.12
   resolution: "@goodwidget/ai-credits-widget@npm:0.1.12"
@@ -1028,6 +1041,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@goodwidget/streaming-widget@npm:0.1.1":
+  version: 0.1.1
+  resolution: "@goodwidget/streaming-widget@npm:0.1.1"
+  dependencies:
+    "@goodsdks/streaming-sdk": "npm:1.1.0"
+    "@goodwidget/core": "npm:0.1.5"
+    "@goodwidget/embed": "npm:0.1.4"
+    "@goodwidget/ui": "npm:0.1.6"
+    viem: "npm:^2.0.0"
+  peerDependencies:
+    react: ">=18.0.0"
+    react-dom: ">=18.0.0"
+  checksum: 10c0/736eed474360e938a07e8a4d27dafabe0baa49e0dcd9323da2370cd73a719a01f1ade4363a7e2d72a635cc85de309baa3e40b00a96b79702e2657e20d70f98bd
+  languageName: node
+  linkType: hard
+
 "@goodwidget/superfluid-campaign-widget@npm:0.1.7":
   version: 0.1.7
   resolution: "@goodwidget/superfluid-campaign-widget@npm:0.1.7"
@@ -1116,6 +1145,15 @@ __metadata:
     react-native-svg:
       optional: true
   checksum: 10c0/7d4e87ccfa5264fd1ec9c5053b8e998b8b1c4ad5135bc1086cc7319d8b886c742e87a1b683eee8d1270fb18973dfaf1b49470fab35bb7d2bcbc28f958706a469
+  languageName: node
+  linkType: hard
+
+"@graphql-typed-document-node/core@npm:^3.2.0":
+  version: 3.2.0
+  resolution: "@graphql-typed-document-node/core@npm:3.2.0"
+  peerDependencies:
+    graphql: ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+  checksum: 10c0/94e9d75c1f178bbae8d874f5a9361708a3350c8def7eaeb6920f2c820e82403b7d4f55b3735856d68e145e86c85cbfe2adc444fdc25519cd51f108697e99346c
   languageName: node
   linkType: hard
 
@@ -3157,6 +3195,27 @@ __metadata:
   peerDependencies:
     webpack: ">=5.0.0"
   checksum: 10c0/1a24a3502dd673a5cb1c893196599c212a3aea1202d1a3d47934487f5055c80a3aae9ee1c7bde835257222d78ae3247c7b218a89beb45f89d391d673437a4782
+  languageName: node
+  linkType: hard
+
+"@sfpro/sdk@npm:^0.1.0":
+  version: 0.1.9
+  resolution: "@sfpro/sdk@npm:0.1.9"
+  peerDependencies:
+    "@wagmi/core": ^2
+    react: ">=18"
+    viem: ^2
+    wagmi: ^2
+  peerDependenciesMeta:
+    "@wagmi/core":
+      optional: true
+    react:
+      optional: true
+    viem:
+      optional: true
+    wagmi:
+      optional: true
+  checksum: 10c0/b800a428948d18674fb9ca2a1cec013cd56cdfd844f9b859249d7c174d1f4f99a2eafe74f542f4c11122c7c049389f68d5bbdc72278bcbbbb89586379034abe7
   languageName: node
   linkType: hard
 
@@ -10050,6 +10109,7 @@ __metadata:
     "@goodwidget/core": "npm:0.1.5"
     "@goodwidget/embed": "npm:0.1.4"
     "@goodwidget/goodreserve-widget": "npm:0.1.7"
+    "@goodwidget/streaming-widget": "npm:0.1.1"
     "@goodwidget/superfluid-campaign-widget": "npm:0.1.7"
     "@goodwidget/ui": "npm:0.1.6"
     "@hcaptcha/react-hcaptcha": "npm:^2.0.2"
@@ -10129,6 +10189,24 @@ __metadata:
   version: 4.2.11
   resolution: "graceful-fs@npm:4.2.11"
   checksum: 10c0/386d011a553e02bc594ac2ca0bd6d9e4c22d7fa8cfbfc448a6d148c59ea881b092db9dbe3547ae4b88e55f1b01f7c4a2ecc53b310c042793e63aa44cf6c257f2
+  languageName: node
+  linkType: hard
+
+"graphql-request@npm:^7.1.2":
+  version: 7.4.0
+  resolution: "graphql-request@npm:7.4.0"
+  dependencies:
+    "@graphql-typed-document-node/core": "npm:^3.2.0"
+  peerDependencies:
+    graphql: 14 - 16
+  checksum: 10c0/066531d70b9c4656251e51c950ce9bee3df05291e12e2b983608d75ac3a70d700efd6488d273b043235dc125658973db38b21eba59e808863831a5a19a6a7b41
+  languageName: node
+  linkType: hard
+
+"graphql@npm:^16.9.0":
+  version: 16.14.2
+  resolution: "graphql@npm:16.14.2"
+  checksum: 10c0/a95a96961eaff55cc9fe9d31fae6f33499ac988b972d07ea5085024cb1333f515b902f376e7393a5489aa82200a8aff3eb96580e4d1b69d702ed19b6eb1ce97a
   languageName: node
   linkType: hard
 

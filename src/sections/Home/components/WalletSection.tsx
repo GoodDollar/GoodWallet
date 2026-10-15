@@ -45,12 +45,14 @@ type WidgetTabSelectedEventType =
   | AnalyticsEventTypes.AICreditsTabSelected
   | AnalyticsEventTypes.GoodReserveTabSelected
   | AnalyticsEventTypes.SuperfluidCampaignTabSelected
+  | AnalyticsEventTypes.StreamingTabSelected
 
 const widgetActionEventType: Record<string, WidgetTabSelectedEventType> = {
   "goodwidget.ai-credits": AnalyticsEventTypes.AICreditsTabSelected,
   "goodwidget.goodreserve": AnalyticsEventTypes.GoodReserveTabSelected,
   "goodwidget.superfluid-campaign":
     AnalyticsEventTypes.SuperfluidCampaignTabSelected,
+  "goodwidget.streaming": AnalyticsEventTypes.StreamingTabSelected,
 }
 
 export default function WalletSection({
