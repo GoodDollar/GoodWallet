@@ -272,10 +272,13 @@ const goodReserveWidget = defineWidget({
  * Token balances. The package registers its Custom Element as a side effect
  * when its register entry is imported.
  */
+const STREAMING_WIDGET_PACKAGE = "@goodwidget/streaming-widget"
+const STREAMING_WIDGET_VERSION = "0.1.0"
+
 const streamingWidget = defineWidget({
   widgetId: "goodwidget.streaming",
-  packageName: "@goodwidget/streaming-widget",
-  packageVersion: "0.1.0",
+  packageName: STREAMING_WIDGET_PACKAGE,
+  packageVersion: STREAMING_WIDGET_VERSION,
   routeSlug: "streaming",
   displayName: "Streaming",
   description: "Manage money streams, pools, and Super Token balances",
@@ -287,7 +290,19 @@ const streamingWidget = defineWidget({
   integrationMode: "web-component",
   entry: {
     tagName: "gw-streaming",
-    load: () => import("@goodwidget/streaming-widget/register"),
+    /**
+     * Unlike every other GoodWidget package, streaming-widget 0.1.0 does not
+     * export `goodWidgetMetadata` from its register entry, so the module fails
+     * both the host type contract and `assertWidgetModuleMetadata`. Supply the
+     * identity here; drop this once the package exports its own.
+     */
+    load: async () => ({
+      ...(await import("@goodwidget/streaming-widget/register")),
+      goodWidgetMetadata: {
+        packageName: STREAMING_WIDGET_PACKAGE,
+        packageVersion: STREAMING_WIDGET_VERSION,
+      },
+    }),
   },
   providerPolicy: {
     chainIds: [CELO_CHAIN_ID, BASE_CHAIN_ID],
