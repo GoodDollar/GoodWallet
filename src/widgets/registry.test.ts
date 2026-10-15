@@ -273,4 +273,57 @@ describe("widget registry", () => {
       ])
     })
   })
+
+  describe("Streaming widget", () => {
+    it("is present in the live WIDGETS array with the correct widgetId", () => {
+      const streaming = WIDGETS.find(
+        (w) => w.widgetId === "goodwidget.streaming",
+      )
+      expect(streaming).toBeDefined()
+      expect(streaming).toMatchObject({
+        widgetId: "goodwidget.streaming",
+        packageName: "@goodwidget/streaming-widget",
+        packageVersion: "0.1.0",
+        routeSlug: "streaming",
+        entry: { tagName: "gw-streaming" },
+        providerPolicy: {
+          chainIds: [42220, 8453],
+        },
+      })
+    })
+
+    it("passes registry validation (createWidgetRegistry does not throw)", () => {
+      const streaming = WIDGETS.find(
+        (w) => w.widgetId === "goodwidget.streaming",
+      )
+      expect(streaming).toBeDefined()
+      if (!streaming) return
+      expect(() => createWidgetRegistry([streaming])).not.toThrow()
+    })
+
+    it("appears in widgetDashboardActions only when dashboardVisible", () => {
+      const streaming = WIDGETS.find(
+        (w) => w.widgetId === "goodwidget.streaming",
+      )
+      const action = widgetDashboardActions.find(
+        (a) => a.widgetId === "goodwidget.streaming",
+      )
+      if (streaming?.dashboardVisible === false) {
+        expect(action).toBeUndefined()
+      } else {
+        expect(action).toBeDefined()
+        expect(action?.routeSlug).toBe("streaming")
+        expect(action?.label).toBe("Streaming")
+      }
+    })
+
+    it("uses the shared provider method allowlist", () => {
+      const streaming = WIDGETS.find(
+        (w) => w.widgetId === "goodwidget.streaming",
+      )
+      expect(streaming?.providerPolicy.requiredMethods).toEqual([
+        ...WIDGET_PROVIDER_METHOD_LIST,
+      ])
+    })
+  })
 })

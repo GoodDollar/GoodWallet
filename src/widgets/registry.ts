@@ -267,10 +267,43 @@ const goodReserveWidget = defineWidget({
   },
 })
 
+/**
+ * Superfluid streaming widget: money streams, GDA pool memberships, and Super
+ * Token balances. The package registers its Custom Element as a side effect
+ * when its register entry is imported.
+ */
+const streamingWidget = defineWidget({
+  widgetId: "goodwidget.streaming",
+  packageName: "@goodwidget/streaming-widget",
+  packageVersion: "0.1.0",
+  routeSlug: "streaming",
+  displayName: "Streaming",
+  description: "Manage money streams, pools, and Super Token balances",
+  dashboardVisible: readBooleanEnv(
+    process.env.NEXT_PUBLIC_STREAMING_WIDGET_DASHBOARD_ENABLED,
+    false,
+  ),
+  icon: { kind: "system", name: "Waves" },
+  integrationMode: "web-component",
+  entry: {
+    tagName: "gw-streaming",
+    load: () => import("@goodwidget/streaming-widget/register"),
+  },
+  providerPolicy: {
+    chainIds: [CELO_CHAIN_ID, BASE_CHAIN_ID],
+    requiredMethods: WIDGET_PROVIDER_METHOD_LIST,
+  },
+})
+
 export const WIDGETS: readonly RegisteredWidget[] =
   process.env.NEXT_PUBLIC_PLAYWRIGHT_TEST_MODE === "true"
     ? [testFixtureWidget]
-    : [superfluidCampaignWidget, aiCreditsWidget, goodReserveWidget]
+    : [
+        superfluidCampaignWidget,
+        aiCreditsWidget,
+        goodReserveWidget,
+        streamingWidget,
+      ]
 export const widgetRegistry = createWidgetRegistry(WIDGETS)
 
 export const getWidgetByRoute = (
