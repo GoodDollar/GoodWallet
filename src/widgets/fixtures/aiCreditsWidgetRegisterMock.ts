@@ -7,7 +7,7 @@
  */
 export const goodWidgetMetadata = {
   packageName: "@goodwidget/ai-credits-widget",
-  packageVersion: "0.1.0",
+  packageVersion: "0.1.12",
 }
 
 export const register = (tagName?: string): string =>

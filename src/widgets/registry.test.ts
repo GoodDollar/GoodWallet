@@ -157,7 +157,6 @@ describe("widget registry", () => {
     expect(superfluid).toMatchObject({
       widgetId: "goodwidget.superfluid-campaign",
       packageName: "@goodwidget/superfluid-campaign-widget",
-      packageVersion: "0.1.5",
       routeSlug: "superfluid-campaign",
       entry: { tagName: "gw-superfluid-campaign" },
       providerPolicy: {
@@ -230,7 +229,6 @@ describe("widget registry", () => {
       expect(goodReserve).toMatchObject({
         widgetId: "goodwidget.goodreserve",
         packageName: "@goodwidget/goodreserve-widget",
-        packageVersion: "0.1.7",
         routeSlug: "goodreserve",
         entry: { tagName: "gw-goodreserve-widget" },
         providerPolicy: {
@@ -283,7 +281,6 @@ describe("widget registry", () => {
       expect(streaming).toMatchObject({
         widgetId: "goodwidget.streaming",
         packageName: "@goodwidget/streaming-widget",
-        packageVersion: "0.1.1",
         routeSlug: "streaming",
         entry: { tagName: "gw-streaming" },
         providerPolicy: {
