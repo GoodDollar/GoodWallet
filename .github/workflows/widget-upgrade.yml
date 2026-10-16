@@ -1,0 +1,120 @@
+name: Upgrade widget
+
+# Manual widget upgrade. Pick a widget and the version to move it to; this
+# opens a pull request with the bump, which then runs the normal checks and
+# preview deployment. Nothing is merged automatically.
+#
+# The widget list mirrors src/widgets/registry.ts. A dropdown cannot be built
+# at runtime, so the options are checked against the registry by
+# src/widgets/widgetUpgradeWorkflow.test.ts — add a widget there and the test
+# tells you to add it here.
+
+on:
+  workflow_dispatch:
+    inputs:
+      widget:
+        description: Widget to upgrade
+        required: true
+        type: choice
+        options:
+          - "@goodwidget/ai-credits-widget"
+          - "@goodwidget/goodreserve-widget"
+          - "@goodwidget/streaming-widget"
+          - "@goodwidget/superfluid-campaign-widget"
+      version:
+        description: Version to upgrade to, or "latest"
+        required: false
+        default: latest
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: widget-upgrade-${{ inputs.widget }}
+  cancel-in-progress: false
+
+jobs:
+  upgrade:
+    name: Open upgrade pull request
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Run install
+        run: yarn install --immutable
+
+      - name: Upgrade widget
+        id: upgrade
+        run: |
+          yarn node scripts/widget-release/sync-version.mjs \
+            --package "${{ inputs.widget }}" \
+            --version "${{ inputs.version }}"
+
+      - name: Update lockfile
+        run: yarn install --no-immutable
+
+      - name: Run Biome Fix
+        run: yarn biome:fix:all
+
+      - name: Run Biome Check
+        run: yarn biome:verify:all
+
+      - name: Run Tests
+        run: yarn test
+
+      - name: Compose pull request body
+        id: body
+        env:
+          WIDGET: ${{ inputs.widget }}
+          VERSION: ${{ steps.upgrade.outputs.version }}
+          PREVIOUS: ${{ steps.upgrade.outputs.previous-version }}
+          CHANGED: ${{ steps.upgrade.outputs.changed-files }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          set -euo pipefail
+          {
+            echo "Widget upgrade requested by @$ACTOR."
+            echo
+            echo "| | |"
+            echo "|---|---|"
+            echo "| Widget | \`$WIDGET\` |"
+            echo "| Version | \`$PREVIOUS\` -> \`$VERSION\` |"
+            echo
+            echo "Updated \`$CHANGED\` and \`yarn.lock\`."
+            echo
+            echo "Biome and the unit tests passed before this pull request was"
+            echo "opened. Preview deployment and Playwright run in the checks."
+            echo
+            echo "Route, icon, integration mode and providerPolicy are"
+            echo "unchanged - this is a version bump only."
+          } > "$RUNNER_TEMP/pr-body.md"
+          echo "path=$RUNNER_TEMP/pr-body.md" >> "$GITHUB_OUTPUT"
+
+      - name: Open pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          # Pull requests opened with the default GITHUB_TOKEN do not trigger
+          # the pull_request workflow, so the bump would land with no preview
+          # deployment or Playwright run.
+          token: ${{ secrets.WIDGET_AUTOMATION_TOKEN || github.token }}
+          base: main
+          branch: bump/${{ steps.upgrade.outputs.branch-slug }}-${{ steps.upgrade.outputs.version }}
+          delete-branch: true
+          labels: widget-upgrade
+          commit-message: "chore: bump ${{ inputs.widget }} to version ${{ steps.upgrade.outputs.version }} in package.json and update references"
+          title: "chore: bump ${{ inputs.widget }} to version ${{ steps.upgrade.outputs.version }}"
+          body-path: ${{ steps.body.outputs.path }}
