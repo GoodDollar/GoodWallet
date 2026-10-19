@@ -50,7 +50,6 @@ export type HomeTranslations = {
   allTokens: string
   gooddollar: string
   pwaConfirmAlert: string
-  predictions: string
   noTokens: {
     title: string
     description: string
@@ -121,21 +120,6 @@ export type OptionsTranslations = {
   termsOfUse: string
 }
 
-export type PredictionsTranslations = {
-  title: string
-  subtitle: string
-  markets: string
-  openOrders: string
-  positions: string
-  marketTakerOrderFailedMiniumAmount: string
-  limitOrderFailedMiniumAmount: (minAmountShares: number) => string
-  welcomeDialog: {
-    title: string
-    body: string
-    acceptBtn: string
-  }
-}
-
 export type ReceiveTranslations = {
   title: string
   scan: string
@@ -155,26 +139,6 @@ export type SwapTranslations = {
   routesSearchingTag: string
   routesNoRoutesTag: string
   routesSelectRouteTag: string
-  welcomeFlow: {
-    title: string
-    subtitle: string
-    createAccountStep: {
-      title: string
-      subtitle: string
-    }
-    deriveAccountStep: {
-      title: string
-      subtitle: string
-    }
-    createSafeStep: {
-      title: string
-      subtitle: string
-    }
-    allowTokensStep: {
-      title: string
-      subtitle: string
-    }
-  }
   tokenInformation: {
     token: string
     chain: string
@@ -333,7 +297,6 @@ export type TypedTranslations = {
   home: HomeTranslations
   gooddollar: GoodDollarTranslations
   options: OptionsTranslations
-  predictions: PredictionsTranslations
   receive: ReceiveTranslations
   swap: SwapTranslations
   send: SendTranslations

@@ -13,20 +13,27 @@ import { DerivationPaths } from "@/utils/derivationPaths"
 
 import type { ISigner, ISignerSession } from "../types"
 import { dogeNetwork, dogeTestNetwork } from "./bitcoinNetworks"
+import { getXrpSecretSeed } from "./xrp"
 
 const ED25519_ALGORITHM_IDENTIFIER = Object.freeze({ name: "Ed25519" })
 
 const ECPair = ECPairFactory(ecc)
+
+export { getXrpSecretSeed } from "./xrp"
 export const validator = (
   pubkey: Uint8Array,
   msghash: Uint8Array,
   signature: Uint8Array,
 ): boolean => ECPair.fromPublicKey(pubkey).verify(msghash, signature)
 
-export const getPrivateKeyHex = (
+export const getPrivateKeyHex = async (
   chainType: keyof ISigner,
   masterSeed: string,
-): string => {
+): Promise<string> => {
+  if (chainType === "XRP" || chainType === "XRP_TESTNET") {
+    return getXrpSecretSeed(chainType, masterSeed)
+  }
+
   return getPrivateKey(chainType, masterSeed).toString("hex")
 }
 
@@ -216,18 +223,12 @@ const getXrpPair = async (
   chainType: "XRP" | "XRP_TESTNET",
   masterSeed: string,
 ) => {
-  const { ECDSA, encodeSeed, deriveAddress, deriveKeypair, encode } =
-    await import("xrpl")
+  const { ECDSA, deriveAddress, deriveKeypair, encode } = await import("xrpl")
   const { hashSignedTx } = await import("xrpl/dist/npm/utils/hashes")
   const { encodeForSigning } = await import("ripple-binary-codec")
   const { sign } = await import("ripple-keypairs")
 
-  const bytesToKeepForED25519 = 16
-  const derivedSeed = getPrivateKey(chainType, masterSeed)
-  const encodedSeed = encodeSeed(
-    derivedSeed.subarray(0, bytesToKeepForED25519),
-    ECDSA.ed25519,
-  )
+  const encodedSeed = await getXrpSecretSeed(chainType, masterSeed)
   const { publicKey, privateKey } = deriveKeypair(encodedSeed, {
     algorithm: ECDSA.ed25519,
   })

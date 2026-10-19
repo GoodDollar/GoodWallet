@@ -1,30 +1,26 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useMemo } from "react"
 
 import { setBottomSheetProps } from "@/components/Snippet/BottomSheet/bottomSheetStore"
 import { LoadingSpinner } from "@/components/Snippet/LoadingSpinner"
-import { useSessionContext } from "@/login"
+import { config } from "@/config"
+import { useSessionContext } from "@/login/hooks/context"
+import type { EVMSigner } from "@/login/types"
 
-import type { WidgetHostProps } from "./hostTypes"
 import { useWidgetProvider, WidgetProvider } from "./provider/WidgetProvider"
 import { type RegisteredWidget, widgetRegistry } from "./registry"
+// import { createSuperfluidCitizenClaimExecution } from "./superfluidClaimExecution"
 import { WidgetRenderer } from "./WidgetRenderer"
 
 export const AuthenticatedWidgetRoute = ({
   widgetId,
-  themeOverrides,
-  config,
 }: {
   widgetId: string
-  themeOverrides?: WidgetHostProps["themeOverrides"]
-  config?: WidgetHostProps["config"]
 }) => {
   const { signer, isLoading } = useSessionContext()
   const widget = widgetRegistry.get(widgetId)
 
-  // Bottom-sheet metadata comes from the same reviewed registry entry that
-  // controls provider permissions, avoiding route-specific duplicate config.
   useEffect(() => {
     if (widget) {
       setBottomSheetProps({
@@ -37,47 +33,43 @@ export const AuthenticatedWidgetRoute = ({
 
   if (!widget) throw new Error(`Unknown widget route: ${widgetId}`)
   if (isLoading) return <LoadingSpinner />
-  // Never mount in-process widget code until the wallet session is available.
-  if (!signer) return null
+  if (!signer?.EVM) return null
 
   return (
     <WidgetProvider
       chainIds={widget.providerPolicy.chainIds}
       requiredMethods={widget.providerPolicy.requiredMethods}
     >
-      <AuthenticatedWidget
-        widget={widget}
-        themeOverrides={themeOverrides}
-        config={config}
-      />
+      <MountedWidget widget={widget} evmSigner={signer.EVM} />
     </WidgetProvider>
   )
 }
 
-/**
- * This child runs only inside WidgetProvider, so both integration modes receive
- * exactly the same restricted EIP-1193 instance. Neither host can access the
- * custodial signer held by the surrounding session.
- */
-const AuthenticatedWidget = ({
+const MountedWidget = ({
   widget,
-  themeOverrides,
-  config,
+  evmSigner,
 }: {
   widget: RegisteredWidget
-  themeOverrides?: WidgetHostProps["themeOverrides"]
-  config?: WidgetHostProps["config"]
+  evmSigner: EVMSigner
 }) => {
-  // This hook is the only point where the restricted capability enters the
-  // rendering branch selected by WidgetRenderer.
   const provider = useWidgetProvider()
+  const elementProps = useMemo(() => {
+    if (widget.widgetId !== "goodwidget.superfluid-campaign") {
+      return widget.elementProps
+    }
+
+    return {
+      ...widget.elementProps,
+      citizenClaimEnvironment: config.g$claim.contracts,
+      disableClaim: true,
+    }
+  }, [evmSigner, widget])
 
   return (
     <WidgetRenderer
       widget={widget}
       provider={provider}
-      themeOverrides={themeOverrides}
-      config={config}
+      elementProps={elementProps}
     />
   )
 }

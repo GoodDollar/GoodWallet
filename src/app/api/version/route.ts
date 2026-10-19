@@ -2,12 +2,14 @@ import { NextResponse } from "next/server"
 
 import { newVercelConfig } from "@/configServerless"
 
-export const dynamic = "force-static"
-export const revalidate = 60 // 1 minutes
+export const dynamic = "force-dynamic"
 
 const headers = {
   headers: {
-    "Cache-Control": `public, max-age=${revalidate}`,
+    "Cache-Control":
+      "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
+    Pragma: "no-cache",
+    Expires: "0",
   },
 }
 

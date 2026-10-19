@@ -1,18 +1,46 @@
-// Injected content via Sentry wizard below
-import { withSentryConfig } from "@sentry/nextjs";
+import { withSentryConfig } from "@sentry/nextjs"
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactCompiler: true,
   reactStrictMode: true,
 
+  transpilePackages: [
+    "@goodwidget/superfluid-campaign-widget",
+    "@goodwidget/citizen-claim-widget",
+    "@goodwidget/ai-credits-widget",
+    "@goodwidget/goodreserve-widget",
+    "@goodwidget/streaming-widget",
+    "@goodwidget/core",
+    "@goodwidget/embed",
+    "@goodwidget/ui",
+    "react-native-web",
+  ],
+
+  turbopack: {
+    resolveAlias: {
+      "react-native": "react-native-web",
+    },
+  },
+
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      "react-native$": "react-native-web",
+    }
+    config.resolve.extensions = [
+      ".web.js",
+      ".web.jsx",
+      ".web.ts",
+      ".web.tsx",
+      ...(config.resolve.extensions ?? []),
+    ]
+    return config
+  },
+
   env: {
     NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA: process.env.VERCEL_GIT_COMMIT_SHA,
-  },
-  turbopack: {
-    // Keep Turbopack scoped to this checkout without baking a contributor's
-    // local path into CI, Vercel, or another maintainer's environment.
-    root: process.cwd(),
+    TAMAGUI_TARGET: "web",
   },
   images: {
     minimumCacheTTL: 31536000,
@@ -45,6 +73,18 @@ const nextConfig = {
   ],
   headers: async () => {
     const headers = [
+      {
+        // Anti-clickjacking: only GoodWallet itself and delta may iframe us.
+        // The delta mobile app uses a native WebView (top-level document), which frame-ancestors does not affect.
+        source: "/:path*",
+        headers: [
+          {
+            key: "Content-Security-Policy",
+            value:
+              "frame-ancestors 'self' https://delta.app https://*.delta.app;",
+          },
+        ],
+      },
       {
         //Allow browsers to cache content from public folder for one week, to cut down on the number of edge requests
         source: "/:all*(.png|.jpg|.jpeg|.gif|.svg|.ico|.webp|.webmanifest)",

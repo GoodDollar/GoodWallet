@@ -2,7 +2,7 @@
 
 ## 1. Project Overview
 
-GoodWallet V2 is a multi-chain, multi-protocol crypto wallet built on Next.js 16. It spans EVM chains plus Solana, Bitcoin, Dogecoin and XRP, with token management via Alchemy, cross-chain swaps via Li.Fi, prediction-market trading via Polymarket, and WalletConnect (Reown) connectivity. It centers on the GoodDollar (G$) UBI ecosystem.
+GoodWallet V2 is a multi-chain, multi-protocol crypto wallet built on Next.js 16. It spans EVM chains plus Solana, Bitcoin, Dogecoin and XRP, with token management via Alchemy, cross-chain swaps via Li.Fi, and WalletConnect (Reown) connectivity. It centers on the GoodDollar (G$) UBI ecosystem.
 
 ## 2. Core Features
 
@@ -12,8 +12,6 @@ GoodWallet V2 is a multi-chain, multi-protocol crypto wallet built on Next.js 16
   Alchemy-based balance tracking, send/receive, QR code transactions, gasless mode
 - **Swaps**
   Cross-chain and same-chain swaps via Li.Fi (EVM, Solana, Bitcoin providers)
-- **Predictions / Trading**
-  Polymarket prediction markets with on-chain trading and live charts
 - **GoodDollar Ecosystem**
   UBI claims, identity/whitelisting, faucet, referrals
 - **Authentication**
@@ -34,7 +32,6 @@ GoodWallet V2 is a multi-chain, multi-protocol crypto wallet built on Next.js 16
 - **Swaps & Bridging**: Li.Fi SDK v4
 - **Multi-chain Data**: Alchemy, Tatum
 - **Connectivity**: WalletConnect v2 via Reown WalletKit
-- **Predictions**: Polymarket CLOB / builder-relayer clients
 - **Authentication**: Web3Auth/Torus social logins, Auth0 passwordless (hCaptcha)
 - **Analytics**: Sentry, Amplitude
 
@@ -47,7 +44,7 @@ GoodWallet V2 is a multi-chain, multi-protocol crypto wallet built on Next.js 16
 - **GoodDollar**
   UBI claims, identity verification, multi-chain G$ support
 - **Project Structure**
-  `/src/app` (App Router, `[locale]` routes, `/api`), `/src/sections` (feature flows: Home, Send, Receive, Swap, Predictions, GoodDollar, Login, WalletConnect, Qr, Options), `/src/chain`, `/src/tokens`, `/src/stores`, `/src/hooks`, `/src/components`, `/src/ui`
+  `/src/app` (App Router, `[locale]` routes, `/api`), `/src/sections` (feature flows: Home, Send, Receive, Swap, GoodDollar, Login, WalletConnect, Qr, Options), `/src/chain`, `/src/tokens`, `/src/stores`, `/src/hooks`, `/src/components`, `/src/ui`
 
 ## 6. Development Tools
 
@@ -92,3 +89,70 @@ yarn dev
 Other scripts: `yarn build`, `yarn start`, `yarn test`, `yarn lint`.
 
 Then open http://localhost:3000 in your browser
+
+### GoodWidget local packages and local testing
+
+The Superfluid campaign widget and its GoodWidget runtime packages are currently
+installed from local tarballs. Build them in a checkout of
+[GoodDollar/GoodWidget](https://github.com/GoodDollar/GoodWidget), then copy or
+pack these packages into `local-packages/`:
+
+```sh
+pnpm --filter @goodwidget/ui pack --pack-destination /path/to/GoodWallet/local-packages
+pnpm --filter @goodwidget/core pack --pack-destination /path/to/GoodWallet/local-packages
+pnpm --filter @goodwidget/embed pack --pack-destination /path/to/GoodWallet/local-packages
+pnpm --filter @goodwidget/citizen-claim-widget pack --pack-destination /path/to/GoodWallet/local-packages
+pnpm --filter @goodwidget/superfluid-campaign-widget pack --pack-destination /path/to/GoodWallet/local-packages
+```
+
+Rename the generated archives to `ui.tgz`, `core.tgz`, `embed.tgz`,
+`citizen-claim-widget.tgz`, and `superfluid-campaign-widget.tgz`, respectively,
+then run `yarn install`. The archives are gitignored.
+
+## Vercel deployments
+
+Vercel Git deployments are disabled in `vercel.json`. Pull requests targeting
+`main` are handled by the Preview workflow and deployed as prebuilt Preview
+artifacts after the checks pass. Pushes to `main` are handled by the main branch
+workflow and deployed as prebuilt Preview artifacts. Pushes to `production` use
+a separate release workflow with prebuilt Production deployment steps,
+preserving the existing promotion-by-merge process without relying on Vercel
+Git deployments. Domains remain managed by Vercel.
+
+The repository needs these GitHub Actions secrets:
+
+- `VERCEL_TOKEN`
+- `VERCEL_ORG_ID`
+- `VERCEL_PROJECT_ID`
+
+## GoodWidget visibility
+
+Widget routes are registered independently from dashboard buttons. For example,
+setting `NEXT_PUBLIC_AI_CREDITS_WIDGET_DASHBOARD_ENABLED=true` shows the AI
+Credits button; it is hidden when unset or set to `false`, while the authenticated
+`/{locale}/ai-credits` path remains available. `NEXT_PUBLIC_*` values are read
+during the Next.js build, so a Vercel environment change requires a new
+deployment/redeploy.
+
+The Superfluid button follows the same pattern with
+`NEXT_PUBLIC_SUPERFLUID_CAMPAIGN_WIDGET_DASHBOARD_ENABLED`; its authenticated
+`/{locale}/superfluid-campaign` path remains available when the button is hidden.
+
+The Streaming button follows the same pattern with
+`NEXT_PUBLIC_STREAMING_WIDGET_DASHBOARD_ENABLED`; its authenticated
+`/{locale}/streaming` path remains available when the button is hidden.
+
+## GoodWidget local-tarball workflow
+
+Widget packages that are not yet published to npm (e.g. `@goodwidget/ai-credits-widget`)
+must be installed from a local tarball built inside the
+[GoodDollar/GoodWidget](https://github.com/GoodDollar/GoodWidget) monorepo.
+
+1. Clone `GoodDollar/GoodWidget` alongside this repo.
+2. Inside the GoodWidget monorepo, pack the widget:
+   ```sh
+   pnpm --filter @goodwidget/ai-credits-widget pack --pack-destination /path/to/GoodWallet/local-packages
+   ```
+3. The tarball lands at `local-packages/ai-credits-widget.tgz` (already referenced in `package.json`).
+4. Run `yarn install` in this repo to link the tarball.
+5. The path `local-packages/*.tgz` is git-ignored; do **not** commit tarballs.

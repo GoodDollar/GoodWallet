@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
+import { createPortal } from "react-dom"
 import { Button } from "ui"
 import { useSnapshot } from "valtio"
 
@@ -15,6 +16,7 @@ import { ErrorDialog } from "./ErrorDialog"
 import { GenericDialog } from "./GenericDialog"
 import { SessionProposalDialog } from "./SessionProposalDialog"
 import { SessionRequestDialog } from "./SessionRequestDialog"
+import styles from "./WalletConnectDialog.module.css"
 
 const renderDialog = (dialog: WalletConnectDialogType) => {
   switch (dialog.type) {
@@ -31,6 +33,12 @@ const renderDialog = (dialog: WalletConnectDialogType) => {
 
 export const WalletConnectDialog = () => {
   const { dialog, status, exiting } = useSnapshot(walletConnectDialogStore)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+    return () => setMounted(false)
+  }, [])
 
   useEffect(() => {
     document.body.style.overflow = "hidden"
@@ -39,11 +47,11 @@ export const WalletConnectDialog = () => {
     }
   }, [])
 
-  if (status !== "pending") return null
+  if (!mounted || status !== "pending") return null
 
-  return (
+  return createPortal(
     <div
-      className={dialogStyles.dialogOverlay}
+      className={`${dialogStyles.dialogOverlay} ${styles.aboveWidgets}`}
       onClick={(e) => {
         updateWalletConnectDialogStatus("rejected")
         e.stopPropagation()
@@ -75,6 +83,7 @@ export const WalletConnectDialog = () => {
           ) : null}
         </div>
       </dialog>
-    </div>
+    </div>,
+    document.body,
   )
 }

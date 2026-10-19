@@ -1,7 +1,7 @@
 import { proxy } from "valtio"
 
 type VersionResponse = {
-  version: string
+  version?: string
 }
 
 type PwaVersioningStore = {
@@ -16,9 +16,19 @@ const POLLING_INTERVAL = 5 * 60 * 1000
 
 const refreshVersion = async (): Promise<void> => {
   try {
-    const res = await fetch("/api/version")
+    // A cached response can describe a previous deployment and make the
+    // update prompt appear again after the page is refreshed.
+    const res = await fetch(`/api/version?t=${Date.now()}`, {
+      cache: "no-store",
+    })
+    if (!res.ok) {
+      throw new Error(`Version request failed with status ${res.status}`)
+    }
+
     const parsedResponse = (await res.json()) as VersionResponse
-    pwaVersionStore.remoteVersion = parsedResponse.version
+    if (parsedResponse.version) {
+      pwaVersionStore.remoteVersion = parsedResponse.version
+    }
   } catch (error) {
     console.error(error)
   }

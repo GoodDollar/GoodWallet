@@ -6,18 +6,44 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
 } from "react"
 
-import { useSessionContext } from "@/login"
+import { useSessionContext } from "@/login/hooks/context"
+import { openWalletConnectDialog } from "@/sections/WalletConnect/store/walletConnectDialogStore"
 
-import { RestrictedEip1193Provider } from "./RestrictedEip1193Provider"
+import {
+  RestrictedEip1193Provider,
+  type WalletApprovalRequest,
+} from "./RestrictedEip1193Provider"
 
 const WidgetProviderContext = createContext<RestrictedEip1193Provider | null>(
   null,
 )
 
-// This is the only bridge from the authenticated custodial session to widget
-// code. Consumers receive the restricted EIP-1193 facade, never the signer.
+const requestWalletApproval = async (
+  request: WalletApprovalRequest,
+): Promise<boolean> => {
+  const status = await openWalletConnectDialog({
+    type: "generic",
+    title: "Approve widget request",
+    bodyText: JSON.stringify(
+      {
+        method: request.method,
+        account: request.account,
+        chainId: request.chainId,
+        params: request.params,
+      },
+      (_key, value: unknown) =>
+        typeof value === "bigint" ? `0x${value.toString(16)}` : value,
+      2,
+    ),
+    acceptBtnText: "Approve",
+    rejectBtnText: "Reject",
+  })
+  return status === "accepted"
+}
+
 export const WidgetProvider = ({
   chainIds,
   requiredMethods,
@@ -29,6 +55,7 @@ export const WidgetProvider = ({
 }) => {
   const { signer } = useSessionContext()
   const evmSigner = signer?.EVM
+  const liveProviderRef = useRef<RestrictedEip1193Provider | null>(null)
   const provider = useMemo(
     () =>
       evmSigner
@@ -36,16 +63,27 @@ export const WidgetProvider = ({
             signer: evmSigner,
             chainIds,
             requiredMethods,
+            requestWalletApproval,
           })
         : null,
     [evmSigner, chainIds, requiredMethods],
   )
 
   useEffect(() => {
-    if (provider && evmSigner) provider.updateAccount(evmSigner)
-  }, [provider, evmSigner])
+    liveProviderRef.current = provider
+    return () => {
+      const disposedProvider = provider
+      if (liveProviderRef.current === disposedProvider) {
+        liveProviderRef.current = null
+      }
+      queueMicrotask(() => {
+        if (liveProviderRef.current === disposedProvider) return
+        disposedProvider?.dispose()
+      })
+    }
+  }, [provider])
 
-  if (!provider) return null
+  if (!provider || !evmSigner) return null
   return (
     <WidgetProviderContext.Provider value={provider}>
       {children}

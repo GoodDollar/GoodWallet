@@ -1,23 +1,6 @@
-import { MIN_TAKER_ORDER_IN_DOLLAR } from "@/sections/Predictions/constants/validation"
-
 import type { TypedTranslations } from "../types"
 
 const en: TypedTranslations = {
-  predictions: {
-    title: "Predictions",
-    subtitle: "powered by Polymarket",
-    markets: "Markets",
-    openOrders: "Open Orders",
-    positions: "Positions",
-    marketTakerOrderFailedMiniumAmount: `Market buys must be greater than $${MIN_TAKER_ORDER_IN_DOLLAR}`,
-    limitOrderFailedMiniumAmount: (minAmountShares: number) =>
-      `Limit buys must be greater than ${minAmountShares} shares`,
-    welcomeDialog: {
-      title: "Welcome to Predictions",
-      body: "Explore live market events and trade on their outcomes.\nTo get started, fund your Polymarket account.",
-      acceptBtn: "Start Predicting",
-    },
-  },
   privacy: {
     bannerTitle: "Privacy Settings",
     mainDescription:
@@ -76,7 +59,6 @@ const en: TypedTranslations = {
     news: "News",
     activity: "Activity",
     allTokens: "All",
-    predictions: "Predictions",
     noTokens: {
       title: "No Tokens Yet",
       description:
@@ -254,27 +236,6 @@ const en: TypedTranslations = {
       title: "How swaps work",
       body: "You can swap over 10,000 tokens across multiple blockchains.\nMake sure you have enough gas on the selected chain.\nSome swaps may take a few minutes to complete.",
       acceptBtn: "I understand",
-    },
-    welcomeFlow: {
-      title: "Get started with Predictions",
-      subtitle:
-        "To start trading on Polymarket, you need to sign and complete the following steps",
-      createAccountStep: {
-        title: "Create Account",
-        subtitle: "Polymarket needs to authenticate your wallet",
-      },
-      deriveAccountStep: {
-        title: "Existing account with Polymarket",
-        subtitle: "Confirm to authenticate",
-      },
-      createSafeStep: {
-        title: "Create Wallet",
-        subtitle: "Polymarket requires a Safe wallet",
-      },
-      allowTokensStep: {
-        title: "Allow Tokens",
-        subtitle: "USDC.e coins are used in Polymarket",
-      },
     },
     title: "Swap",
     searchPlaceholder: "Search token",

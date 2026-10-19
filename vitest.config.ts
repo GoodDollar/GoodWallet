@@ -22,6 +22,18 @@ export default defineConfig({
       "ethers-utils/*": path.resolve(__dirname, "./src/ethers-utils"),
       gooddollar: path.resolve(__dirname, "./src/gooddollar"),
       "gooddollar/*": path.resolve(__dirname, "./src/gooddollar"),
+      // Mock the AI Credits widget register module in tests since the package
+      // is installed via local tarball and its side-effect registration is not
+      // needed during unit tests.
+      "@goodwidget/ai-credits-widget/register": path.resolve(
+        __dirname,
+        "./src/widgets/fixtures/aiCreditsWidgetRegisterMock.ts",
+      ),
+      // Same for the Streaming widget register module.
+      "@goodwidget/streaming-widget/register": path.resolve(
+        __dirname,
+        "./src/widgets/fixtures/streamingWidgetRegisterMock.ts",
+      ),
     },
   },
 })

@@ -1,23 +1,6 @@
-import { MIN_TAKER_ORDER_IN_DOLLAR } from "@/sections/Predictions/constants/validation"
-
 import type { TypedTranslations } from "../types"
 
 const da: TypedTranslations = {
-  predictions: {
-    title: "Predictions",
-    subtitle: "med Polymarket",
-    markets: "Markeder",
-    openOrders: "Åbne ordrer",
-    positions: "Positioner",
-    marketTakerOrderFailedMiniumAmount: `Markeds køb skal være større end $${MIN_TAKER_ORDER_IN_DOLLAR}`,
-    limitOrderFailedMiniumAmount: (minAmountShares: number) =>
-      `Limit køb skal være større end ${minAmountShares} aktier`,
-    welcomeDialog: {
-      title: "Velkommen til Predictions",
-      body: "Udforsk markedsbegivenheder live og handle på deres udfald.\nFor at komme i gang, skal du fylde din Polymarket-konto op.",
-      acceptBtn: "Start med at forudsige",
-    },
-  },
   privacy: {
     bannerTitle: "Privatlivsindstillinger",
     mainDescription:
@@ -75,7 +58,6 @@ const da: TypedTranslations = {
     activity: "Aktivitet",
     allTokens: "Alle",
     gooddollar: "GoodDollar",
-    predictions: "Prediktioner",
     noTokens: {
       title: "Ingen Tokens Endnu",
       description:
@@ -250,27 +232,6 @@ const da: TypedTranslations = {
       volume: "Volumen 24T",
       address: "Adresse",
       price: "Pris",
-    },
-    welcomeFlow: {
-      title: "Kom i gang med Prediktioner",
-      subtitle:
-        "For at begynde at handle på Polymarket skal du underskrive og gennemføre tre trin",
-      createAccountStep: {
-        title: "Opret konto",
-        subtitle: "Polymarket skal godkende din wallet",
-      },
-      deriveAccountStep: {
-        title: "Eksisterende konto med Polymarket",
-        subtitle: "Bekræft for at godkende",
-      },
-      createSafeStep: {
-        title: "Opret Wallet",
-        subtitle: "Polymarket kræver en Safe wallet",
-      },
-      allowTokensStep: {
-        title: "Tillad tokens",
-        subtitle: "USDC.e mønter bruges i Polymarket",
-      },
     },
     firstTimeDialog: {
       title: "Hvordan fungerer swaps",

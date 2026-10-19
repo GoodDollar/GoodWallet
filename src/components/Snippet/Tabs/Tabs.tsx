@@ -28,10 +28,6 @@ type TabProps = PropsWithChildren<{
         tabPage: "gooddollar"
         tabId: "claim" | "inviteRewards" | "news"
       }
-    | {
-        tabPage: "predictions"
-        tabId: "markets" | "openOrders" | "positions"
-      }
   )
 
 const eventType = {
@@ -42,9 +38,6 @@ const eventType = {
   privacy: AnalyticsEventTypes.PrivacyPolicyTabSelected,
   claim: AnalyticsEventTypes.GoodDollarClaimTabSelected,
   inviteRewards: AnalyticsEventTypes.GoodDollarInviteRewardsTabSelected,
-  markets: AnalyticsEventTypes.PredictionsMarketsTabSelected,
-  openOrders: AnalyticsEventTypes.PredictionsOpenOrdersTabSelected,
-  positions: AnalyticsEventTypes.PredictionsPositionsTabSelected,
 } as const
 
 export const Tab = ({ children }: TabProps) => children
@@ -74,7 +67,6 @@ export const Tabs = ({ children, activeTab }: TabsProps) => {
     legal: legalTranslations,
     home: homeTranslations,
     gooddollar: goodDollarTransalations,
-    predictions: predictionsTranslations,
   } = translations
 
   const getLabelFromTabPage = (tab: ReactElement<TabProps>) => {
@@ -86,8 +78,6 @@ export const Tabs = ({ children, activeTab }: TabsProps) => {
         return legalTranslations[tabId]
       case "gooddollar":
         return goodDollarTransalations[tabId]
-      case "predictions":
-        return predictionsTranslations[tabId]
       default:
         throw new Error("Unknown tab page")
     }

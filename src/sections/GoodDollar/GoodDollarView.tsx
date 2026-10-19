@@ -1,5 +1,7 @@
 "use client"
 
+import { useSearchParams } from "next/navigation"
+
 import { Tab, Tabs } from "@/components/Snippet/Tabs/Tabs"
 
 import ClaimView from "./components/Claim/ClaimView"
@@ -7,9 +9,12 @@ import InviteView from "./components/Invite/InviteView"
 import NewsView from "./components/News/NewsView"
 
 export default function GoodDollarView() {
+  const tab = useSearchParams().get("tab")
+  const activeTab = tab === "invite" ? "inviteRewards" : (tab ?? undefined)
+
   return (
     <div className="h-full px-6 mt-[12px]">
-      <Tabs>
+      <Tabs activeTab={activeTab}>
         <Tab tabPage="gooddollar" tabId="claim">
           <ClaimView />
         </Tab>

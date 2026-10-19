@@ -8,26 +8,38 @@ import type { HostedWidgetElement } from "./hostTypes"
 import type { RestrictedEip1193Provider } from "./provider/RestrictedEip1193Provider"
 
 describe("Web Component host properties", () => {
-  it("passes the provider by identity and clears every Wallet-owned reference", () => {
+  it("hands objects over by identity and clears Wallet references on cleanup", () => {
     const provider = {} as RestrictedEip1193Provider
-    const element = {} as HostedWidgetElement
+    const element = {} as HostedWidgetElement & Record<string, unknown>
     const themeOverrides = { color: { primary: "#00AFFE" } }
     const config = { environment: "production" }
+    const elementProps = {
+      backendUrl: "https://api.example.com",
+      fundingVaultAddress: "0xfundingvault",
+      poolAddresses: { 606: "0xpool" },
+    }
 
     assignHostedWidgetProperties(element, {
       provider,
       themeOverrides,
       config,
+      elementProps,
     })
 
     expect(element.provider).toBe(provider)
     expect(element.themeOverrides).toBe(themeOverrides)
     expect(element.config).toBe(config)
+    expect(element.backendUrl).toBe(elementProps.backendUrl)
+    expect(element.fundingVaultAddress).toBe(elementProps.fundingVaultAddress)
+    expect(element.poolAddresses).toBe(elementProps.poolAddresses)
 
     clearHostedWidgetProperties(element)
 
     expect(element.provider).toBeNull()
     expect(element.themeOverrides).toBeUndefined()
     expect(element.config).toBeUndefined()
+    expect(element.backendUrl).toBeUndefined()
+    expect(element.fundingVaultAddress).toBeUndefined()
+    expect(element.poolAddresses).toBeUndefined()
   })
 })

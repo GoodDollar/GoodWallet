@@ -41,6 +41,7 @@ import {
 import { FaCaretDown, FaCaretUp } from "react-icons/fa"
 import { HiDotsHorizontal } from "react-icons/hi"
 import { IoDocumentOutline } from "react-icons/io5"
+import { LuSparkles, LuWaves } from "react-icons/lu"
 import { MdOutlineContactSupport, MdOutlinePrivacyTip } from "react-icons/md"
 import { RiArrowDownLine, RiArrowUpLine } from "react-icons/ri"
 import { TbCube3dSphere, TbLogout } from "react-icons/tb"
@@ -62,7 +63,6 @@ import Swap from "./icons/swap.svg"
 import Gift from "./illustrations/Gift.svg"
 import GoodDollarRain from "./illustrations/GoodDollarRain.png"
 import GoodDollarStack from "./illustrations/GoodDollarStack.png"
-import Predictions from "./illustrations/predictions.svg"
 import Slide1 from "./illustrations/slide1.svg"
 import Slide2 from "./illustrations/slide2.svg"
 import Slide3 from "./illustrations/slide3.svg"
@@ -120,12 +120,13 @@ export const UIIcons = {
   AccountsIcon: TbCube3dSphere,
   Cash: BsCashStack,
   Legal: IoDocumentOutline,
+  Sparkles: LuSparkles,
+  Waves: LuWaves,
   Logout: TbLogout,
   Privacy: MdOutlinePrivacyTip,
   Questionmark: BsFillQuestionCircleFill,
   Support: MdOutlineContactSupport,
   Legacy,
-  Predictions,
   Spinner,
   Swap,
 } as const

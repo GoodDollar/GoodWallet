@@ -2,6 +2,7 @@ import { useState } from "react"
 import { useDebouncedEffect } from "@react-hookz/web"
 import { Box, Button, Text } from "ui"
 
+import { normalizeEvmAddress } from "ethers-utils"
 import { getChainProvider } from "@/chain/provider/provider"
 import QrScanner from "@/components/QrScanner/QrScanner"
 import { useTranslation } from "@/translations"
@@ -30,7 +31,11 @@ export const SendRecipient = (props: { inert?: boolean }) => {
           return
         }
         const chainProvider = getChainProvider(selectedToken.chainId)
-        if (chainProvider.isValidAddress(addressLike)) {
+        if (
+          chainProvider.isValidAddress(
+            normalizeEvmAddress(addressLike, selectedToken.chainId),
+          )
+        ) {
           setToAddress(addressLike)
           setToEns(undefined)
           return

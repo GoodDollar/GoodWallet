@@ -30,12 +30,30 @@ import { postMessageToReactNative } from "@/utils/messageReactNative"
 import { isPwa } from "@/utils/pwa"
 import {
   coreDashboardActions,
+  type DashboardAction,
   widgetDashboardActions,
 } from "@/widgets/registry"
 
 import { Menu } from "./Menu"
 import { ProfileCard } from "./ProfileCard"
 import styles from "./WalletSection.module.css"
+
+// Widget dashboard buttons that should report a click. Core actions
+// (Send/Receive/Swap/...) are intentionally excluded - they only track
+// action completion, not the click itself.
+type WidgetTabSelectedEventType =
+  | AnalyticsEventTypes.AICreditsTabSelected
+  | AnalyticsEventTypes.GoodReserveTabSelected
+  | AnalyticsEventTypes.SuperfluidCampaignTabSelected
+  | AnalyticsEventTypes.StreamingTabSelected
+
+const widgetActionEventType: Record<string, WidgetTabSelectedEventType> = {
+  "goodwidget.ai-credits": AnalyticsEventTypes.AICreditsTabSelected,
+  "goodwidget.goodreserve": AnalyticsEventTypes.GoodReserveTabSelected,
+  "goodwidget.superfluid-campaign":
+    AnalyticsEventTypes.SuperfluidCampaignTabSelected,
+  "goodwidget.streaming": AnalyticsEventTypes.StreamingTabSelected,
+}
 
 export default function WalletSection({
   children,
@@ -78,20 +96,23 @@ export default function WalletSection({
   )
 
   useEffect(() => {
-    if (versionSnap.remoteVersion) {
-      const clientVersion = config.vercelConfig.commitSha
-      if (clientVersion == undefined) {
-        console.log("Client version not found")
-        return
-      }
+    const remoteVersion = versionSnap.remoteVersion
+    if (!remoteVersion) return
 
-      if (clientVersion !== pwaVersionStore.remoteVersion) {
-        if (confirm(homeTranslations.pwaConfirmAlert)) {
-          window.location.reload()
-        }
-      }
+    const clientVersion = config.vercelConfig.commitSha
+    if (!clientVersion || clientVersion === remoteVersion) return
+    if (sessionStorage.getItem("pwa-dismissed-version") === remoteVersion) {
+      return
     }
-  }, [versionSnap.remoteVersion, homeTranslations])
+
+    if (confirm(homeTranslations.pwaConfirmAlert)) {
+      const updateUrl = new URL(window.location.href)
+      updateUrl.searchParams.set("_goodwallet_update", Date.now().toString())
+      window.location.replace(updateUrl)
+    } else {
+      sessionStorage.setItem("pwa-dismissed-version", remoteVersion)
+    }
+  }, [versionSnap.remoteVersion, homeTranslations.pwaConfirmAlert])
 
   useDebouncedEffect(
     () => {
@@ -193,13 +214,12 @@ export default function WalletSection({
     send: homeTranslations.send,
     receive: homeTranslations.receive,
     swap: homeTranslations.swap,
-    predictions: homeTranslations.predictions,
     walletconnect: homeTranslations.walletConnect,
   }
-
-  // The registry is the single ordering/routing source for both built-in
-  // actions and reviewed widget integrations.
-  const dashboardActions = [...coreDashboardActions, ...widgetDashboardActions]
+  const dashboardActions: readonly DashboardAction[] = [
+    ...coreDashboardActions,
+    ...widgetDashboardActions,
+  ]
 
   return (
     <>
@@ -242,12 +262,21 @@ export default function WalletSection({
                   : action.id === "walletconnect" && sessions.length > 0
                     ? "connected"
                     : undefined
+              const widgetEventType = action.widgetId
+                ? widgetActionEventType[action.widgetId]
+                : undefined
+
               return (
                 <Link
                   key={action.id}
                   href={`/${locale}/${action.routeSlug}`}
                   scroll={false}
                   prefetch={true}
+                  onClick={
+                    widgetEventType
+                      ? () => captureEvent({ type: widgetEventType })
+                      : undefined
+                  }
                 >
                   <RoundButton
                     icon={icon}

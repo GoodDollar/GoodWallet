@@ -1,28 +1,42 @@
 import type { HostedWidgetElement, WidgetHostProps } from "./hostTypes"
 
-/**
- * Assign the shared host contract without serializing capability objects into
- * markup. Kept as a small pure helper so the security-sensitive handoff can be
- * tested without constructing a browser Custom Element.
- */
+const ELEMENT_PROP_KEYS = new WeakMap<object, string[]>()
+
 export const assignHostedWidgetProperties = (
   element: HostedWidgetElement,
-  { provider, themeOverrides, config }: WidgetHostProps,
+  { provider, themeOverrides, config, elementProps }: WidgetHostProps,
 ): void => {
+  clearElementProps(element)
+
   element.provider = provider
   element.themeOverrides = themeOverrides
   element.config = config
+
+  const keys: string[] = []
+  if (elementProps) {
+    for (const [key, value] of Object.entries(elementProps)) {
+      if (value === undefined) continue
+      ;(element as HostedWidgetElement & Record<string, unknown>)[key] = value
+      keys.push(key)
+    }
+  }
+  ELEMENT_PROP_KEYS.set(element, keys)
 }
 
-/**
- * Drop references owned by the Wallet whenever the host element is replaced or
- * unmounted. This does not revoke the session itself; it prevents a detached
- * widget element from retaining the provider capability.
- */
 export const clearHostedWidgetProperties = (
   element: HostedWidgetElement,
 ): void => {
+  clearElementProps(element)
   element.provider = null
   element.themeOverrides = undefined
   element.config = undefined
+}
+
+const clearElementProps = (element: HostedWidgetElement): void => {
+  const keys = ELEMENT_PROP_KEYS.get(element)
+  if (!keys) return
+  for (const key of keys) {
+    ;(element as HostedWidgetElement & Record<string, unknown>)[key] = undefined
+  }
+  ELEMENT_PROP_KEYS.delete(element)
 }

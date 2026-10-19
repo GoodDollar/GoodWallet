@@ -23,12 +23,6 @@ export const registerAddressPostAPIKey = {
   apiKey: process.env.AIRDROP_API_KEY as string,
 }
 
-export const polymarketKeys = {
-  builderApiKey: process.env.POLYMARKET_BUILDER_API_KEY as string,
-  builderSecret: process.env.POLYMARKET_BUILDER_SECRET as string,
-  builderPassphrase: process.env.POLYMARKET_BUILDER_PASSPHRASE as string,
-}
-
 export const amplitudeConfig = {
   apiKey: process.env.NEXT_PUBLIC_AMPLITUDE_API_KEY as string,
 }

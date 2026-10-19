@@ -25,7 +25,6 @@ export default function OptionsView() {
   const { captureEvent } = useAnalytics()
   const [expanded, setExpanded] = useState(false)
   const [selectedChainType, setSelectedChainType] = useState<keyof ISigner>()
-
   const handleCopyPrivateKey = async () => {
     if (!selectedChainType) return
     const session = await getSessionFromLocalStorage()
@@ -39,7 +38,10 @@ export default function OptionsView() {
     })
 
     if (status === "accepted") {
-      const privateKey = getPrivateKeyHex(selectedChainType, session.masterSeed)
+      const privateKey = await getPrivateKeyHex(
+        selectedChainType,
+        session.masterSeed,
+      )
       navigator.clipboard.writeText(privateKey)
       captureEvent({ type: AnalyticsEventTypes.PrivateKeyCopied })
       setSelectedChainType(undefined)
