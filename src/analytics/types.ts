@@ -51,6 +51,7 @@ export enum AnalyticsEventTypes {
   AICreditsTabSelected = "AICredits_Tab_Selected",
   GoodReserveTabSelected = "GoodReserve_Tab_Selected",
   SuperfluidCampaignTabSelected = "SuperfluidCampaign_Tab_Selected",
+  StreamingTabSelected = "Streaming_Tab_Selected",
 }
 
 export enum AvailableMethodsNames {
@@ -272,4 +273,7 @@ export type AnalyticsEvent =
     }
   | {
       type: AnalyticsEventTypes.SuperfluidCampaignTabSelected
+    }
+  | {
+      type: AnalyticsEventTypes.StreamingTabSelected
     }

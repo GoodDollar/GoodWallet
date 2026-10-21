@@ -29,6 +29,11 @@ export default defineConfig({
         __dirname,
         "./src/widgets/fixtures/aiCreditsWidgetRegisterMock.ts",
       ),
+      // Same for the Streaming widget register module.
+      "@goodwidget/streaming-widget/register": path.resolve(
+        __dirname,
+        "./src/widgets/fixtures/streamingWidgetRegisterMock.ts",
+      ),
     },
   },
 })

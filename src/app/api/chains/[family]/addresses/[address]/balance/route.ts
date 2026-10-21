@@ -11,7 +11,9 @@ import { throwIfQueryParamIsNull } from "../../../../../utils/throwIfQueryParamI
 // cache balance for 5 seconds
 const headers = {
   headers: {
-    "Cache-Control": `public, max-age=${5}`,
+    "Cache-Control": "public, s-maxage=5",
+    "CDN-Cache-Control": "public, s-maxage=5",
+    "Vercel-CDN-Cache-Control": "public, s-maxage=5",
   },
 }
 export async function GET(
