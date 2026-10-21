@@ -941,19 +941,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@goodwidget/ai-credits-widget@npm:0.1.13":
-  version: 0.1.13
-  resolution: "@goodwidget/ai-credits-widget@npm:0.1.13"
+"@goodwidget/ai-credits-widget@npm:0.1.14":
+  version: 0.1.14
+  resolution: "@goodwidget/ai-credits-widget@npm:0.1.14"
   dependencies:
     "@goodsdks/citizen-sdk": "npm:1.2.7"
     "@goodwidget/core": "npm:0.1.5"
     "@goodwidget/embed": "npm:0.1.4"
-    "@goodwidget/ui": "npm:0.1.6"
+    "@goodwidget/ui": "npm:0.1.7"
     viem: "npm:^2.0.0"
   peerDependencies:
     react: ">=18.0.0"
     react-dom: ">=18.0.0"
-  checksum: 10c0/c3910c06806880b9f256eff6d2f911d6602b2d29b892cffc25e85e7bfbc5ed2fca073e3e7e877067187d87c04dda67f1409023c697507d18e1fdd06bdddb48d4
+  checksum: 10c0/ed6f028bb6b6641e0e014b47c52ceb41ffd4c20c53f8fc3f4ea90a6101675b4c5b4aee82125f83ea4b5155067177e7d1bbb1d6c8ea019ae76f709a16e5e5b4ee
   languageName: node
   linkType: hard
 
@@ -1145,6 +1145,31 @@ __metadata:
     react-native-svg:
       optional: true
   checksum: 10c0/7d4e87ccfa5264fd1ec9c5053b8e998b8b1c4ad5135bc1086cc7319d8b886c742e87a1b683eee8d1270fb18973dfaf1b49470fab35bb7d2bcbc28f958706a469
+  languageName: node
+  linkType: hard
+
+"@goodwidget/ui@npm:0.1.7":
+  version: 0.1.7
+  resolution: "@goodwidget/ui@npm:0.1.7"
+  dependencies:
+    "@tamagui/animations-react-native": "npm:^1.121.0"
+    "@tamagui/core": "npm:1.121.0"
+    "@tamagui/lucide-icons": "npm:1.121.0"
+    "@tamagui/themes": "npm:1.121.0"
+    tamagui: "npm:1.121.0"
+  peerDependencies:
+    "@react-native-clipboard/clipboard": ">=1.14.0"
+    react: ">=18.0.0"
+    react-native: ">=0.76.0"
+    react-native-svg: ">=12"
+  peerDependenciesMeta:
+    "@react-native-clipboard/clipboard":
+      optional: true
+    react-native:
+      optional: true
+    react-native-svg:
+      optional: true
+  checksum: 10c0/305874ed893cfbd5f87be867499127bd2738c9c6945e39587f176c80612198e4fc965e796d5d97ca8884a83e127744fbbc71faaa0ca2fbb0df0c0ac05ff308f5
   languageName: node
   linkType: hard
 
@@ -10105,13 +10130,13 @@ __metadata:
     "@bitcoinerlab/secp256k1": "npm:^1.2.0"
     "@electric-sql/pglite": "npm:^0.5.3"
     "@gooddollar/goodprotocol": "npm:^2.2.0"
-    "@goodwidget/ai-credits-widget": "npm:0.1.13"
+    "@goodwidget/ai-credits-widget": "npm:0.1.14"
     "@goodwidget/core": "npm:0.1.5"
     "@goodwidget/embed": "npm:0.1.4"
     "@goodwidget/goodreserve-widget": "npm:0.1.7"
     "@goodwidget/streaming-widget": "npm:0.1.1"
     "@goodwidget/superfluid-campaign-widget": "npm:0.1.7"
-    "@goodwidget/ui": "npm:0.1.6"
+    "@goodwidget/ui": "npm:0.1.7"
     "@hcaptcha/react-hcaptcha": "npm:^2.0.2"
     "@json-rpc-tools/utils": "npm:^1.7.6"
     "@lifi/sdk": "npm:^4.1.0"
