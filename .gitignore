@@ -37,7 +37,7 @@ yarn-error.log*
 
 # vercel
 .vercel
-.env*
+
 
 .yarn/*
 !.yarn/patches

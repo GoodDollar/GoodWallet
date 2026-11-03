@@ -59,55 +59,85 @@ GoodWallet V2 is a multi-chain, multi-protocol crypto wallet built on Next.js 16
 - **Internationalization**: i18n routing with `[locale]` directories
 - **Cross-Browser & Cross-Platform**: consistent experience on major browsers
 
-## 8. Requirements & Running
+## 8. Local development
 
-- Node.js 22+
-- Yarn 4.x
-- A configured environment file. Copy `.env.example` to `.env.development`
-  (or `.env.production`) and fill in real values:
+You need Node.js 22+ and Corepack or Yarn. The repository pins Yarn 4.17.0.
 
-  ```sh
-  cp .env.example .env.development
-  ```
+1. Install dependencies:
 
-  `.env.development` and `.env.production` are gitignored — never commit real
-  secrets. Variables prefixed `NEXT_PUBLIC_` are inlined into the client bundle
-  and must be treated as public; everything else is server-only.
+   ```sh
+   corepack enable # if Yarn is not already available
+   yarn install
+   ```
 
-To install dependencies, run:
+   GoodWidget packages are installed from the package registry; a separate
+   GoodWidget checkout is not required.
+
+2. Create your local configuration, unless you already have one:
+
+   ```sh
+   cp .env.example-simple .env.development
+   ```
+
+   Edit `.env.development` for the features you want to use. Set RPC URLs for
+   the chains you need, and configure Web3Auth and the corresponding provider
+   credentials if using Google, Facebook, or passwordless login. GoodDollar
+   contract environments are `development`, and `production`.
+   The example uses a local PGlite database at `./data/local.db`.
+
+   For a local test login without setting up an authentication provider, set:
+
+   ```dotenv
+   NEXT_PUBLIC_LOGIN_GOOGLE_ENABLED=false
+   NEXT_PUBLIC_LOGIN_FACEBOOK_ENABLED=false
+   NEXT_PUBLIC_LOGIN_PWLESS_ENABLED=false
+   NEXT_PUBLIC_TEST_LOGIN_ENABLED=true
+   NEXT_PUBLIC_TEST_LOGIN_MASTER_SEED=<64-character-hex-test-seed>
+   NEXT_PUBLIC_TEST_LOGIN_USER_NAME=Local test wallet
+   NEXT_PUBLIC_TEST_LOGIN_PROFILE_IMAGE=/icon.svg
+   ```
+
+   Generate a test seed with `openssl rand -hex 32`. This creates a real wallet
+   seed exposed to the browser: use it only for a disposable test wallet and
+   never fund it with assets of value. RPCs and provider API keys may still be
+   needed for chain data and other integrations.
+
+   `.env.development` is gitignored; keep credentials out of Git. Variables
+   prefixed `NEXT_PUBLIC_` are visible to the browser. If you also have an
+   `.env.local`, Next.js loads it with higher priority than `.env.development`.
+
+3. Start the application:
+
+   ```sh
+   yarn dev
+   ```
+
+   This creates `data/`, applies the local PGlite schema with `drizzle-kit push`,
+   and starts Next.js at http://localhost:3000. The database used by the app is
+   selected separately by `POSTGRES_TOKENS_DATABASE_URL`; keep the example's
+   `pglite://./data/local.db` to use the same local database.
+
+Other useful commands: `yarn build`, `yarn start`, `yarn test`, and
+`yarn biome:verify:all`.
+
+### Testing an unreleased package
+
+The normal setup installs published packages. To test an unreleased widget or
+any other unreleased package, build and pack it in its source repository, then
+temporarily point this project at the resulting tarball. For example, for a
+package in the [GoodWidget](https://github.com/GoodDollar/GoodWidget) monorepo:
 
 ```sh
-yarn install
+mkdir -p /path/to/GoodWallet/local-packages
+pnpm --filter <package-name> pack --pack-destination /path/to/GoodWallet/local-packages
 ```
 
-To start the development server (runs `drizzle-kit push`, then `next dev`):
-
-```sh
-yarn dev
-```
-
-Other scripts: `yarn build`, `yarn start`, `yarn test`, `yarn lint`.
-
-Then open http://localhost:3000 in your browser
-
-### GoodWidget local packages and local testing
-
-The Superfluid campaign widget and its GoodWidget runtime packages are currently
-installed from local tarballs. Build them in a checkout of
-[GoodDollar/GoodWidget](https://github.com/GoodDollar/GoodWidget), then copy or
-pack these packages into `local-packages/`:
-
-```sh
-pnpm --filter @goodwidget/ui pack --pack-destination /path/to/GoodWallet/local-packages
-pnpm --filter @goodwidget/core pack --pack-destination /path/to/GoodWallet/local-packages
-pnpm --filter @goodwidget/embed pack --pack-destination /path/to/GoodWallet/local-packages
-pnpm --filter @goodwidget/citizen-claim-widget pack --pack-destination /path/to/GoodWallet/local-packages
-pnpm --filter @goodwidget/superfluid-campaign-widget pack --pack-destination /path/to/GoodWallet/local-packages
-```
-
-Rename the generated archives to `ui.tgz`, `core.tgz`, `embed.tgz`,
-`citizen-claim-widget.tgz`, and `superfluid-campaign-widget.tgz`, respectively,
-then run `yarn install`. The archives are gitignored.
+Follow the source repository's build instructions before packing. In GoodWallet,
+update the package's `package.json` dependency to a local file reference such as
+`"file:./local-packages/package.tgz"` (using the actual tarball name), then run
+`yarn install`. Revert the dependency and lockfile changes when finished unless
+they are intentionally part of your work. The `local-packages/*.tgz` archives
+are gitignored.
 
 ## Vercel deployments
 
@@ -141,18 +171,3 @@ The Superfluid button follows the same pattern with
 The Streaming button follows the same pattern with
 `NEXT_PUBLIC_STREAMING_WIDGET_DASHBOARD_ENABLED`; its authenticated
 `/{locale}/streaming` path remains available when the button is hidden.
-
-## GoodWidget local-tarball workflow
-
-Widget packages that are not yet published to npm (e.g. `@goodwidget/ai-credits-widget`)
-must be installed from a local tarball built inside the
-[GoodDollar/GoodWidget](https://github.com/GoodDollar/GoodWidget) monorepo.
-
-1. Clone `GoodDollar/GoodWidget` alongside this repo.
-2. Inside the GoodWidget monorepo, pack the widget:
-   ```sh
-   pnpm --filter @goodwidget/ai-credits-widget pack --pack-destination /path/to/GoodWallet/local-packages
-   ```
-3. The tarball lands at `local-packages/ai-credits-widget.tgz` (already referenced in `package.json`).
-4. Run `yarn install` in this repo to link the tarball.
-5. The path `local-packages/*.tgz` is git-ignored; do **not** commit tarballs.
