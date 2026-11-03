@@ -1,0 +1,9 @@
+# Security and automation boundaries require GoodDollar maintainer review.
+/.github/workflows/ @GoodDollar/goodbuilders-maintainers
+/.github/agents/ @GoodDollar/goodbuilders-maintainers
+/scripts/widget-release/ @GoodDollar/goodbuilders-maintainers
+/src/widgets/ @GoodDollar/goodbuilders-maintainers
+/src/login/ @GoodDollar/goodbuilders-maintainers
+/config.ts @GoodDollar/goodbuilders-maintainers
+/configServerless.ts @GoodDollar/goodbuilders-maintainers
+/next.config.mjs @GoodDollar/goodbuilders-maintainers
