@@ -10,6 +10,7 @@ const {
   mockBroadcastTransaction,
   mockGetTransaction,
   mockGetTransactionCount,
+  mockGetBlockNumber,
   mockSubmitReferral,
   mockSetDivviMarked,
 } = vi.hoisted(() => ({
@@ -18,6 +19,7 @@ const {
   mockBroadcastTransaction: vi.fn(),
   mockGetTransaction: vi.fn(),
   mockGetTransactionCount: vi.fn(),
+  mockGetBlockNumber: vi.fn(),
   mockSubmitReferral: vi.fn(),
   mockSetDivviMarked: vi.fn(),
 }))
@@ -36,6 +38,7 @@ vi.mock("./ethersProviders", () => ({
     broadcastTransaction: mockBroadcastTransaction,
     getTransaction: mockGetTransaction,
     getTransactionCount: mockGetTransactionCount,
+    getBlockNumber: mockGetBlockNumber,
   })),
 }))
 
@@ -84,10 +87,17 @@ const createType2Options = (
   maxPriorityFeePerGas,
 })
 
-const createTxResponse = (hash = TX_HASH) => ({
-  hash,
-  wait: vi.fn().mockResolvedValue({ hash }),
-})
+const createTxResponse = (hash = TX_HASH) => {
+  const response = {
+    hash,
+    wait: vi.fn().mockResolvedValue({ hash }),
+    replaceableTransaction: vi.fn(),
+  }
+  // By default replaceableTransaction returns a copy of itself so the tracked
+  // path exercises the same wait mock as the untracked path.
+  response.replaceableTransaction.mockReturnValue(response)
+  return response
+}
 
 // ── Tests ───────────────────────────────────────────────────────────────────
 
@@ -107,6 +117,7 @@ describe("ethers-utils", () => {
 
     mockAcquire.mockResolvedValue(undefined)
     mockGetTransactionCount.mockResolvedValue(0)
+    mockGetBlockNumber.mockResolvedValue(100)
     mockBroadcastTransaction.mockResolvedValue(txResponse)
     mockSubmitReferral.mockResolvedValue({
       json: vi.fn().mockResolvedValue({}),
@@ -451,6 +462,105 @@ describe("ethers-utils", () => {
         ),
       ).rejects.toThrow("User rejected")
       expect(mockBroadcastTransaction).not.toHaveBeenCalled()
+    })
+
+    it("resolves with the replacement receipt when the tx is sped up by the external wallet", async () => {
+      // Simulate the external wallet submitting a speed-up: the original hash
+      // is never mined; replaceableTransaction().wait() throws TRANSACTION_REPLACED.
+      const replacementReceipt = { hash: "0xreplacementhash" }
+      const replacedError = Object.assign(
+        new Error("transaction was replaced"),
+        {
+          code: "TRANSACTION_REPLACED",
+          reason: "speedup",
+          receipt: replacementReceipt,
+          replacement: { hash: "0xreplacementhash" },
+        },
+      )
+
+      txResponse.replaceableTransaction.mockReturnValue({
+        ...txResponse,
+        wait: vi.fn().mockRejectedValue(replacedError),
+      })
+      mockGetTransaction.mockResolvedValue(txResponse)
+      request = createRequest({ data: "0xcalldata_DIVVI_SUFFIX" })
+
+      const result = await sendTxWaitForMining(
+        walletSigner as never,
+        DEFAULT_GAS_LIMIT,
+        request,
+        options,
+      )
+
+      // The replacement receipt is surfaced, not an error.
+      expect(result.txReceipt).toEqual(replacementReceipt)
+      // Divvi tracking uses the replacement hash.
+      expect(mockSubmitReferral).toHaveBeenCalledWith({
+        txHash: "0xreplacementhash",
+        chainId: request.chainId,
+      })
+    })
+
+    it("resolves with the replacement receipt when the tx is cancelled by the external wallet", async () => {
+      const cancelReceipt = { hash: "0xcancelhash" }
+      const cancelError = Object.assign(new Error("transaction was replaced"), {
+        code: "TRANSACTION_REPLACED",
+        reason: "cancelled",
+        receipt: cancelReceipt,
+        replacement: { hash: "0xcancelhash" },
+      })
+
+      txResponse.replaceableTransaction.mockReturnValue({
+        ...txResponse,
+        wait: vi.fn().mockRejectedValue(cancelError),
+      })
+      mockGetTransaction.mockResolvedValue(txResponse)
+
+      const result = await sendTxWaitForMining(
+        walletSigner as never,
+        DEFAULT_GAS_LIMIT,
+        request,
+        options,
+      )
+
+      expect(result.txReceipt).toEqual(cancelReceipt)
+    })
+
+    it("does not trigger a resend when getTransaction temporarily fails to find the tx", async () => {
+      // Simulate RPC returning null for the first few polls then succeeding.
+      mockGetTransaction
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(null)
+        .mockResolvedValue(txResponse)
+
+      const result = await sendTxWaitForMining(
+        walletSigner as never,
+        DEFAULT_GAS_LIMIT,
+        request,
+        options,
+      )
+
+      // No second submitTransaction call — no resend.
+      expect(walletSigner.submitTransaction).toHaveBeenCalledTimes(1)
+      expect(result.txResponse.hash).toBe(TX_HASH)
+    })
+
+    it("captures the start block before polling so replacement tracking covers the submission window", async () => {
+      const START_BLOCK = 42
+      mockGetBlockNumber.mockResolvedValue(START_BLOCK)
+      mockGetTransaction.mockResolvedValue(txResponse)
+
+      await sendTxWaitForMining(
+        walletSigner as never,
+        DEFAULT_GAS_LIMIT,
+        request,
+        options,
+      )
+
+      expect(mockGetBlockNumber).toHaveBeenCalled()
+      expect(txResponse.replaceableTransaction).toHaveBeenCalledWith(
+        START_BLOCK,
+      )
     })
   })
 })

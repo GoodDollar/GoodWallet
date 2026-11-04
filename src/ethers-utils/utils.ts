@@ -6,7 +6,12 @@ import type {
   TransactionRequest,
   TransactionResponse,
 } from "ethers/providers"
-import { type BigNumberish, FixedNumber, formatUnits } from "ethers/utils"
+import {
+  type BigNumberish,
+  FixedNumber,
+  formatUnits,
+  isError,
+} from "ethers/utils"
 
 import {
   GD_DATASUFFIX,
@@ -54,10 +59,13 @@ const SUBMITTED_TX_MAX_ATTEMPTS = 40
 const getSubmittedTransaction = async (
   provider: AbstractProvider,
   hash: string,
-): Promise<TransactionResponse> => {
+): Promise<{ txResponse: TransactionResponse; startBlock: number }> => {
+  // Capture the current block before polling so replacement tracking covers the
+  // window from submission to discovery.
+  const startBlock = await provider.getBlockNumber()
   for (let attempt = 0; attempt < SUBMITTED_TX_MAX_ATTEMPTS; attempt++) {
     const txResponse = await provider.getTransaction(hash)
-    if (txResponse) return txResponse
+    if (txResponse) return { txResponse, startBlock }
     await new Promise((resolve) => setTimeout(resolve, SUBMITTED_TX_POLL_MS))
   }
   throw new Error(`Transaction ${hash} was not found on chain`)
@@ -76,7 +84,10 @@ const submitWithWallet = async (
     gasLimit,
   })
   const provider = getEthersProvider(broadcastRequest.chainId)
-  return { hash, txResponse: getSubmittedTransaction(provider, hash) }
+  // getSubmittedTransaction resolves with both the response and the block at
+  // which we started watching; both are needed for replacement tracking.
+  const txInfo = getSubmittedTransaction(provider, hash)
+  return { hash, txInfo }
 }
 
 export const sendTx = async (
@@ -90,14 +101,14 @@ export const sendTx = async (
   trxMinedPromise: Promise<TransactionReceipt | null>
 }> => {
   if (signer.submitTransaction) {
-    const { hash, txResponse } = await submitWithWallet(
+    const { hash, txInfo } = await submitWithWallet(
       signer.submitTransaction,
       signer,
       gasLimit,
       broadcastRequest,
     )
-    const trxMinedPromise = txResponse.then((trx) =>
-      waitForMinedStatus(trx, broadcastRequest, signer),
+    const trxMinedPromise = txInfo.then(({ txResponse, startBlock }) =>
+      waitForMinedStatus(txResponse, startBlock, broadcastRequest, signer),
     )
     return { hash, trxMinedPromise }
   }
@@ -115,8 +126,15 @@ export const sendTx = async (
       signer,
       broadcastRequest,
     )
+    // broadcastTransaction returns a response with replacement tracking already
+    // set up by ethers; pass undefined for startBlock to use that tracking.
     const trx = await provider.broadcastTransaction(signedTx)
-    const trxMinedPromise = waitForMinedStatus(trx, broadcastRequest, signer)
+    const trxMinedPromise = waitForMinedStatus(
+      trx,
+      undefined,
+      broadcastRequest,
+      signer,
+    )
     return { hash: trx.hash, trxMinedPromise }
   } finally {
     lock.release(broadcastRequest.chainId)
@@ -136,9 +154,10 @@ export const sendTxWaitForMining = async (
       gasLimit,
       broadcastRequest,
     )
-    const txResponse = await submitted.txResponse
+    const { txResponse, startBlock } = await submitted.txInfo
     const txReceipt = await waitForMinedStatus(
       txResponse,
+      startBlock,
       broadcastRequest,
       signer,
     )
@@ -162,8 +181,10 @@ export const sendTxWaitForMining = async (
     const txResponse = await provider.broadcastTransaction(signedTx)
     console.info("sendTx got response", { txResponse })
 
+    // broadcastTransaction already attaches replacement tracking; pass undefined.
     const txReceipt = await waitForMinedStatus(
       txResponse,
+      undefined,
       broadcastRequest,
       signer,
     )
@@ -177,10 +198,38 @@ export const sendTxWaitForMining = async (
 
 async function waitForMinedStatus(
   txResponse: TransactionResponse,
+  startBlock: number | undefined,
   broadcastRequest: BroadcastRequest,
   signer: EVMSigner,
 ) {
-  const txReceipt = await txResponse.wait()
+  // When startBlock is provided the response came from provider.getTransaction()
+  // and does not carry ethers' built-in replacement tracking. Enable it so that
+  // a speed-up or cancellation submitted by an external wallet resolves here
+  // rather than hanging until the original hash is eventually dropped.
+  const tracked =
+    startBlock !== undefined
+      ? txResponse.replaceableTransaction(startBlock)
+      : txResponse
+
+  let txReceipt: TransactionReceipt | null
+  try {
+    txReceipt = await tracked.wait()
+  } catch (err) {
+    // TRANSACTION_REPLACED is thrown when a replacement tx mines with the same
+    // nonce. "cancelled" means a zero-value self-transfer; "speedup"/"repriced"
+    // means the original payload was re-sent at a higher fee.  In all cases we
+    // treat the replacement receipt as the final outcome and continue with Divvi
+    // tracking so the user sees a completed state.
+    if (isError(err, "TRANSACTION_REPLACED")) {
+      console.info("waitForMinedStatus: transaction replaced", {
+        reason: err.reason,
+        hash: err.replacement?.hash,
+      })
+      txReceipt = err.receipt ?? null
+    } else {
+      throw err
+    }
+  }
 
   // send marker to divvi and mark as done
   if (broadcastRequest.data?.includes(GD_DATASUFFIX) && txReceipt?.hash) {
