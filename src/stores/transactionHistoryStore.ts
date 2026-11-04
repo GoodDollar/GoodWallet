@@ -22,6 +22,7 @@ let lastRefreshAllTimestamp = 0
  * previous session cannot appear under a new account.
  */
 export const clearActivityHistory = () => {
+  activeAccount = undefined
   currentAccountToken++
   internalTxs.clear()
   lastRefreshAllTimestamp = 0
@@ -69,8 +70,8 @@ const refreshHistory = async (addresses: Addresses | undefined) => {
   // Reset cached data when the account changes so a previous account's
   // transactions cannot appear under the new one.
   if (account !== activeAccount) {
-    activeAccount = account
     clearActivityHistory()
+    activeAccount = account
   }
 
   if (!addresses || now - lastRefreshAllTimestamp < REFRESH_INTERVAL_MS) {

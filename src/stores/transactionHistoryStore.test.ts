@@ -83,6 +83,12 @@ describe("transactionHistoryStore", () => {
     clearActivityHistory()
 
     expect(activityHistoryStore.perChain.get(42220)).toBeUndefined()
+
+    // Re-authenticating with the same account must treat it as fresh
+    const tx2 = mockTx("0xtx2", 2000)
+    mockGetTransactions.mockResolvedValueOnce([tx2])
+    await activityHistoryStore.refreshHistory(makeAddresses(account))
+    expect(activityHistoryStore.perChain.get(42220)).toEqual([tx2])
   })
 
   it("guards against late async responses from Account A writing into Account B UI", async () => {
