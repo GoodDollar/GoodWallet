@@ -191,5 +191,67 @@ describe("reown - coordinated switching and account monitoring", () => {
 
       expect(hash).toBe("0xsuccesshash")
     })
+
+    it("serializes signMessage so it cannot interleave with an in-progress submitTransaction", async () => {
+      const session = await getReownSession("direct", "existing_wallet", {
+        interactive: false,
+        expectedAddress: address,
+      })
+
+      const executionOrder: string[] = []
+      let resolveSubmit: () => void = () => {}
+      const submitInFlight = new Promise<void>((resolve) => {
+        resolveSubmit = resolve
+      })
+
+      const { BrowserProvider } = await import("ethers")
+      const mockSigner = {
+        sendUncheckedTransaction: vi.fn(async () => {
+          executionOrder.push("submit_started")
+          await submitInFlight
+          executionOrder.push("submit_finished")
+          return "0xhash"
+        }),
+        signMessage: vi.fn(async () => {
+          executionOrder.push("sign_message")
+          return "0xsignature"
+        }),
+      }
+      vi.spyOn(BrowserProvider.prototype, "getSigner").mockResolvedValue(
+        mockSigner as never,
+      )
+
+      mockSwitchNetwork.mockResolvedValue(undefined)
+      mockGetChainId.mockReturnValue(42220)
+
+      // 1. Start submitTransaction (it acquires the lock and waits on submitInFlight)
+      const submitPromise = session.signer.EVM.submitTransaction?.({
+        chainId: 42220,
+        to: "0xrecipient",
+        value: BigInt(0),
+      })
+
+      // 2. Concurrently call signMessage while submitTransaction holds the lock
+      const signMessagePromise =
+        session.signer.EVM.signMessage?.("test-payload")
+
+      // Give event loop ticks to confirm signMessage cannot proceed while submit holds lock
+      await new Promise((r) => setTimeout(r, 50))
+      expect(executionOrder).toEqual(["submit_started"])
+      expect(mockSigner.signMessage).not.toHaveBeenCalled()
+
+      // 3. Complete the in-flight submission
+      resolveSubmit()
+      await submitPromise
+      const signature = await signMessagePromise
+
+      // 4. Verify signMessage executed strictly after submitTransaction finished
+      expect(executionOrder).toEqual([
+        "submit_started",
+        "submit_finished",
+        "sign_message",
+      ])
+      expect(signature).toBe("0xsignature")
+    })
   })
 })

@@ -295,10 +295,16 @@ export const getReownSession = async (
     signer: {
       EVM: {
         address: connectedAddress,
-        signMessage: async (message) =>
-          (await getWalletSigner(appKit, connectedAddress)).signMessage(
-            message,
-          ),
+        signMessage: async (message) => {
+          await chainOpLock.acquire(CHAIN_OP_LOCK_KEY)
+          try {
+            return await (
+              await getWalletSigner(appKit, connectedAddress)
+            ).signMessage(message)
+          } finally {
+            chainOpLock.release(CHAIN_OP_LOCK_KEY)
+          }
+        },
         signTypedData: async (domain, types, value) => {
           // Hold the lock for the entire switch → sign sequence.
           await chainOpLock.acquire(CHAIN_OP_LOCK_KEY)
