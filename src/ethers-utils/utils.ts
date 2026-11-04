@@ -59,10 +59,8 @@ const SUBMITTED_TX_MAX_ATTEMPTS = 40
 const getSubmittedTransaction = async (
   provider: AbstractProvider,
   hash: string,
+  startBlock: number,
 ): Promise<{ txResponse: TransactionResponse; startBlock: number }> => {
-  // Capture the current block before polling so replacement tracking covers the
-  // window from submission to discovery.
-  const startBlock = await provider.getBlockNumber()
   for (let attempt = 0; attempt < SUBMITTED_TX_MAX_ATTEMPTS; attempt++) {
     const txResponse = await provider.getTransaction(hash)
     if (txResponse) return { txResponse, startBlock }
@@ -78,15 +76,18 @@ const submitWithWallet = async (
   gasLimit: bigint,
   broadcastRequest: BroadcastRequest,
 ) => {
+  const provider = getEthersProvider(broadcastRequest.chainId)
+  // Capture startBlock before calling submit so replacement tracking covers the
+  // window while the user confirms the transaction in the wallet popup.
+  const startBlock = await provider.getBlockNumber()
   const hash = await submit({
     ...broadcastRequest,
     from: signer.address,
     gasLimit,
   })
-  const provider = getEthersProvider(broadcastRequest.chainId)
   // getSubmittedTransaction resolves with both the response and the block at
   // which we started watching; both are needed for replacement tracking.
-  const txInfo = getSubmittedTransaction(provider, hash)
+  const txInfo = getSubmittedTransaction(provider, hash, startBlock)
   return { hash, txInfo }
 }
 

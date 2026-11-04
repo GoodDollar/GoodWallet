@@ -545,9 +545,17 @@ describe("ethers-utils", () => {
       expect(result.txResponse.hash).toBe(TX_HASH)
     })
 
-    it("captures the start block before polling so replacement tracking covers the submission window", async () => {
+    it("captures the start block before wallet submission so replacement tracking covers the popup window", async () => {
       const START_BLOCK = 42
-      mockGetBlockNumber.mockResolvedValue(START_BLOCK)
+      const callOrder: string[] = []
+      mockGetBlockNumber.mockImplementation(async () => {
+        callOrder.push("getBlockNumber")
+        return START_BLOCK
+      })
+      walletSigner.submitTransaction.mockImplementation(async () => {
+        callOrder.push("submitTransaction")
+        return TX_HASH
+      })
       mockGetTransaction.mockResolvedValue(txResponse)
 
       await sendTxWaitForMining(
@@ -557,7 +565,7 @@ describe("ethers-utils", () => {
         options,
       )
 
-      expect(mockGetBlockNumber).toHaveBeenCalled()
+      expect(callOrder).toEqual(["getBlockNumber", "submitTransaction"])
       expect(txResponse.replaceableTransaction).toHaveBeenCalledWith(
         START_BLOCK,
       )
