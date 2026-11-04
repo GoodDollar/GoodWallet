@@ -217,15 +217,31 @@ async function waitForMinedStatus(
     txReceipt = await tracked.wait()
   } catch (err) {
     // TRANSACTION_REPLACED is thrown when a replacement tx mines with the same
-    // nonce. "cancelled" means a zero-value self-transfer; "speedup"/"repriced"
-    // means the original payload was re-sent at a higher fee.  In all cases we
-    // treat the replacement receipt as the final outcome and continue with Divvi
-    // tracking so the user sees a completed state.
+    // nonce.  Ethers distinguishes three reasons:
+    //
+    //  "repriced"  — same calldata/to/value at a higher fee (speed-up). The
+    //                replacement carries the original intent, so we use its
+    //                receipt and continue with Divvi tracking.
+    //
+    //  "cancelled" — zero-value self-transfer with empty calldata. The original
+    //                transaction's intent was NOT executed; rethrowing lets
+    //                callers surface a failure to the user.
+    //
+    //  "replaced"  — different calldata/to/value (different intent). Same as
+    //                "cancelled": the original payload was not executed, so we
+    //                rethrow rather than presenting the replacement as success.
     if (isError(err, "TRANSACTION_REPLACED")) {
       console.info("waitForMinedStatus: transaction replaced", {
         reason: err.reason,
         hash: err.replacement?.hash,
       })
+      if (err.reason === "cancelled" || err.reason === "replaced") {
+        // "cancelled" (zero-value self-transfer) or "replaced" (different intent):
+        // the original transaction's intent was NOT executed. Rethrow so callers'
+        // error paths surface failure to the user; Divvi referral is not reached.
+        throw err
+      }
+      // "repriced" (speed-up): same intent executed at higher fee; use receipt.
       txReceipt = err.receipt ?? null
     } else {
       throw err

@@ -501,7 +501,9 @@ describe("ethers-utils", () => {
       })
     })
 
-    it("resolves with the replacement receipt when the tx is cancelled by the external wallet", async () => {
+    it("throws and does not submit a Divvi referral when the tx is cancelled by the external wallet", async () => {
+      // "cancelled" = zero-value self-transfer: the original intent was NOT
+      // executed; waitForMinedStatus must rethrow so callers surface a failure.
       const cancelReceipt = { hash: "0xcancelhash" }
       const cancelError = Object.assign(new Error("transaction was replaced"), {
         code: "TRANSACTION_REPLACED",
@@ -515,15 +517,51 @@ describe("ethers-utils", () => {
         wait: vi.fn().mockRejectedValue(cancelError),
       })
       mockGetTransaction.mockResolvedValue(txResponse)
+      request = createRequest({ data: "0xcalldata_DIVVI_SUFFIX" })
 
-      const result = await sendTxWaitForMining(
-        walletSigner as never,
-        DEFAULT_GAS_LIMIT,
-        request,
-        options,
+      await expect(
+        sendTxWaitForMining(
+          walletSigner as never,
+          DEFAULT_GAS_LIMIT,
+          request,
+          options,
+        ),
+      ).rejects.toThrow("transaction was replaced")
+
+      expect(mockSubmitReferral).not.toHaveBeenCalled()
+    })
+
+    it("throws and does not submit a Divvi referral when the tx is replaced with different intent by the external wallet", async () => {
+      // "replaced" = different calldata/to/value: a different-intent transaction
+      // mined in place of the original; waitForMinedStatus must rethrow.
+      const replaceReceipt = { hash: "0xreplacehash" }
+      const replaceError = Object.assign(
+        new Error("transaction was replaced"),
+        {
+          code: "TRANSACTION_REPLACED",
+          reason: "replaced",
+          receipt: replaceReceipt,
+          replacement: { hash: "0xreplacehash" },
+        },
       )
 
-      expect(result.txReceipt).toEqual(cancelReceipt)
+      txResponse.replaceableTransaction.mockReturnValue({
+        ...txResponse,
+        wait: vi.fn().mockRejectedValue(replaceError),
+      })
+      mockGetTransaction.mockResolvedValue(txResponse)
+      request = createRequest({ data: "0xcalldata_DIVVI_SUFFIX" })
+
+      await expect(
+        sendTxWaitForMining(
+          walletSigner as never,
+          DEFAULT_GAS_LIMIT,
+          request,
+          options,
+        ),
+      ).rejects.toThrow("transaction was replaced")
+
+      expect(mockSubmitReferral).not.toHaveBeenCalled()
     })
 
     it("does not trigger a resend when getTransaction temporarily fails to find the tx", async () => {
