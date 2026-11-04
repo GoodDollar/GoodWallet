@@ -11,8 +11,8 @@ import manifest from "@/app/manifest"
 import { CELO_CHAIN_ID } from "@/chain/chain-ids"
 import { AVAILABLE_EVM_CHAINS } from "@/chain/chains"
 import type { Chain } from "@/chain/types"
+import { config } from "@/config"
 
-import { config } from "../../config"
 import type { ISignerSession } from "./types"
 
 type GetReownSessionOptions = {

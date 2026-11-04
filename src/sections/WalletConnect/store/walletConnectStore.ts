@@ -5,10 +5,10 @@ import { getSdkError } from "@walletconnect/utils"
 import { proxy, ref } from "valtio"
 
 import manifest from "@/app/manifest"
+import { config } from "@/config"
 import type { ISigner } from "@/login"
 import { getWCUri } from "@/utils/reownAppKitWrapper"
 
-import { config } from "../../../../config"
 import { setupListeners } from "../requests/RequestHandler"
 
 export const INITIALIZE_WALLET_CONNECT_KEY = "INITIALIZE_WALLET_CONNECT"
