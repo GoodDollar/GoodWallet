@@ -7,6 +7,7 @@ import {
   type TypedDataField,
 } from "ethers"
 
+import { isSameAddress } from "@/ethers-utils/utils"
 import type { EVMSigner } from "@/login"
 
 export class WalletWrapper extends AbstractSigner {
@@ -39,8 +40,8 @@ export class WalletWrapper extends AbstractSigner {
     if (this.#signer.submitTransaction) {
       // Preserve a `from` supplied by the dApp so the signer can verify it
       // matches the connected account; default to the current address only
-      // when `from` is absent.
-      if (tx.from && tx.from !== this.address) {
+      // when `from` is absent. Comparison is case-insensitive (EIP-55).
+      if (tx.from && !isSameAddress(String(tx.from), this.address)) {
         throw new Error(
           `Transaction sender ${String(tx.from)} does not match connected account ${this.address}`,
         )

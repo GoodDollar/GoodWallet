@@ -61,6 +61,33 @@ describe("WalletWrapper.sendTransactionHash", () => {
     ).resolves.toBe("0xwallethash")
   })
 
+  it("accepts when the dApp supplies a from that differs only in EIP-55 casing", async () => {
+    const checksummedAddress = "0x5aAeb6053F3E94C9b9A09f33669435E7Ef1bEAeD"
+    const lowerCaseFrom = checksummedAddress.toLowerCase()
+    const submitTransaction = vi.fn(async () => "0xwallethash")
+    const signer = {
+      address: checksummedAddress,
+      signMessage: vi.fn(),
+      signTypedData: vi.fn(),
+      signTransaction: vi.fn(async () => "0xraw"),
+      submitTransaction,
+    }
+    const txWithLowerFrom = {
+      to: checksummedAddress,
+      from: lowerCaseFrom,
+      value: BigInt(1),
+      chainId: 1,
+    }
+
+    await expect(
+      new WalletWrapper(signer).sendTransactionHash(txWithLowerFrom),
+    ).resolves.toBe("0xwallethash")
+    expect(submitTransaction).toHaveBeenCalledWith({
+      ...txWithLowerFrom,
+      from: checksummedAddress,
+    })
+  })
+
   it("signs and broadcasts locally for local-key signers", async () => {
     const signer = createSigner()
     const wrapper = new WalletWrapper(signer, {} as Provider)
