@@ -154,6 +154,19 @@ export const setupListeners = (
         methods,
         response: "error",
       })
+      // Reject the proposal so the dApp is not left pending until expiry.
+      // Required namespaces that include unsupported chains are rejected with
+      // UNSUPPORTED_CHAINS; unsupported optional namespaces are silently omitted
+      // by buildApprovedNamespaces, so they never reach here.
+      try {
+        await walletConnectInstance.rejectSession({
+          id: proposal.id,
+          reason: getSdkError("UNSUPPORTED_CHAINS"),
+        })
+      } catch (error) {
+        console.error("Failed to reject session proposal", error)
+      }
+      closeWindowAfterWCRequestFullfilled()
       return
     }
 
