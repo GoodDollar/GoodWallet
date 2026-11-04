@@ -44,11 +44,16 @@ async function getAmountsForChain(
   return provider.getAmounts(chainId, tokensOfChain, address)
 }
 
+// Guard token bumped on every refresh or account change so late async responses
+// from a previous account cannot overwrite the current account's balances.
+let amountsToken = 0
+
 export const refreshAmounts = async (
   tokens: Tokens | undefined,
   addresses: Addresses | undefined,
   chainId: number | "all",
 ) => {
+  const token = ++amountsToken
   if (!tokens || !addresses) {
     amountsStore.amounts.clear()
     amountsStore.isLoading = true
@@ -67,6 +72,8 @@ export const refreshAmounts = async (
             addresses,
             chainId,
           )
+          // Drop late response if the account or query changed while in flight.
+          if (token !== amountsToken) return
           amountsStore.amounts.set(chainId, amounts)
         },
       )
@@ -83,12 +90,15 @@ export const refreshAmounts = async (
           addresses,
           chainId,
         )
+        if (token !== amountsToken) return
         amountsStore.amounts.set(chainId, amountsForChain)
       }
     }
   } finally {
-    amountsStore.isLoading = false
-    amountsStore.isValidating = false
+    if (token === amountsToken) {
+      amountsStore.isLoading = false
+      amountsStore.isValidating = false
+    }
   }
 }
 refreshAmounts(tokensStore.tokens, sessionState.addresses, "all")

@@ -37,6 +37,14 @@ export class WalletWrapper extends AbstractSigner {
   // External wallets broadcast themselves; local keys sign and broadcast here.
   async sendTransactionHash(tx: TransactionRequest): Promise<string> {
     if (this.#signer.submitTransaction) {
+      // Preserve a `from` supplied by the dApp so the signer can verify it
+      // matches the connected account; default to the current address only
+      // when `from` is absent.
+      if (tx.from && tx.from !== this.address) {
+        throw new Error(
+          `Transaction sender ${String(tx.from)} does not match connected account ${this.address}`,
+        )
+      }
       return await this.#signer.submitTransaction({ ...tx, from: this.address })
     }
     return (await this.sendTransaction(tx)).hash

@@ -1,0 +1,120 @@
+import { beforeEach, describe, expect, it, vi } from "vitest"
+
+import { type Tx, TxDirection } from "@/hooks/useLedger/types"
+import type { Addresses, ISigner } from "@/login"
+
+const mockGetTransactions = vi.fn()
+
+vi.mock("@/chain/chains", () => ({
+  getAvailableChainIds: vi.fn(() => [42220]),
+}))
+
+vi.mock("@/chain/provider/provider", () => ({
+  getChainProvider: vi.fn(() => ({
+    family: "EVM",
+    getTransactions: mockGetTransactions,
+  })),
+}))
+
+import {
+  activityHistoryStore,
+  clearActivityHistory,
+} from "./transactionHistoryStore"
+
+const makeAddresses = (evmAddress: string): Addresses => {
+  const map = new Map<keyof ISigner, string>()
+  map.set("EVM", evmAddress)
+  return map
+}
+
+const mockTx = (hash: string, timestamp: number): Tx => ({
+  hash,
+  chainId: 42220,
+  timestamp,
+  txDirection: TxDirection.OUTGOING,
+  amount: "1.0",
+  tokenAddress: "0x0000000000000000000000000000000000000000",
+  to: "0xrecipient",
+  from: "0xsender",
+})
+
+describe("transactionHistoryStore", () => {
+  beforeEach(() => {
+    vi.resetAllMocks()
+    clearActivityHistory()
+  })
+
+  it("isolates history per account and refreshes when active account changes", async () => {
+    const accountA = "0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    const accountB = "0xBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+
+    const txA = mockTx("0xtxA", 1000)
+    mockGetTransactions.mockResolvedValueOnce([txA])
+
+    // Fetch history for Account A
+    await activityHistoryStore.refreshHistory(makeAddresses(accountA))
+    expect(activityHistoryStore.perChain.get(42220)).toEqual([txA])
+
+    // Switch to Account B within 10-minute window
+    const txB = mockTx("0xtxB", 2000)
+    mockGetTransactions.mockResolvedValueOnce([txB])
+
+    await activityHistoryStore.refreshHistory(makeAddresses(accountB))
+
+    // Account B must see Account B's history, not Account A's
+    const historyB = activityHistoryStore.perChain.get(42220)
+    expect(historyB).toEqual([txB])
+    expect(historyB?.some((tx) => tx.hash === "0xtxA")).toBe(false)
+  })
+
+  it("clears cached history and propagating transactions on clearActivityHistory", async () => {
+    const account = "0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    const tx = mockTx("0xtx1", 1000)
+    mockGetTransactions.mockResolvedValueOnce([tx])
+
+    await activityHistoryStore.refreshHistory(makeAddresses(account))
+    expect(activityHistoryStore.perChain.get(42220)?.length).toBe(1)
+
+    // Add propagating tx
+    const propagatingTx = mockTx("0xpropagating", 1500)
+    activityHistoryStore.addPropagatingTx(propagatingTx)
+    expect(activityHistoryStore.perChain.get(42220)?.length).toBe(2)
+
+    clearActivityHistory()
+
+    expect(activityHistoryStore.perChain.get(42220)).toBeUndefined()
+  })
+
+  it("guards against late async responses from Account A writing into Account B UI", async () => {
+    const accountA = "0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    const accountB = "0xBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+
+    let resolveAccountA: (txs: Tx[]) => void = () => {}
+    const accountAPromise = new Promise<Tx[]>((resolve) => {
+      resolveAccountA = resolve
+    })
+
+    // Account A triggers refresh with delayed response
+    mockGetTransactions.mockImplementationOnce(() => accountAPromise)
+    const refreshAPromise = activityHistoryStore.refreshHistory(
+      makeAddresses(accountA),
+    )
+
+    // While Account A's query is in flight, Account B logs in
+    const txB = mockTx("0xtxB", 2000)
+    mockGetTransactions.mockResolvedValueOnce([txB])
+    await activityHistoryStore.refreshHistory(makeAddresses(accountB))
+
+    expect(activityHistoryStore.perChain.get(42220)).toEqual([txB])
+
+    // Now Account A's delayed response finally resolves
+    const txA = mockTx("0xtxA", 1000)
+    resolveAccountA([txA])
+    await refreshAPromise
+
+    // Account A's late response must NOT overwrite or contaminate Account B's store
+    const currentTxs = activityHistoryStore.perChain.get(42220)
+    expect(currentTxs).toEqual([txB])
+    expect(currentTxs?.some((tx) => tx.hash === "0xtxA")).toBe(false)
+  })
+})

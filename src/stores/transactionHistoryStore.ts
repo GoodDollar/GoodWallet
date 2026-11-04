@@ -7,8 +7,26 @@ import type { Tx } from "@/hooks/useLedger/types"
 import type { Addresses } from "@/login"
 
 const REFRESH_INTERVAL_MS = 1000 * 60 * 10 // 10 minutes
+
+// History is keyed by account address so a previous account's entries cannot
+// leak across sessions. Both the internal (propagating) txs and the last-refresh
+// timestamp are reset whenever the active account changes.
+let activeAccount: string | undefined
+let currentAccountToken = 0
 const internalTxs = new Map<number, Tx[]>()
 let lastRefreshAllTimestamp = 0
+
+/**
+ * Clears all cached history and resets the refresh timer.
+ * Must be called whenever the active account changes so stale data from a
+ * previous session cannot appear under a new account.
+ */
+export const clearActivityHistory = () => {
+  currentAccountToken++
+  internalTxs.clear()
+  lastRefreshAllTimestamp = 0
+  activityHistoryStore.perChain = proxyMap()
+}
 
 type ActivityHistoryStore = {
   perChain: Map<number, Tx[]>
@@ -44,25 +62,39 @@ const addPropagatingTx = (tx: Tx) => {
 
 const refreshHistory = async (addresses: Addresses | undefined) => {
   const now = Date.now()
+
+  // Derive a stable account key from the EVM address (the primary signer key).
+  const account = addresses?.get("EVM")
+
+  // Reset cached data when the account changes so a previous account's
+  // transactions cannot appear under the new one.
+  if (account !== activeAccount) {
+    activeAccount = account
+    clearActivityHistory()
+  }
+
   if (!addresses || now - lastRefreshAllTimestamp < REFRESH_INTERVAL_MS) {
     return
   }
 
+  const token = currentAccountToken
   lastRefreshAllTimestamp = now
   activityHistoryStore.isLoading = true
 
   try {
-    await refreshAllChains(addresses)
+    await refreshAllChains(addresses, token)
   } catch (error) {
     console.error(error)
   } finally {
-    activityHistoryStore.isLoading = false
+    if (token === currentAccountToken) {
+      activityHistoryStore.isLoading = false
+    }
   }
 }
 
-const refreshAllChains = async (addresses: Addresses) => {
+const refreshAllChains = async (addresses: Addresses, token: number) => {
   const promises = getAvailableChainIds(addresses).map((chainId) =>
-    refreshHistorySingleChain(addresses, chainId),
+    refreshHistorySingleChain(addresses, chainId, token),
   )
   await Promise.allSettled(promises)
 }
@@ -70,6 +102,7 @@ const refreshAllChains = async (addresses: Addresses) => {
 const refreshHistorySingleChain = async (
   addresses: Addresses,
   chainId: number,
+  token: number,
 ) => {
   const provider = getChainProvider(chainId)
   const address = addresses.get(provider.family)
@@ -77,6 +110,13 @@ const refreshHistorySingleChain = async (
     throw new Error(`Address not found for provider: ${provider.family}`)
   }
   const externalTxsForChain = await provider.getTransactions(chainId, address)
+
+  // Guard against late async writes: if the account changed or history was
+  // cleared while the query was in flight, discard the stale response.
+  if (token !== currentAccountToken || activeAccount !== addresses.get("EVM")) {
+    return
+  }
+
   const internalTxsForChain = internalTxs.get(chainId) || []
 
   const combinedTxsForChain = combineTxs(
