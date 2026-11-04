@@ -11,8 +11,23 @@ vi.mock("@/config", () => ({
   },
 }))
 
-const { mockDisconnectSession } = vi.hoisted(() => ({
+vi.mock("@walletconnect/core", () => ({
+  Core: vi.fn(),
+}))
+
+vi.mock("@/utils/reownAppKitWrapper", () => ({
+  getWCUri: vi.fn(() => undefined),
+}))
+
+const { mockWalletKitInit, mockDisconnectSession } = vi.hoisted(() => ({
+  mockWalletKitInit: vi.fn(),
   mockDisconnectSession: vi.fn().mockResolvedValue(undefined),
+}))
+
+vi.mock("@reown/walletkit", () => ({
+  default: {
+    init: mockWalletKitInit,
+  },
 }))
 
 import type WalletKit from "@reown/walletkit"
@@ -23,6 +38,7 @@ import type { ISigner } from "@/login/types"
 import {
   disconnectIncompatibleSessions,
   isSessionCompatibleWithSigner,
+  walletConnectState,
 } from "./walletConnectStore"
 
 describe("walletConnectStore - session compatibility and isolation", () => {
@@ -41,22 +57,42 @@ describe("walletConnectStore - session compatibility and isolation", () => {
     },
   } as unknown as ISigner
 
+  const sessionForA = {
+    topic: "topic-a",
+    namespaces: {
+      eip155: {
+        accounts: [`eip155:1:${evmAddressA}`, `eip155:42220:${evmAddressA}`],
+        methods: ["eth_sendTransaction"],
+        events: [],
+      },
+    },
+  } as unknown as SessionTypes.Struct
+
+  const sessionForB = {
+    topic: "topic-b",
+    namespaces: {
+      eip155: {
+        accounts: [`eip155:1:${evmAddressB}`, `eip155:42220:${evmAddressB}`],
+        methods: ["eth_sendTransaction"],
+        events: [],
+      },
+    },
+  } as unknown as SessionTypes.Struct
+
   beforeEach(() => {
     vi.resetAllMocks()
+    vi.stubGlobal("window", {
+      location: { origin: "http://localhost:3000" },
+    })
+    vi.stubGlobal("sessionStorage", {
+      setItem: vi.fn(),
+      getItem: vi.fn(),
+    })
+    walletConnectState.walletConnectInstance = undefined
+    walletConnectState.sessions = []
   })
 
   it("considers an EVM session compatible only if its account matches the active signer", () => {
-    const sessionForA = {
-      topic: "topic-a",
-      namespaces: {
-        eip155: {
-          accounts: [`eip155:1:${evmAddressA}`, `eip155:42220:${evmAddressA}`],
-          methods: ["eth_sendTransaction"],
-          events: [],
-        },
-      },
-    } as unknown as SessionTypes.Struct
-
     expect(isSessionCompatibleWithSigner(sessionForA, signerA)).toBe(true)
     expect(isSessionCompatibleWithSigner(sessionForA, signerB)).toBe(false)
   })
@@ -76,29 +112,7 @@ describe("walletConnectStore - session compatibility and isolation", () => {
     expect(isSessionCompatibleWithSigner(solanaSession, signerA)).toBe(false)
   })
 
-  it("disconnects incompatible restored sessions so they do not silently rebind to a new signer", async () => {
-    const sessionForA = {
-      topic: "topic-a",
-      namespaces: {
-        eip155: {
-          accounts: [`eip155:1:${evmAddressA}`],
-          methods: ["eth_sendTransaction"],
-          events: [],
-        },
-      },
-    } as unknown as SessionTypes.Struct
-
-    const sessionForB = {
-      topic: "topic-b",
-      namespaces: {
-        eip155: {
-          accounts: [`eip155:1:${evmAddressB}`],
-          methods: ["eth_sendTransaction"],
-          events: [],
-        },
-      },
-    } as unknown as SessionTypes.Struct
-
+  it("disconnects incompatible restored sessions so they do not silently rebind to a new signer (helper)", async () => {
     const mockWallet = {
       getActiveSessions: () => ({
         "topic-a": sessionForA,
@@ -117,5 +131,37 @@ describe("walletConnectStore - session compatibility and isolation", () => {
         message: expect.stringContaining("User disconnected"),
       }),
     })
+  })
+
+  it("disconnects incompatible restored sessions during initializeWalletConnect integration", async () => {
+    const activeSessions: Record<string, SessionTypes.Struct> = {
+      "topic-a": sessionForA,
+      "topic-b": sessionForB,
+    }
+    const mockWallet = {
+      getActiveSessions: vi.fn(() => ({ ...activeSessions })),
+      disconnectSession: vi.fn(
+        async (args: { topic: string; reason: unknown }) => {
+          delete activeSessions[args.topic]
+          await mockDisconnectSession(args)
+        },
+      ),
+      pair: vi.fn(),
+    }
+    mockWalletKitInit.mockResolvedValueOnce(mockWallet)
+
+    // Account B logs in and initializes WalletConnect
+    await walletConnectState.initializeWalletConnect(signerB)
+
+    // Integration check: initializeWalletConnect must prune Account A's session
+    expect(mockDisconnectSession).toHaveBeenCalledTimes(1)
+    expect(mockDisconnectSession).toHaveBeenCalledWith({
+      topic: "topic-a",
+      reason: expect.objectContaining({
+        message: expect.stringContaining("User disconnected"),
+      }),
+    })
+    // And retained sessions should only be Account B's
+    expect(walletConnectState.sessions).toEqual([sessionForB])
   })
 })
