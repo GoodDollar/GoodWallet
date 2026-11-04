@@ -9,6 +9,7 @@ import {
 } from "@/login/reown"
 import type { Addresses, ISigner, ISignerSession } from "@/login/types"
 import { resetWalletConnectDialogs } from "@/sections/WalletConnect/store/walletConnectDialogStore"
+import { clearActivityHistory } from "@/stores/transactionHistoryStore"
 
 const SIGNER_SESSION_KEY = "SIGNER_SESSION"
 
@@ -96,6 +97,8 @@ export const setSession = (session: ISignerSession | null) => {
     sessionState.reconnectReason = undefined
   } else {
     sessionState.addresses = undefined
+    // Clear cached history when a session ends so the next account starts fresh.
+    clearActivityHistory()
   }
 
   if (sessionState.session) {
@@ -110,8 +113,12 @@ export const setSession = (session: ISignerSession | null) => {
   sessionState.isLoading = false
 
   if (session?.type === "REOWN") {
-    stopAccountWatch = watchReownAccount(session.address, () =>
-      endSession("accountChanged"),
+    // Use distinct callbacks so an external wallet disconnect is not reported
+    // as an account change, keeping the reconnect message accurate.
+    stopAccountWatch = watchReownAccount(
+      session.address,
+      () => endSession("accountChanged"),
+      () => endSession(),
     )
   }
 }
@@ -129,10 +136,14 @@ const endSession = (reconnectReason?: ReconnectReason) => {
   setSession(null)
   sessionState.reconnectReason = reconnectReason
 
+  // Disconnect active dApp sessions on every logout path regardless of session
+  // type, so WalletConnect sessions bound to a local-key signer are also torn
+  // down and cannot silently rebind to a new signer.
+  disconnectDappSessions().catch((error) => {
+    console.error("Failed to disconnect WalletConnect sessions", error)
+  })
+
   if (previousSession?.type === "REOWN") {
-    disconnectDappSessions().catch((error) => {
-      console.error("Failed to disconnect WalletConnect sessions", error)
-    })
     disconnectReown().catch((error) => {
       console.error("Failed to disconnect Reown session", error)
     })

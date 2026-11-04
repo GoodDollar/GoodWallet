@@ -1,5 +1,6 @@
 import { type CreateAppKit, createAppKit } from "@reown/appkit"
 import { EthersAdapter } from "@reown/appkit-adapter-ethers"
+import { Lock } from "async-await-mutex-lock"
 import {
   BrowserProvider,
   type Eip1193Provider,
@@ -10,8 +11,8 @@ import manifest from "@/app/manifest"
 import { CELO_CHAIN_ID } from "@/chain/chain-ids"
 import { AVAILABLE_EVM_CHAINS } from "@/chain/chains"
 import type { Chain } from "@/chain/types"
-import { config } from "@/config"
 
+import { config } from "../../config"
 import type { ISignerSession } from "./types"
 
 type GetReownSessionOptions = {
@@ -30,6 +31,13 @@ export class ReownConnectionCancelledError extends Error {
 
 let appKitPromise: Promise<AppKit> | undefined
 let appKitInstance: AppKit | undefined
+
+// A wallet-operation lock serialises the ensureChain → sign/submit sequence so
+// concurrent operations (e.g. parallel claims) cannot interleave chain switches.
+// The lock key is a constant string because there is only one connected wallet
+// at a time and all signing shares a single EIP-1193 provider.
+const CHAIN_OP_LOCK_KEY = "reown"
+const chainOpLock = new Lock<string>()
 
 const getMetadata = () => {
   const { name, description, icons } = manifest()
@@ -242,11 +250,19 @@ const submitTransaction = async (
   address: string,
   tx: TransactionRequest,
 ): Promise<string> => {
-  await ensureChain(appKit, tx.chainId)
-  const signer = await getWalletSigner(appKit, address)
-  // The wallet owns nonce and fee selection for transactions it submits.
-  const { nonce: _nonce, ...request } = tx
-  return await signer.sendUncheckedTransaction(request)
+  // Hold the chain-operation lock for the entire switch → submit sequence to
+  // prevent a concurrent operation from switching chains between this check and
+  // the actual send.
+  await chainOpLock.acquire(CHAIN_OP_LOCK_KEY)
+  try {
+    await ensureChain(appKit, tx.chainId)
+    const signer = await getWalletSigner(appKit, address)
+    // The wallet owns nonce and fee selection for transactions it submits.
+    const { nonce: _nonce, ...request } = tx
+    return await signer.sendUncheckedTransaction(request)
+  } finally {
+    chainOpLock.release(CHAIN_OP_LOCK_KEY)
+  }
 }
 
 export const getReownSession = async (
@@ -284,10 +300,16 @@ export const getReownSession = async (
             message,
           ),
         signTypedData: async (domain, types, value) => {
-          await ensureChain(appKit, domain.chainId)
-          return (
-            await getWalletSigner(appKit, connectedAddress)
-          ).signTypedData(domain, types, value)
+          // Hold the lock for the entire switch → sign sequence.
+          await chainOpLock.acquire(CHAIN_OP_LOCK_KEY)
+          try {
+            await ensureChain(appKit, domain.chainId)
+            return (
+              await getWalletSigner(appKit, connectedAddress)
+            ).signTypedData(domain, types, value)
+          } finally {
+            chainOpLock.release(CHAIN_OP_LOCK_KEY)
+          }
         },
         signTransaction: async () => {
           throw new Error("Connected wallets cannot sign raw transactions")
@@ -305,21 +327,31 @@ export const getReownEip1193Provider = async (
   chainId?: number,
 ) => {
   const appKit = await getAppKit()
-  await ensureChain(appKit, chainId)
-  if (!isSameAddress(appKit.getAddress("eip155"), address)) {
-    throw new Error("Connected wallet account changed. Please reconnect.")
+  // Hold the lock so a concurrent submitTransaction cannot switch chains while
+  // this call is resolving.
+  await chainOpLock.acquire(CHAIN_OP_LOCK_KEY)
+  try {
+    await ensureChain(appKit, chainId)
+    if (!isSameAddress(appKit.getAddress("eip155"), address)) {
+      throw new Error("Connected wallet account changed. Please reconnect.")
+    }
+    const provider = appKit.getProvider<Eip1193Provider>("eip155")
+    if (!provider) {
+      throw new Error("Connected provider not available")
+    }
+    return { provider, chainId: Number(appKit.getChainId()) }
+  } finally {
+    chainOpLock.release(CHAIN_OP_LOCK_KEY)
   }
-  const provider = appKit.getProvider<Eip1193Provider>("eip155")
-  if (!provider) {
-    throw new Error("Connected provider not available")
-  }
-  return { provider, chainId: Number(appKit.getChainId()) }
 }
 
 // Calls onChange when the wallet switches account or disconnects.
+// onAccountChanged is invoked when a different account is connected.
+// onDisconnected is invoked when the wallet is explicitly disconnected.
 export const watchReownAccount = (
   address: string,
-  onChange: () => void,
+  onAccountChanged: () => void,
+  onDisconnected: () => void,
 ): (() => void) => {
   if (!appKitInstance) {
     return () => undefined
@@ -328,10 +360,13 @@ export const watchReownAccount = (
     if (state.status === "connecting" || state.status === "reconnecting") {
       return
     }
-    const changed = state.isConnected
-      ? !isSameAddress(state.address, address)
-      : state.status === "disconnected"
-    if (changed) onChange()
+    if (state.isConnected) {
+      if (!isSameAddress(state.address, address)) {
+        onAccountChanged()
+      }
+    } else if (state.status === "disconnected") {
+      onDisconnected()
+    }
   }, "eip155")
 }
 
