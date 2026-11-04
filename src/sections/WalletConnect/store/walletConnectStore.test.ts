@@ -4,6 +4,13 @@ vi.mock("../requests/RequestHandler", () => ({
   setupListeners: vi.fn(),
 }))
 
+vi.mock("@/config", () => ({
+  config: {
+    walletConnectEnabled: true,
+    walletConnectProjectId: "test-project-id",
+  },
+}))
+
 const { mockDisconnectSession } = vi.hoisted(() => ({
   mockDisconnectSession: vi.fn().mockResolvedValue(undefined),
 }))

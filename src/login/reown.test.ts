@@ -53,7 +53,7 @@ vi.mock("@/chain/chains", () => ({
   ]),
 }))
 
-vi.mock("../../config", () => ({
+vi.mock("@/config", () => ({
   config: {
     walletConnectEnabled: true,
     walletConnectProjectId: "test-project-id",
