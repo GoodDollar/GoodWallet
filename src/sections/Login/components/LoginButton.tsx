@@ -1,16 +1,18 @@
 "use client"
 
-import type { FC } from "react"
-import { Button } from "ui"
+import { type FC, useState } from "react"
+import { Button, useToast } from "ui"
 
 import { localeKey, useTranslation } from "translations"
 import { config } from "@/config"
 import {
   Captcha,
   usePKeyLogin,
+  useReownLogin,
   useTriggerTorusAggregateLogin,
   useTriggerTorusLogin,
 } from "@/login"
+import { ReownConnectionCancelledError } from "@/login/reown"
 
 const { env, torus } = config
 const { network, web3AuthClientId, providers, captchaKey } = torus
@@ -114,5 +116,50 @@ export const PrivateKeyLoginButton: FC<{
       text={userName}
       onClick={onClick}
     />
+  )
+}
+
+export const ExistingWalletLoginButton: FC<{ isDefault?: boolean }> = ({
+  isDefault,
+}) => {
+  const { locale, translations } = useTranslation()
+  const { createToast } = useToast()
+  const connect = useReownLogin()
+  const [isConnecting, setIsConnecting] = useState(false)
+
+  const onClick = async () => {
+    if (isConnecting) return
+    saveLocaleToSession(locale)
+    setIsConnecting(true)
+    try {
+      await connect()
+    } catch (error) {
+      const cancelled = error instanceof ReownConnectionCancelledError
+      if (!cancelled) console.error("Existing wallet login failed", error)
+      createToast({
+        message: cancelled
+          ? translations.login.existingWalletCancelled
+          : translations.login.existingWalletFailed,
+        status: "error",
+        autoClose: true,
+      })
+    } finally {
+      setIsConnecting(false)
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      <Button
+        variant={isDefault ? "solid" : "outlined"}
+        full
+        text={translations.login.existingWallet}
+        loading={isConnecting}
+        onClick={onClick}
+      />
+      <p className="text-center text-xs opacity-70">
+        {translations.login.evmOnlyNotice}
+      </p>
+    </div>
   )
 }

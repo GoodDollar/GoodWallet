@@ -4,7 +4,6 @@ import {
 } from "@walletconnect/jsonrpc-utils"
 import type { SignClientTypes } from "@walletconnect/types"
 import { getSdkError } from "@walletconnect/utils"
-import type { AbstractSigner } from "ethers"
 
 import { getEthersProvider } from "ethers-utils"
 
@@ -14,6 +13,7 @@ import {
   getSignParamsMessage,
   getSignTypedDataParamsData,
 } from "../utils/HelperUtils"
+import type { WalletWrapper } from "../utils/WalletWrapper"
 
 type RequestEventArgs = Omit<
   SignClientTypes.EventArguments["session_request"],
@@ -21,7 +21,7 @@ type RequestEventArgs = Omit<
 >
 
 export async function approveEIP155Request(
-  wallet: AbstractSigner,
+  wallet: WalletWrapper,
   requestEvent: RequestEventArgs,
 ) {
   const { params, id } = requestEvent
@@ -74,15 +74,16 @@ export async function approveEIP155Request(
     case EIP155_SIGNING_METHODS.ETH_SEND_TRANSACTION:
       try {
         //ChainId of format e.g. eip155:1 for Ethereum Mainnet
-        const provider = getEthersProvider(Number(chainId.split(":")[1]))
+        const internalChainId = Number(chainId.split(":")[1])
+        const provider = getEthersProvider(internalChainId)
         const sendTransaction = request.params[0]
         if (sendTransaction.gas && !sendTransaction.gasLimit) {
           sendTransaction.gasLimit = sendTransaction.gas
         }
-        const connectedWallet = wallet.connect(provider)
-        const hash = await connectedWallet.sendTransaction(sendTransaction)
-        const receipt = typeof hash === "string" ? hash : hash?.hash // TODO improve interface
-        return formatJsonRpcResult(id, receipt)
+        const hash = await wallet
+          .connect(provider)
+          .sendTransactionHash({ ...sendTransaction, chainId: internalChainId })
+        return formatJsonRpcResult(id, hash)
       } catch (error) {
         console.error(error)
         const message =

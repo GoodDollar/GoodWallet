@@ -1,7 +1,7 @@
 import { proxy } from "valtio"
 import { proxyMap } from "valtio/utils"
 
-import { AVAILABLE_CHAINS_IDS } from "@/chain/chains"
+import { getAvailableChainIds } from "@/chain/chains"
 import { getChainProvider } from "@/chain/provider/provider"
 import type { Tx } from "@/hooks/useLedger/types"
 import type { Addresses } from "@/login"
@@ -61,7 +61,7 @@ const refreshHistory = async (addresses: Addresses | undefined) => {
 }
 
 const refreshAllChains = async (addresses: Addresses) => {
-  const promises = AVAILABLE_CHAINS_IDS.map((chainId) =>
+  const promises = getAvailableChainIds(addresses).map((chainId) =>
     refreshHistorySingleChain(addresses, chainId),
   )
   await Promise.allSettled(promises)

@@ -13,7 +13,7 @@ import {
 import type { SDKClient, SDKProvider } from "@lifi/sdk"
 import { proxy, ref } from "valtio"
 import { subscribeKey } from "valtio/utils"
-import { createWalletClient, http } from "viem"
+import { createWalletClient, custom, type Hex, http } from "viem"
 import {
   base,
   bsc,
@@ -27,7 +27,8 @@ import {
 
 import { config } from "@/config"
 import { sessionState } from "@/login/context/SessionContext/storage"
-import type { ISigner } from "@/login/types"
+import { getReownEip1193Provider } from "@/login/reown"
+import type { EVMSigner, ISigner } from "@/login/types"
 
 import { bitcoinAdapter } from "./adapters/bitcoinWalletAdapter"
 import { createSolanaWallet } from "./adapters/solanaWalletAdapter"
@@ -65,6 +66,45 @@ const getLifiRpcUrls = () => {
   return rpcUrls
 }
 
+// External wallets sign and broadcast through their own provider.
+const getExternalWalletClient = async (signer: EVMSigner, chainId?: number) => {
+  const { provider, chainId: activeChainId } = await getReownEip1193Provider(
+    signer.address,
+    chainId,
+  )
+  return createWalletClient({
+    account: signer.address as Hex,
+    chain: chains.find((chain) => chain.id === activeChainId),
+    transport: custom(provider),
+  })
+}
+
+const getEvmProviderOptions = (signer: EVMSigner) => {
+  if (signer.submitTransaction) {
+    return {
+      getWalletClient: () => getExternalWalletClient(signer),
+      switchChain: (chainId: number) =>
+        getExternalWalletClient(signer, chainId),
+    }
+  }
+
+  const account = getViemAccount(signer)
+  const walletClient = createWalletClient({
+    account,
+    chain: mainnet,
+    transport: http(config.rpcUrls[mainnet.id]),
+  })
+  return {
+    getWalletClient: async () => walletClient,
+    switchChain: async (chainId: number) =>
+      createWalletClient({
+        account,
+        chain: chains.find((chain) => chain.id == chainId),
+        transport: http(config.rpcUrls[chainId]),
+      }),
+  }
+}
+
 const initializeLifi = async (signer: ISigner | undefined) => {
   if (!signer) {
     lifiState.isInitialized = false
@@ -86,23 +126,8 @@ const initializeLifi = async (signer: ISigner | undefined) => {
       import("@lifi/sdk-provider-bitcoin"),
     ])
 
-    const account = getViemAccount(signer.EVM)
-    const walletClient = createWalletClient({
-      account,
-      chain: mainnet,
-      transport: http(config.rpcUrls[mainnet.id]),
-    })
-
     const providers: SDKProvider[] = [
-      EthereumProvider({
-        getWalletClient: async () => walletClient,
-        switchChain: async (chainId) =>
-          createWalletClient({
-            account,
-            chain: chains.find((chain) => chain.id == chainId),
-            transport: http(config.rpcUrls[chainId]),
-          }),
-      }),
+      EthereumProvider(getEvmProviderOptions(signer.EVM)),
     ]
     if (signer.SOLANA) {
       const wallet = createSolanaWallet(signer.SOLANA)

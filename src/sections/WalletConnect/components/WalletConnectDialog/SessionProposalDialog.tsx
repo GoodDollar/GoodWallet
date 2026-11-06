@@ -2,7 +2,7 @@ import type { ProposalTypes, SignClientTypes } from "@walletconnect/types"
 import { Icon, Text } from "ui"
 
 import { useTranslation } from "translations"
-import { AVAILABLE_CHAINS, AVAILABLE_CHAINS_IDS } from "@/chain/chains"
+import { AVAILABLE_CHAINS, isChainAvailableForAddresses } from "@/chain/chains"
 import { ChainIcon } from "@/components/Typo/ChainIcon"
 import { truncateString } from "@/components/Utils/format"
 import { type Addresses, useSessionContext } from "@/login"
@@ -56,7 +56,7 @@ export const SessionProposalDialog = ({ sessionProposal }: Props) => {
   )
   const optionalChainIds: number[] = extractChainIds(
     sessionProposal.params.optionalNamespaces,
-  ).filter((chainId) => AVAILABLE_CHAINS_IDS.includes(chainId))
+  ).filter((chainId) => isChainAvailableForAddresses(chainId, addresses))
 
   const listOfChainIds = [...requiredChainIds, ...optionalChainIds]
 

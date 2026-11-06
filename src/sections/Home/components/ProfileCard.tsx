@@ -7,7 +7,7 @@ import { Box, Button, createToast, Drawer, Icon } from "ui"
 
 import { AnalyticsEventTypes } from "@/analytics/types"
 import { useAnalytics } from "@/analytics/useAnalytics"
-import { AVAILABLE_CHAINS, AVAILABLE_CHAINS_IDS } from "@/chain/chains"
+import { AVAILABLE_CHAINS, getAvailableChainIds } from "@/chain/chains"
 import { formatTokenValue } from "@/components/Utils/tokenFormat"
 import { useSessionContext } from "@/login"
 import {
@@ -149,7 +149,7 @@ export const ProfileCard = ({
         onClose={() => setIsBottomSliderOpen(false)}
       >
         <Box vertical gap="none" scroll>
-          {AVAILABLE_CHAINS_IDS.map((chainId) => {
+          {getAvailableChainIds(addresses).map((chainId) => {
             return (
               <ChainSelectorSliderRow
                 key={chainId}
