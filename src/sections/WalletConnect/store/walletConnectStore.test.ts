@@ -35,6 +35,8 @@ import type { SessionTypes } from "@walletconnect/types"
 
 import type { ISigner } from "@/login/types"
 
+import { BIP122_MAINNET_CAIP2, BIP122_TESTNET_CAIP2 } from "../data/BIP122Data"
+import { SOLANA_DEVNET, SOLANA_MAINNET } from "../data/SolanaData"
 import {
   disconnectIncompatibleSessions,
   isSessionCompatibleWithSigner,
@@ -163,5 +165,147 @@ describe("walletConnectStore - session compatibility and isolation", () => {
     })
     // And retained sessions should only be Account B's
     expect(walletConnectState.sessions).toEqual([sessionForB])
+  })
+
+  it("rejects restored sessions with methods unsupported by the signer (M8)", async () => {
+    const externalSigner = {
+      EVM: {
+        address: evmAddressA,
+        submitTransaction: vi.fn(),
+      },
+    } as unknown as ISigner
+
+    const sessionWithRawSign = {
+      topic: "topic-raw-sign",
+      namespaces: {
+        eip155: {
+          accounts: [`eip155:1:${evmAddressA}`],
+          methods: ["eth_signTransaction"],
+          events: [],
+        },
+      },
+    } as unknown as SessionTypes.Struct
+
+    const sessionWithSupportedMethods = {
+      topic: "topic-supported-methods",
+      namespaces: {
+        eip155: {
+          accounts: [`eip155:1:${evmAddressA}`],
+          methods: ["eth_sendTransaction", "personal_sign"],
+          events: [],
+        },
+      },
+    } as unknown as SessionTypes.Struct
+
+    expect(
+      isSessionCompatibleWithSigner(sessionWithRawSign, externalSigner),
+    ).toBe(false)
+    expect(
+      isSessionCompatibleWithSigner(
+        sessionWithSupportedMethods,
+        externalSigner,
+      ),
+    ).toBe(true)
+
+    const mockWallet = {
+      getActiveSessions: () => ({
+        "topic-raw-sign": sessionWithRawSign,
+        "topic-supported-methods": sessionWithSupportedMethods,
+      }),
+      disconnectSession: mockDisconnectSession,
+    } as unknown as WalletKit
+
+    await disconnectIncompatibleSessions(mockWallet, externalSigner)
+
+    expect(mockDisconnectSession).toHaveBeenCalledWith({
+      topic: "topic-raw-sign",
+      reason: expect.objectContaining({
+        message: expect.stringContaining("User disconnected"),
+      }),
+    })
+    expect(mockDisconnectSession).not.toHaveBeenCalledWith(
+      expect.objectContaining({ topic: "topic-supported-methods" }),
+    )
+  })
+
+  it("prefers the matching-network address for Bitcoin and Solana testnets (M9)", () => {
+    const multiChainSigner = {
+      EVM: { address: evmAddressA },
+      BTC: { address: "1MainnetBtcAddress" },
+      BTC_TESTNET: { address: "tb1qTestnetBtcAddress" },
+      SOLANA: { address: "MainnetSolAddress" },
+      SOLANA_DEVNET: { address: "DevnetSolAddress" },
+    } as unknown as ISigner
+
+    const btcTestnetSession = {
+      topic: "topic-btc-testnet",
+      namespaces: {
+        bip122: {
+          accounts: [`${BIP122_TESTNET_CAIP2}:tb1qTestnetBtcAddress`],
+          methods: ["signPsbt"],
+          events: [],
+        },
+      },
+    } as unknown as SessionTypes.Struct
+
+    const btcMainnetSession = {
+      topic: "topic-btc-mainnet",
+      namespaces: {
+        bip122: {
+          accounts: [`${BIP122_MAINNET_CAIP2}:1MainnetBtcAddress`],
+          methods: ["signPsbt"],
+          events: [],
+        },
+      },
+    } as unknown as SessionTypes.Struct
+
+    const solDevnetSession = {
+      topic: "topic-sol-devnet",
+      namespaces: {
+        solana: {
+          accounts: [`${SOLANA_DEVNET}:DevnetSolAddress`],
+          methods: ["solana_signTransaction"],
+          events: [],
+        },
+      },
+    } as unknown as SessionTypes.Struct
+
+    const solMainnetSession = {
+      topic: "topic-sol-mainnet",
+      namespaces: {
+        solana: {
+          accounts: [`${SOLANA_MAINNET}:MainnetSolAddress`],
+          methods: ["solana_signTransaction"],
+          events: [],
+        },
+      },
+    } as unknown as SessionTypes.Struct
+
+    expect(
+      isSessionCompatibleWithSigner(btcTestnetSession, multiChainSigner),
+    ).toBe(true)
+    expect(
+      isSessionCompatibleWithSigner(btcMainnetSession, multiChainSigner),
+    ).toBe(true)
+    expect(
+      isSessionCompatibleWithSigner(solDevnetSession, multiChainSigner),
+    ).toBe(true)
+    expect(
+      isSessionCompatibleWithSigner(solMainnetSession, multiChainSigner),
+    ).toBe(true)
+
+    const btcWrongTestnetSession = {
+      topic: "topic-btc-wrong-testnet",
+      namespaces: {
+        bip122: {
+          accounts: [`${BIP122_TESTNET_CAIP2}:wrongAddress`],
+          methods: ["signPsbt"],
+          events: [],
+        },
+      },
+    } as unknown as SessionTypes.Struct
+    expect(
+      isSessionCompatibleWithSigner(btcWrongTestnetSession, multiChainSigner),
+    ).toBe(false)
   })
 })

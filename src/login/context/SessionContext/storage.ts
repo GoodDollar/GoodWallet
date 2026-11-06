@@ -62,7 +62,10 @@ const fromJSON = async (
   return null
 }
 
-export type ReconnectReason = "accountChanged" | "restoreFailed"
+export type ReconnectReason =
+  | "accountChanged"
+  | "restoreFailed"
+  | "disconnected"
 
 type SessionState = {
   session: null | ISignerSession
@@ -101,13 +104,15 @@ export const setSession = (session: ISignerSession | null) => {
     clearActivityHistory()
   }
 
-  if (sessionState.session) {
-    localStorage.setItem(
-      SIGNER_SESSION_KEY,
-      JSON.stringify(sessionState.session),
-    )
-  } else {
-    localStorage.removeItem(SIGNER_SESSION_KEY)
+  if (typeof localStorage !== "undefined") {
+    if (sessionState.session) {
+      localStorage.setItem(
+        SIGNER_SESSION_KEY,
+        JSON.stringify(sessionState.session),
+      )
+    } else {
+      localStorage.removeItem(SIGNER_SESSION_KEY)
+    }
   }
 
   sessionState.isLoading = false
@@ -118,7 +123,7 @@ export const setSession = (session: ISignerSession | null) => {
     stopAccountWatch = watchReownAccount(
       session.address,
       () => endSession("accountChanged"),
-      () => endSession(),
+      () => endSession("disconnected"),
     )
   }
 }

@@ -9,7 +9,10 @@ import { config } from "@/config"
 import type { ISigner } from "@/login"
 import { getWCUri } from "@/utils/reownAppKitWrapper"
 
+import { BIP122_TESTNET_CAIP2 } from "../data/BIP122Data"
+import { SOLANA_DEVNET } from "../data/SolanaData"
 import { setupListeners } from "../requests/RequestHandler"
+import { getSupportedNamespaces } from "../utils/supportedNamespaces"
 
 export const INITIALIZE_WALLET_CONNECT_KEY = "INITIALIZE_WALLET_CONNECT"
 
@@ -32,7 +35,21 @@ export const isSessionCompatibleWithSigner = (
   signer: ISigner,
 ): boolean => {
   const namespaces = session.namespaces || {}
+  const supported = getSupportedNamespaces(signer)
+
   for (const [ns, data] of Object.entries(namespaces)) {
+    const supportedNs = supported[ns]
+    if (!supportedNs) {
+      return false
+    }
+
+    const supportedMethods = new Set(supportedNs.methods)
+    for (const method of data.methods || []) {
+      if (!supportedMethods.has(method)) {
+        return false
+      }
+    }
+
     if (ns === "eip155") {
       const evmAddress = signer.EVM?.address?.toLowerCase()
       if (!evmAddress) return false
@@ -44,19 +61,29 @@ export const isSessionCompatibleWithSigner = (
       }
     } else if (ns === "solana") {
       if (!signer.SOLANA && !signer.SOLANA_DEVNET) return false
-      const solAddress = signer.SOLANA?.address || signer.SOLANA_DEVNET?.address
       for (const account of data.accounts || []) {
-        const address = account.split(":").pop()
-        if (address && address !== solAddress) {
+        const parts = account.split(":")
+        const address = parts.pop()
+        const chainId = parts.join(":")
+        const expectedAddress =
+          chainId === SOLANA_DEVNET
+            ? (signer.SOLANA_DEVNET?.address ?? signer.SOLANA?.address)
+            : (signer.SOLANA?.address ?? signer.SOLANA_DEVNET?.address)
+        if (!expectedAddress || address !== expectedAddress) {
           return false
         }
       }
     } else if (ns === "bip122") {
       if (!signer.BTC && !signer.BTC_TESTNET) return false
-      const btcAddress = signer.BTC?.address || signer.BTC_TESTNET?.address
       for (const account of data.accounts || []) {
-        const address = account.split(":").pop()
-        if (address && address !== btcAddress) {
+        const parts = account.split(":")
+        const address = parts.pop()
+        const chainId = parts.join(":")
+        const expectedAddress =
+          chainId === BIP122_TESTNET_CAIP2
+            ? (signer.BTC_TESTNET?.address ?? signer.BTC?.address)
+            : (signer.BTC?.address ?? signer.BTC_TESTNET?.address)
+        if (!expectedAddress || address !== expectedAddress) {
           return false
         }
       }

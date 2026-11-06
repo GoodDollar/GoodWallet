@@ -494,6 +494,9 @@ describe("ethers-utils", () => {
 
       // The replacement receipt is surfaced, not an error.
       expect(result.txReceipt).toEqual(replacementReceipt)
+      // The replacement response (with replacement hash) is returned to callers.
+      expect(result.txResponse.hash).toBe("0xreplacementhash")
+      expect(result.originalTxResponse?.hash).toBe(txResponse.hash)
       // Divvi tracking uses the replacement hash.
       expect(mockSubmitReferral).toHaveBeenCalledWith({
         txHash: "0xreplacementhash",
@@ -564,6 +567,37 @@ describe("ethers-utils", () => {
       expect(mockSubmitReferral).not.toHaveBeenCalled()
     })
 
+    it("throws and does not submit a Divvi referral when a repriced replacement tx reverts on-chain (status 0)", async () => {
+      const revertedReceipt = { hash: "0xreplacementhash", status: 0 }
+      const revertedError = Object.assign(
+        new Error("transaction was replaced and reverted"),
+        {
+          code: "TRANSACTION_REPLACED",
+          reason: "repriced",
+          receipt: revertedReceipt,
+          replacement: { hash: "0xreplacementhash" },
+        },
+      )
+
+      txResponse.replaceableTransaction.mockReturnValue({
+        ...txResponse,
+        wait: vi.fn().mockRejectedValue(revertedError),
+      })
+      mockGetTransaction.mockResolvedValue(txResponse)
+      request = createRequest({ data: "0xcalldata_DIVVI_SUFFIX" })
+
+      await expect(
+        sendTxWaitForMining(
+          walletSigner as never,
+          DEFAULT_GAS_LIMIT,
+          request,
+          options,
+        ),
+      ).rejects.toThrow("transaction was replaced and reverted")
+
+      expect(mockSubmitReferral).not.toHaveBeenCalled()
+    })
+
     it("does not trigger a resend when getTransaction temporarily fails to find the tx", async () => {
       // Simulate RPC returning null for the first few polls then succeeding.
       mockGetTransaction
@@ -581,6 +615,25 @@ describe("ethers-utils", () => {
       // No second submitTransaction call — no resend.
       expect(walletSigner.submitTransaction).toHaveBeenCalledTimes(1)
       expect(result.txResponse.hash).toBe(TX_HASH)
+    })
+
+    it("retries when getTransaction encounters transient RPC errors and resolves when it succeeds", async () => {
+      // Simulate RPC throwing transient errors before returning the transaction.
+      mockGetTransaction
+        .mockRejectedValueOnce(new Error("RPC rate limited: 429"))
+        .mockRejectedValueOnce(new Error("Network timeout"))
+        .mockResolvedValue(txResponse)
+
+      const result = await sendTxWaitForMining(
+        walletSigner as never,
+        DEFAULT_GAS_LIMIT,
+        request,
+        options,
+      )
+
+      expect(result.txResponse.hash).toBe(TX_HASH)
+      expect(mockGetTransaction).toHaveBeenCalledTimes(3)
+      expect(walletSigner.submitTransaction).toHaveBeenCalledTimes(1)
     })
 
     it("captures the start block before wallet submission so replacement tracking covers the popup window", async () => {

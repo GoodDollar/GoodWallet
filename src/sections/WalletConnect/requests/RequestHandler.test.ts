@@ -148,4 +148,55 @@ describe("RequestHandler - Session Proposal", () => {
       }),
     })
   })
+
+  it("rejects session proposal with UNSUPPORTED_METHODS when required methods are not supported", async () => {
+    const onSessionProposal = listeners.session_proposal
+    expect(onSessionProposal).toBeDefined()
+
+    // Proposal requesting an unsupported method for external wallet (e.g. eth_signTransaction)
+    const unsupportedProposal = {
+      id: 54321,
+      params: {
+        requiredNamespaces: {
+          eip155: {
+            chains: ["eip155:42220"],
+            methods: ["eth_signTransaction"],
+            events: [],
+          },
+        },
+        optionalNamespaces: {},
+      },
+      verifyContext: {
+        verified: {
+          origin: "https://evm-dapp.com",
+        },
+      },
+    }
+
+    await onSessionProposal(unsupportedProposal)
+
+    // Verify error dialog was shown with unsupported methods
+    expect(mockOpenDialog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: "error",
+        errorText: expect.stringContaining("eth_signTransaction"),
+      }),
+    )
+
+    // Verify rejectSession was called with UNSUPPORTED_METHODS error so dApp does not hang
+    expect(mockRejectSession).toHaveBeenCalledWith({
+      id: 54321,
+      reason: expect.objectContaining({
+        code: 5101,
+        message: expect.stringContaining("Unsupported methods"),
+      }),
+    })
+
+    // Dialog was not opened for approval
+    expect(mockOpenDialog).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: "sessionProposal",
+      }),
+    )
+  })
 })

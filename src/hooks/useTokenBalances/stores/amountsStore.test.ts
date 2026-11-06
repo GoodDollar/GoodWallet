@@ -151,6 +151,49 @@ describe("amountsStore - late async response guard", () => {
     expect(amountsStore.amounts.get(42220)).not.toBe(amountsA)
   })
 
+  it("allows concurrent refreshes on different chains to both land without dropping each other", async () => {
+    const account = "0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    const addresses = makeAddresses(account)
+    const tokens = makeTokens([42220, 122])
+
+    const amountsCelo = new NormalizedAddressMap<string, FixedNumber>("EVM", [
+      [
+        "0x1111111111111111111111111111111111111111",
+        FixedNumber.fromString("100.0"),
+      ],
+    ])
+    const amountsFuse = new NormalizedAddressMap<string, FixedNumber>("EVM", [
+      [
+        "0x2222222222222222222222222222222222222222",
+        FixedNumber.fromString("200.0"),
+      ],
+    ])
+
+    let resolveCelo!: (val: unknown) => void
+    const delayedCelo = new Promise((resolve) => {
+      resolveCelo = resolve
+    })
+
+    // Chain 42220 refresh starts and hangs
+    mockGetAmounts.mockImplementationOnce(() => delayedCelo)
+    const refreshCelo = refreshAmounts(tokens, addresses, 42220)
+
+    // Chain 122 refresh starts and finishes immediately
+    mockGetAmounts.mockResolvedValueOnce(amountsFuse)
+    await refreshAmounts(tokens, addresses, 122)
+
+    // Chain 122 should have landed
+    expect(amountsStore.amounts.get(122)).toBe(amountsFuse)
+
+    // Now chain 42220 completes
+    resolveCelo(amountsCelo)
+    await refreshCelo
+
+    // Both chains must be present; chain 42220 must not have been dropped by chain 122's refresh
+    expect(amountsStore.amounts.get(42220)).toBe(amountsCelo)
+    expect(amountsStore.amounts.get(122)).toBe(amountsFuse)
+  })
+
   it("clears amounts when addresses are undefined", async () => {
     amountsStore.amounts.set(42220, new NormalizedAddressMap("EVM"))
     await refreshAmounts(undefined, undefined, "all")

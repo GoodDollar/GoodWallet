@@ -62,8 +62,14 @@ const getSubmittedTransaction = async (
   startBlock: number,
 ): Promise<{ txResponse: TransactionResponse; startBlock: number }> => {
   for (let attempt = 0; attempt < SUBMITTED_TX_MAX_ATTEMPTS; attempt++) {
-    const txResponse = await provider.getTransaction(hash)
-    if (txResponse) return { txResponse, startBlock }
+    try {
+      const txResponse = await provider.getTransaction(hash)
+      if (txResponse) return { txResponse, startBlock }
+    } catch (err) {
+      if (attempt === SUBMITTED_TX_MAX_ATTEMPTS - 1) {
+        throw err
+      }
+    }
     await new Promise((resolve) => setTimeout(resolve, SUBMITTED_TX_POLL_MS))
   }
   throw new Error(`Transaction ${hash} was not found on chain`)
@@ -108,9 +114,15 @@ export const sendTx = async (
       gasLimit,
       broadcastRequest,
     )
-    const trxMinedPromise = txInfo.then(({ txResponse, startBlock }) =>
-      waitForMinedStatus(txResponse, startBlock, broadcastRequest, signer),
-    )
+    const trxMinedPromise = txInfo.then(async ({ txResponse, startBlock }) => {
+      const { txReceipt } = await waitForMinedStatus(
+        txResponse,
+        startBlock,
+        broadcastRequest,
+        signer,
+      )
+      return txReceipt
+    })
     return { hash, trxMinedPromise }
   }
 
@@ -135,7 +147,7 @@ export const sendTx = async (
       undefined,
       broadcastRequest,
       signer,
-    )
+    ).then((res) => res.txReceipt)
     return { hash: trx.hash, trxMinedPromise }
   } finally {
     lock.release(broadcastRequest.chainId)
@@ -156,13 +168,18 @@ export const sendTxWaitForMining = async (
       broadcastRequest,
     )
     const { txResponse, startBlock } = await submitted.txInfo
-    const txReceipt = await waitForMinedStatus(
+    const { txReceipt, replacementTxResponse } = await waitForMinedStatus(
       txResponse,
       startBlock,
       broadcastRequest,
       signer,
     )
-    return { txResponse, txReceipt }
+    const effectiveResponse = replacementTxResponse ?? txResponse
+    return {
+      txResponse: effectiveResponse,
+      txReceipt,
+      ...(replacementTxResponse && { originalTxResponse: txResponse }),
+    }
   }
 
   const from = signer.address
@@ -183,7 +200,7 @@ export const sendTxWaitForMining = async (
     console.info("sendTx got response", { txResponse })
 
     // broadcastTransaction already attaches replacement tracking; pass undefined.
-    const txReceipt = await waitForMinedStatus(
+    const { txReceipt, replacementTxResponse } = await waitForMinedStatus(
       txResponse,
       undefined,
       broadcastRequest,
@@ -191,7 +208,12 @@ export const sendTxWaitForMining = async (
     )
 
     console.info("sendTx got receipt", { txReceipt })
-    return { txResponse, txReceipt }
+    const effectiveResponse = replacementTxResponse ?? txResponse
+    return {
+      txResponse: effectiveResponse,
+      txReceipt,
+      ...(replacementTxResponse && { originalTxResponse: txResponse }),
+    }
   } finally {
     lock.release(broadcastRequest.chainId)
   }
@@ -202,7 +224,10 @@ async function waitForMinedStatus(
   startBlock: number | undefined,
   broadcastRequest: BroadcastRequest,
   signer: EVMSigner,
-) {
+): Promise<{
+  txReceipt: TransactionReceipt | null
+  replacementTxResponse?: TransactionResponse
+}> {
   // When startBlock is provided the response came from provider.getTransaction()
   // and does not carry ethers' built-in replacement tracking. Enable it so that
   // a speed-up or cancellation submitted by an external wallet resolves here
@@ -213,6 +238,7 @@ async function waitForMinedStatus(
       : txResponse
 
   let txReceipt: TransactionReceipt | null
+  let replacementTxResponse: TransactionResponse | undefined
   try {
     txReceipt = await tracked.wait()
   } catch (err) {
@@ -241,8 +267,15 @@ async function waitForMinedStatus(
         // error paths surface failure to the user; Divvi referral is not reached.
         throw err
       }
+      if (err.receipt?.status === 0) {
+        // The replacement transaction reverted on-chain (status 0). Treat as
+        // a reverted transaction: rethrow so caller surfaces failure and Divvi
+        // tracking is not reached.
+        throw err
+      }
       // "repriced" (speed-up): same intent executed at higher fee; use receipt.
       txReceipt = err.receipt ?? null
+      replacementTxResponse = err.replacement
     } else {
       throw err
     }
@@ -262,7 +295,7 @@ async function waitForMinedStatus(
         console.error("divvi failed", { error })
       })
   }
-  return txReceipt
+  return { txReceipt, replacementTxResponse }
 }
 
 async function prepareTx(

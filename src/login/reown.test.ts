@@ -253,5 +253,73 @@ describe("reown - coordinated switching and account monitoring", () => {
       ])
       expect(signature).toBe("0xsignature")
     })
+
+    it("holds chainOpLock until signTypedData finishes and does not allow a concurrent operation to proceed while signing is pending", async () => {
+      const address = "0x1111111111111111111111111111111111111111"
+      mockGetAddress.mockReturnValue(address)
+      mockGetProvider.mockReturnValue({ request: vi.fn() })
+
+      const session = await getReownSession("http://localhost", "reown", {
+        interactive: false,
+      })
+
+      let resolveSigning!: () => void
+      const signingInFlight = new Promise<void>((resolve) => {
+        resolveSigning = resolve
+      })
+
+      const executionOrder: string[] = []
+      const mockSigner = {
+        signTypedData: vi.fn(async () => {
+          executionOrder.push("typed_data_started")
+          await signingInFlight
+          executionOrder.push("typed_data_finished")
+          return "0xtypedsig"
+        }),
+        sendUncheckedTransaction: vi.fn(async () => {
+          executionOrder.push("submit_executed")
+          return "0xhash"
+        }),
+      }
+      const { BrowserProvider } = await import("ethers")
+      vi.spyOn(BrowserProvider.prototype, "getSigner").mockResolvedValue(
+        mockSigner as never,
+      )
+
+      mockSwitchNetwork.mockResolvedValue(undefined)
+      mockGetChainId.mockReturnValue(42220)
+
+      // 1. Start signTypedData (must hold lock while waiting for wallet user)
+      const signPromise = session.signer.EVM.signTypedData?.(
+        { chainId: 42220 },
+        {},
+        {},
+      )
+
+      await new Promise((r) => setTimeout(r, 20))
+
+      // 2. Concurrently attempt submitTransaction while signTypedData is pending
+      const submitPromise = session.signer.EVM.submitTransaction?.({
+        chainId: 42220,
+        to: "0xrecipient",
+        value: BigInt(0),
+      })
+
+      await new Promise((r) => setTimeout(r, 50))
+      expect(executionOrder).toEqual(["typed_data_started"])
+      expect(mockSigner.sendUncheckedTransaction).not.toHaveBeenCalled()
+
+      // 3. Complete the in-flight signing
+      resolveSigning()
+      const signature = await signPromise
+      await submitPromise
+
+      expect(executionOrder).toEqual([
+        "typed_data_started",
+        "typed_data_finished",
+        "submit_executed",
+      ])
+      expect(signature).toBe("0xtypedsig")
+    })
   })
 })

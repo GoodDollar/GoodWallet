@@ -16,87 +16,27 @@ import type { ISigner } from "@/login/types"
 import { getCloseAfterWCAction } from "@/utils/reownAppKitWrapper"
 
 import {
-  BIP122_CHAINS,
   BIP122_MAINNET_CAIP2,
   BIP122_SIGNING_METHODS,
   BIP122_TESTNET_CAIP2,
 } from "../data/BIP122Data"
-import { EIP155_CHAINS, EIP155_SIGNING_METHODS } from "../data/EIP155Data"
+import { EIP155_CHAINS } from "../data/EIP155Data"
 import { EIP5792_METHODS } from "../data/EIP5792Data"
-import { SOLANA_CHAINS, SOLANA_SIGNING_METHODS } from "../data/SolanaData"
+import { SOLANA_SIGNING_METHODS } from "../data/SolanaData"
 import { openWalletConnectDialog } from "../store/walletConnectDialogStore"
 import { getInternalChainId } from "../utils/HelperUtils"
+import {
+  getEip155Methods,
+  getSupportedNamespaces,
+  isExternalWallet,
+} from "../utils/supportedNamespaces"
 import { WalletWrapper } from "../utils/WalletWrapper"
 import { approveBIP122Request } from "./BIP122RequestHandlerUtil"
 import { approveEIP155Request } from "./EIP155RequestHandlerUtil"
 import { approveEIP5792Request } from "./EIP5792RequestHandlerUtil"
 import { approveSolanaRequest } from "./SolanaRequestHandlerUtil"
 
-// External wallets broadcast themselves, so raw-signing methods are not offered.
-const RAW_SIGNING_METHODS = new Set<string>([
-  EIP155_SIGNING_METHODS.ETH_SIGN_TRANSACTION,
-  EIP155_SIGNING_METHODS.ETH_SEND_RAW_TRANSACTION,
-])
-
-const isExternalWallet = (signer: ISigner) => !!signer.EVM.submitTransaction
-
-const getEip155Methods = (signer: ISigner) =>
-  Object.values(EIP155_SIGNING_METHODS).filter(
-    (method) => !isExternalWallet(signer) || !RAW_SIGNING_METHODS.has(method),
-  )
-
-type SupportedNamespace = {
-  chains: string[]
-  methods: string[]
-  events: string[]
-  accounts: string[]
-}
-
-const getSupportedNamespaces = (signer: ISigner) => {
-  const namespaces: Record<string, SupportedNamespace> = {
-    eip155: {
-      chains: EIP155_CHAINS,
-      methods: getEip155Methods(signer),
-      events: ["accountsChanged", "chainChanged"],
-      accounts: EIP155_CHAINS.map((chain) => `${chain}:${signer.EVM.address}`),
-    },
-  }
-
-  const solanaChains: string[] = []
-  const solanaAccounts: string[] = []
-  for (const [internalChainId, walletConnectChainId] of SOLANA_CHAINS) {
-    const chain = AVAILABLE_CHAINS.get(internalChainId)
-    const address = chain && signer[chain.family]?.address
-    if (!address) continue
-    solanaChains.push(walletConnectChainId)
-    solanaAccounts.push(`${walletConnectChainId}:${address}`)
-  }
-  if (solanaAccounts.length > 0) {
-    namespaces.solana = {
-      chains: solanaChains,
-      methods: Object.values(SOLANA_SIGNING_METHODS),
-      events: [],
-      accounts: solanaAccounts,
-    }
-  }
-
-  if (signer.BTC) {
-    const bitcoinAccounts = [`${BIP122_MAINNET_CAIP2}:${signer.BTC.address}`]
-    if (signer.BTC_TESTNET) {
-      bitcoinAccounts.push(
-        `${BIP122_TESTNET_CAIP2}:${signer.BTC_TESTNET.address}`,
-      )
-    }
-    namespaces.bip122 = {
-      chains: Array.from(BIP122_CHAINS.values()),
-      methods: Object.values(BIP122_SIGNING_METHODS),
-      events: [],
-      accounts: bitcoinAccounts,
-    }
-  }
-
-  return namespaces
-}
+export { getEip155Methods, getSupportedNamespaces, isExternalWallet }
 
 export const setupListeners = (
   getSigner: () => ISigner,
@@ -162,6 +102,50 @@ export const setupListeners = (
         await walletConnectInstance.rejectSession({
           id: proposal.id,
           reason: getSdkError("UNSUPPORTED_CHAINS"),
+        })
+      } catch (error) {
+        console.error("Failed to reject session proposal", error)
+      }
+      closeWindowAfterWCRequestFullfilled()
+      return
+    }
+
+    const supportedNamespaces = getSupportedNamespaces(signer)
+    const nonSupportedMethods: string[] = []
+
+    for (const [nsKey, nsConfig] of Object.entries(
+      proposal.params.requiredNamespaces ?? {},
+    )) {
+      const ns = nsKey.includes(":") ? nsKey.split(":")[0] : nsKey
+      const supportedNs = supportedNamespaces[nsKey] ?? supportedNamespaces[ns]
+      if (!supportedNs) {
+        nonSupportedMethods.push(...(nsConfig.methods ?? []))
+      } else {
+        for (const method of nsConfig.methods ?? []) {
+          if (!supportedNs.methods.includes(method)) {
+            nonSupportedMethods.push(method)
+          }
+        }
+      }
+    }
+
+    if (nonSupportedMethods.length > 0) {
+      openWalletConnectDialog({
+        type: "error",
+        errorText: `Methods not supported: ${nonSupportedMethods.join(", ")}`,
+        acceptBtnText: "Ok",
+      })
+      captureEvent({
+        type: AnalyticsEventTypes.WalletConnectSessionProposal,
+        origin: proposal.verifyContext.verified.origin,
+        chainIds,
+        methods,
+        response: "error",
+      })
+      try {
+        await walletConnectInstance.rejectSession({
+          id: proposal.id,
+          reason: getSdkError("UNSUPPORTED_METHODS"),
         })
       } catch (error) {
         console.error("Failed to reject session proposal", error)

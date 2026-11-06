@@ -310,7 +310,7 @@ export const getReownSession = async (
           await chainOpLock.acquire(CHAIN_OP_LOCK_KEY)
           try {
             await ensureChain(appKit, domain.chainId)
-            return (
+            return await (
               await getWalletSigner(appKit, connectedAddress)
             ).signTypedData(domain, types, value)
           } finally {
