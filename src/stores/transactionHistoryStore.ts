@@ -100,29 +100,27 @@ const replacePropagatingTx = (
   const internal = internalTxs.get(chainId)
   const perChain = activityHistoryStore.perChain.get(chainId)
 
-  const isReplacementPresent =
-    (perChain && perChain.some((tx) => tx.hash.toLowerCase() === newLower)) ||
-    (internal && internal.some((tx) => tx.hash.toLowerCase() === newLower))
+  const replacementInPerChain =
+    perChain?.some(
+      (tx) =>
+        tx.hash.toLowerCase() === newLower &&
+        tx.hash.toLowerCase() !== oldLower,
+    ) ?? false
 
-  if (isReplacementPresent) {
-    // If the replacement is already present (e.g. discovered by a history refresh
-    // before trxMinedPromise resolved), drop the original propagating entry instead
-    // of renaming it to avoid duplicate entries with the same hash in Activity.
-    if (internal) {
+  if (internal) {
+    const hasReplacement =
+      replacementInPerChain ||
+      internal.some(
+        (tx) =>
+          tx.hash.toLowerCase() === newLower &&
+          tx.hash.toLowerCase() !== oldLower,
+      )
+    if (hasReplacement) {
       internalTxs.set(
         chainId,
         internal.filter((tx) => tx.hash.toLowerCase() !== oldLower),
       )
-    }
-    if (perChain) {
-      activityHistoryStore.perChain.set(
-        chainId,
-        perChain.filter((tx) => tx.hash.toLowerCase() !== oldLower),
-      )
-    }
-  } else {
-    // Replacement is not yet present; map the original hash to the replacement hash.
-    if (internal) {
+    } else {
       internalTxs.set(
         chainId,
         internal.map((tx) =>
@@ -130,7 +128,15 @@ const replacePropagatingTx = (
         ),
       )
     }
-    if (perChain) {
+  }
+
+  if (perChain) {
+    if (replacementInPerChain) {
+      activityHistoryStore.perChain.set(
+        chainId,
+        perChain.filter((tx) => tx.hash.toLowerCase() !== oldLower),
+      )
+    } else {
       activityHistoryStore.perChain.set(
         chainId,
         perChain.map((tx) =>

@@ -126,13 +126,17 @@ const initializeWalletConnect = async (signer: ISigner) => {
 
   // Restored sessions must not silently rebind to a new signer:
   // disconnect incompatible sessions before the new signer is usable.
-  // Check generation first: if this init was superseded or disconnected while
-  // awaiting WalletKit, do not prune active/restored sessions with a stale signer.
-  if (generation === initGeneration && wallet) {
+  // Check generation first: if this initialization has been superseded,
+  // return without pruning and without publishing.
+  if (generation !== initGeneration) {
+    return
+  }
+
+  if (wallet) {
     await disconnectIncompatibleSessions(wallet, signer)
   }
 
-  // Guard signer publication: do not publish if superseded or disconnected.
+  // Guard signer publication: do not publish if superseded or disconnected during pruning.
   if (generation === initGeneration) {
     activeSigner = signer
     refreshSessions()
