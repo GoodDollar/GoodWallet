@@ -439,14 +439,27 @@ describe("walletConnectStore - session compatibility and isolation", () => {
     expect(getActiveSigner()).toBe(signerB)
   })
 
-  it("does not publish signer if initialization was superseded or logged out", async () => {
+  it("does not publish signer and disconnects restored sessions if logged out during initialization", async () => {
     let resolveInit!: (wallet: unknown) => void
     const initDelay = new Promise((resolve) => {
       resolveInit = resolve
     })
 
+    const restoredSession = {
+      topic: "topic-restored-a",
+      namespaces: {
+        eip155: {
+          accounts: [`eip155:1:${evmAddressA}`],
+          methods: ["eth_sendTransaction", "personal_sign"],
+          events: [],
+        },
+      },
+    }
+
     const mockWallet = {
-      getActiveSessions: () => ({}),
+      getActiveSessions: () => ({
+        "topic-restored-a": restoredSession,
+      }),
       disconnectSession: mockDisconnectSession,
       pair: vi.fn(),
     }
@@ -460,6 +473,14 @@ describe("walletConnectStore - session compatibility and isolation", () => {
 
     resolveInit(mockWallet)
     await p1
+
+    // Restored session must be disconnected on logout
+    expect(mockDisconnectSession).toHaveBeenCalledWith({
+      topic: "topic-restored-a",
+      reason: expect.objectContaining({
+        message: expect.stringContaining("User disconnected"),
+      }),
+    })
 
     // Stale initializer must NOT publish signerA after logout
     expect(() => getActiveSigner()).toThrow("No active wallet session")

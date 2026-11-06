@@ -52,17 +52,31 @@ export const disconnectIncompatibleSessions = async (
 
 let walletKitInitPromise: Promise<WalletKit> | undefined
 let initGeneration = 0
+let pendingLogoutCleanup = false
 
 export const _resetWalletConnectForTesting = () => {
   walletKitInitPromise = undefined
   initGeneration = 0
   activeSigner = undefined
+  pendingLogoutCleanup = false
+}
+
+const disconnectAllSessions = async (wallet: WalletKit) => {
+  await Promise.allSettled(
+    Object.values(wallet.getActiveSessions()).map((session) =>
+      wallet.disconnectSession({
+        topic: session.topic,
+        reason: getSdkError("USER_DISCONNECTED"),
+      }),
+    ),
+  )
 }
 
 const initializeWalletConnect = async (signer: ISigner) => {
   if (!config.walletConnectEnabled) {
     return
   }
+  pendingLogoutCleanup = false
   const generation = ++initGeneration
   activeSigner = undefined
 
@@ -124,9 +138,20 @@ const initializeWalletConnect = async (signer: ISigner) => {
     }
   }
 
+  // If a logout occurred while WalletKit was initializing and no newer login has
+  // taken over, disconnect all active/restored sessions before returning.
+  if (pendingLogoutCleanup) {
+    pendingLogoutCleanup = false
+    if (wallet) {
+      await disconnectAllSessions(wallet)
+      refreshSessions()
+    }
+    return
+  }
+
   // Restored sessions must not silently rebind to a new signer:
   // disconnect incompatible sessions before the new signer is usable.
-  // Check generation first: if this initialization has been superseded,
+  // Check generation first: if this initialization has been superseded by a newer login,
   // return without pruning and without publishing.
   if (generation !== initGeneration) {
     return
@@ -165,14 +190,13 @@ export const disconnectAllWalletConnectSessions = async () => {
   initGeneration++
   activeSigner = undefined
   const wallet = walletConnectState.walletConnectInstance
-  if (!wallet || wallet === "initializing") return
-  await Promise.allSettled(
-    Object.values(wallet.getActiveSessions()).map((session) =>
-      wallet.disconnectSession({
-        topic: session.topic,
-        reason: getSdkError("USER_DISCONNECTED"),
-      }),
-    ),
-  )
+  if (!wallet || wallet === "initializing") {
+    if (wallet === "initializing") {
+      pendingLogoutCleanup = true
+    }
+    return
+  }
+  pendingLogoutCleanup = false
+  await disconnectAllSessions(wallet)
   refreshSessions()
 }
