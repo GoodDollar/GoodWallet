@@ -283,25 +283,29 @@ export const useSubmitTransaction = () => {
     }
 
     const { address, chainId } = selectedToken
+    const accountToken = activityHistoryStore.getCurrentAccountToken()
     return sendTx(
       signer.EVM,
       gasLimit,
       broadcastRequest,
       broadcastOptions,
     ).then(async ({ hash, trxMinedPromise }) => {
-      addPropagatingTx({
-        hash,
-        chainId: chainId,
-        method: "Sent",
-        txDirection: TxDirection.OUTGOING,
-        from: signer.EVM.address,
-        to: broadcastRequest.to
-          ? broadcastRequest.to.toString().toLowerCase()
-          : "0x0",
-        tokenAddress: address,
-        amount: amountInCrypto,
-        timestamp: new Date().getTime() / 1000,
-      })
+      addPropagatingTx(
+        {
+          hash,
+          chainId: chainId,
+          method: "Sent",
+          txDirection: TxDirection.OUTGOING,
+          from: signer.EVM.address,
+          to: broadcastRequest.to
+            ? broadcastRequest.to.toString().toLowerCase()
+            : "0x0",
+          tokenAddress: address,
+          amount: amountInCrypto,
+          timestamp: new Date().getTime() / 1000,
+        },
+        accountToken,
+      )
       return { hash, trxMinedPromise }
     })
   }, [

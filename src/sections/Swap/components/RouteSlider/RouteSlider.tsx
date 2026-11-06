@@ -421,6 +421,7 @@ export default function RouteSlider(
         },
       })
 
+      const accountToken = activityHistoryStore.getCurrentAccountToken()
       const routeExtended = await routeExtendedPromise
       const allStepsSucceeded = routeExtended.steps.every(
         (step) => step.execution?.status === "DONE",
@@ -429,7 +430,7 @@ export default function RouteSlider(
       if (allStepsSucceeded) {
         const propagatingTxs = getPropagatingTxs(routeExtended)
         for (const tx of propagatingTxs) {
-          addPropagatingTx(tx)
+          addPropagatingTx(tx, accountToken)
         }
 
         captureEvent({

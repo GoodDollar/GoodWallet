@@ -25,7 +25,7 @@ type WalletConnectState = {
 
 // Listeners resolve the signer per request so a reconnected session is used.
 let activeSigner: ISigner | undefined
-const getActiveSigner = () => {
+export const getActiveSigner = () => {
   if (!activeSigner) throw new Error("No active wallet session")
   return activeSigner
 }
@@ -37,8 +37,9 @@ export const isSessionCompatibleWithSigner = (
   const namespaces = session.namespaces || {}
   const supported = getSupportedNamespaces(signer)
 
-  for (const [ns, data] of Object.entries(namespaces)) {
-    const supportedNs = supported[ns]
+  for (const [nsKey, data] of Object.entries(namespaces)) {
+    const baseNs = nsKey.includes(":") ? nsKey.split(":")[0] : nsKey
+    const supportedNs = supported[nsKey] ?? supported[baseNs]
     if (!supportedNs) {
       return false
     }
@@ -50,16 +51,22 @@ export const isSessionCompatibleWithSigner = (
       }
     }
 
-    if (ns === "eip155") {
+    if (baseNs === "eip155") {
       const evmAddress = signer.EVM?.address?.toLowerCase()
       if (!evmAddress) return false
+      const supportedChains = new Set(supportedNs.chains)
       for (const account of data.accounts || []) {
-        const address = account.split(":").pop()?.toLowerCase()
+        const parts = account.split(":")
+        const address = parts.pop()?.toLowerCase()
+        const chainId = parts.join(":")
         if (address && address !== evmAddress) {
           return false
         }
+        if (chainId && !supportedChains.has(chainId)) {
+          return false
+        }
       }
-    } else if (ns === "solana") {
+    } else if (baseNs === "solana") {
       if (!signer.SOLANA && !signer.SOLANA_DEVNET) return false
       for (const account of data.accounts || []) {
         const parts = account.split(":")
@@ -73,7 +80,7 @@ export const isSessionCompatibleWithSigner = (
           return false
         }
       }
-    } else if (ns === "bip122") {
+    } else if (baseNs === "bip122") {
       if (!signer.BTC && !signer.BTC_TESTNET) return false
       for (const account of data.accounts || []) {
         const parts = account.split(":")
@@ -118,7 +125,7 @@ const initializeWalletConnect = async (signer: ISigner) => {
   if (!config.walletConnectEnabled) {
     return
   }
-  activeSigner = signer
+  activeSigner = undefined
   let wallet: WalletKit | undefined
   if (!walletConnectState.walletConnectInstance) {
     walletConnectState.walletConnectInstance = "initializing"
@@ -163,6 +170,7 @@ const initializeWalletConnect = async (signer: ISigner) => {
   if (wallet) {
     await disconnectIncompatibleSessions(wallet, signer)
   }
+  activeSigner = signer
   refreshSessions()
 }
 
@@ -185,6 +193,7 @@ export const walletConnectState = proxy<WalletConnectState>({
 })
 
 export const disconnectAllWalletConnectSessions = async () => {
+  activeSigner = undefined
   const wallet = walletConnectState.walletConnectInstance
   if (!wallet || wallet === "initializing") return
   await Promise.allSettled(

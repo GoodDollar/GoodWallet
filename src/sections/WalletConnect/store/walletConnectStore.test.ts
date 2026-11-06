@@ -39,6 +39,7 @@ import { BIP122_MAINNET_CAIP2, BIP122_TESTNET_CAIP2 } from "../data/BIP122Data"
 import { SOLANA_DEVNET, SOLANA_MAINNET } from "../data/SolanaData"
 import {
   disconnectIncompatibleSessions,
+  getActiveSigner,
   isSessionCompatibleWithSigner,
   walletConnectState,
 } from "./walletConnectStore"
@@ -306,6 +307,78 @@ describe("walletConnectStore - session compatibility and isolation", () => {
     } as unknown as SessionTypes.Struct
     expect(
       isSessionCompatibleWithSigner(btcWrongTestnetSession, multiChainSigner),
+    ).toBe(false)
+  })
+
+  it("does not expose the new signer before incompatible sessions are pruned (B9)", async () => {
+    let resolvePruning!: () => void
+    const pruningPromise = new Promise<void>((resolve) => {
+      resolvePruning = resolve
+    })
+
+    const mockWallet = {
+      getActiveSessions: () => ({
+        "topic-a": sessionForA,
+      }),
+      disconnectSession: vi.fn(async () => {
+        await pruningPromise
+      }),
+      pair: vi.fn(),
+    }
+    mockWalletKitInit.mockResolvedValueOnce(mockWallet)
+
+    // Start initialization for signerB while signerA sessions are present
+    const initPromise = walletConnectState.initializeWalletConnect(signerB)
+
+    // Yield to let initialization proceed up to the pruning step
+    await new Promise((r) => setTimeout(r, 0))
+
+    // During pruning, getActiveSigner must NOT expose signerB and must throw
+    expect(() => getActiveSigner()).toThrow("No active wallet session")
+
+    // Once pruning completes, getActiveSigner returns signerB
+    resolvePruning()
+    await initPromise
+
+    expect(getActiveSigner()).toBe(signerB)
+  })
+
+  it("normalizes chain-scoped namespace keys in restored session compatibility (B11)", () => {
+    // Session uses chain-scoped namespace key "eip155:1"
+    const chainScopedSession = {
+      topic: "topic-scoped",
+      namespaces: {
+        "eip155:1": {
+          accounts: [`eip155:1:${evmAddressA}`],
+          methods: ["eth_sendTransaction"],
+          events: [],
+        },
+      },
+    } as unknown as SessionTypes.Struct
+
+    expect(isSessionCompatibleWithSigner(chainScopedSession, signerA)).toBe(
+      true,
+    )
+    expect(isSessionCompatibleWithSigner(chainScopedSession, signerB)).toBe(
+      false,
+    )
+  })
+
+  it("rejects restored EVM sessions requesting unsupported chains (B13)", () => {
+    // Session uses an unsupported EVM chain ID 999
+    const unsupportedChainSession = {
+      topic: "topic-unsupported-chain",
+      namespaces: {
+        eip155: {
+          accounts: [`eip155:999:${evmAddressA}`],
+          methods: ["eth_sendTransaction"],
+          events: [],
+        },
+      },
+    } as unknown as SessionTypes.Struct
+
+    expect(
+      isSessionCompatibleWithSigner(unsupportedChainSession, signerA),
     ).toBe(false)
   })
 })

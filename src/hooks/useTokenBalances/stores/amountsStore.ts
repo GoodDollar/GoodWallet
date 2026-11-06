@@ -62,8 +62,14 @@ export const refreshAmounts = async (
     chainVersions.clear()
     lastAddresses = undefined
     amountsStore.amounts.clear()
+    inFlightRequests = 0
     amountsStore.isLoading = true
     amountsStore.isValidating = false
+    return
+  }
+
+  // Drop stale callbacks closing over a previous account's addresses.
+  if (sessionState.addresses && addresses !== sessionState.addresses) {
     return
   }
 
@@ -71,6 +77,7 @@ export const refreshAmounts = async (
     sessionEpoch++
     chainVersions.clear()
     lastAddresses = addresses
+    amountsStore.amounts.clear()
     inFlightRequests = 0
   }
 
@@ -122,11 +129,13 @@ export const refreshAmounts = async (
       }
     }
   } finally {
-    inFlightRequests--
-    if (inFlightRequests <= 0) {
-      inFlightRequests = 0
-      amountsStore.isLoading = false
-      amountsStore.isValidating = false
+    if (currentEpoch === sessionEpoch) {
+      inFlightRequests--
+      if (inFlightRequests <= 0) {
+        inFlightRequests = 0
+        amountsStore.isLoading = false
+        amountsStore.isValidating = false
+      }
     }
   }
 }

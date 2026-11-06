@@ -16,6 +16,8 @@ let currentAccountToken = 0
 const internalTxs = new Map<number, Tx[]>()
 let lastRefreshAllTimestamp = 0
 
+export const getCurrentAccountToken = () => currentAccountToken
+
 /**
  * Clears all cached history and resets the refresh timer.
  * Must be called whenever the active account changes so stale data from a
@@ -33,7 +35,8 @@ type ActivityHistoryStore = {
   perChain: Map<number, Tx[]>
   isLoading: boolean
   refreshHistory: (addresses: Addresses | undefined) => Promise<void>
-  addPropagatingTx: (tx: Tx) => void
+  addPropagatingTx: (tx: Tx, token?: number) => void
+  getCurrentAccountToken: () => number
 }
 
 const combineTxs = (a: Tx[], b: Tx[]) => {
@@ -44,7 +47,10 @@ const combineTxs = (a: Tx[], b: Tx[]) => {
   return combined.sort((tx1, tx2) => tx2.timestamp - tx1.timestamp)
 }
 
-const addPropagatingTx = (tx: Tx) => {
+const addPropagatingTx = (tx: Tx, token?: number) => {
+  if (token !== undefined && token !== currentAccountToken) {
+    return
+  }
   const internalTxsForChain = internalTxs.get(tx.chainId) || []
   const combinedInternalTxsForChain = combineTxs(internalTxsForChain, [tx])
   //If same length, no new internal txs added
@@ -132,4 +138,5 @@ export const activityHistoryStore = proxy<ActivityHistoryStore>({
   isLoading: false,
   refreshHistory: refreshHistory,
   addPropagatingTx: addPropagatingTx,
+  getCurrentAccountToken: getCurrentAccountToken,
 })

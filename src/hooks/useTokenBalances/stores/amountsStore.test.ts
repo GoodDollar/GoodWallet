@@ -34,6 +34,7 @@ vi.mock("./focusStore", () => ({
 import { FixedNumber } from "ethers"
 
 import type { Addresses, ISigner } from "@/login"
+import { sessionState } from "@/login/context/SessionContext/storage"
 import type { Tokens } from "@/tokens/types"
 
 import { NormalizedAddressMap } from "../NormalizedAddressMap"
@@ -55,8 +56,10 @@ const makeTokens = (chainIds: number[]): Tokens => {
 }
 
 describe("amountsStore - late async response guard", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.resetAllMocks()
+    sessionState.addresses = undefined
+    await refreshAmounts(undefined, undefined, "all")
     amountsStore.amounts.clear()
     amountsStore.isLoading = true
     amountsStore.isValidating = false
@@ -199,5 +202,127 @@ describe("amountsStore - late async response guard", () => {
     await refreshAmounts(undefined, undefined, "all")
     expect(amountsStore.amounts.size).toBe(0)
     expect(amountsStore.isLoading).toBe(true)
+  })
+
+  it("ignores late single-chain mutate callbacks from Account A after switching to Account B (B7)", async () => {
+    const accountA = "0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    const accountB = "0xBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+
+    const tokens = makeTokens([42220])
+    const addressesA = makeAddresses(accountA)
+    const addressesB = makeAddresses(accountB)
+
+    const amountsA = new NormalizedAddressMap<string, FixedNumber>("EVM", [
+      [
+        "0x1111111111111111111111111111111111111111",
+        FixedNumber.fromString("100.0"),
+      ],
+    ])
+    const amountsB = new NormalizedAddressMap<string, FixedNumber>("EVM", [
+      [
+        "0x1111111111111111111111111111111111111111",
+        FixedNumber.fromString("200.0"),
+      ],
+    ])
+
+    // Account A is active initially
+    sessionState.addresses = addressesA
+    await new Promise((r) => setTimeout(r, 10))
+    mockGetAmounts.mockResolvedValueOnce(amountsA)
+    await refreshAmounts(tokens, addressesA, "all")
+    expect(amountsStore.amounts.get(42220)).toBe(amountsA)
+
+    // User switches to Account B
+    sessionState.addresses = addressesB
+    await new Promise((r) => setTimeout(r, 10))
+    mockGetAmounts.mockResolvedValueOnce(amountsB)
+    await refreshAmounts(tokens, addressesB, "all")
+    expect(amountsStore.amounts.get(42220)).toBe(amountsB)
+
+    // Account A's late mutate callback fires for chain 42220 with stale addressesA
+    await refreshAmounts(tokens, addressesA, 42220)
+
+    // Account B's balances must NOT be overwritten by Account A's late callback
+    expect(amountsStore.amounts.get(42220)).toBe(amountsB)
+    expect(amountsStore.amounts.get(42220)).not.toBe(amountsA)
+
+    // Cleanup sessionState for subsequent tests
+    sessionState.addresses = undefined
+  })
+
+  it("does not prematurely clear loading state when stale in-flight request resolves (B10)", async () => {
+    const accountA = "0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    const accountB = "0xBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+
+    const tokens = makeTokens([42220])
+    const addressesA = makeAddresses(accountA)
+    const addressesB = makeAddresses(accountB)
+
+    let resolveA!: (val: unknown) => void
+    const delayedA = new Promise((resolve) => {
+      resolveA = resolve
+    })
+    let resolveB!: (val: unknown) => void
+    const delayedB = new Promise((resolve) => {
+      resolveB = resolve
+    })
+
+    // Account A starts refresh and hangs
+    mockGetAmounts.mockImplementationOnce(() => delayedA)
+    const refreshA = refreshAmounts(tokens, addressesA, "all")
+
+    // Account B logs in while A is in flight; B's refresh also starts and hangs
+    mockGetAmounts.mockImplementationOnce(() => delayedB)
+    const refreshB = refreshAmounts(tokens, addressesB, "all")
+
+    expect(amountsStore.isValidating).toBe(true)
+
+    // Account A's stale fetch resolves
+    resolveA(new NormalizedAddressMap<string, FixedNumber>("EVM"))
+    await refreshA
+
+    // Account B is still in flight, so isValidating must remain true
+    expect(amountsStore.isValidating).toBe(true)
+
+    // Account B resolves
+    resolveB(new NormalizedAddressMap<string, FixedNumber>("EVM"))
+    await refreshB
+
+    expect(amountsStore.isValidating).toBe(false)
+  })
+
+  it("clears cached amounts on account change (B12)", async () => {
+    const accountA = "0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    const accountB = "0xBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+
+    const tokens = makeTokens([42220])
+    const addressesA = makeAddresses(accountA)
+    const addressesB = makeAddresses(accountB)
+
+    const amountsA = new NormalizedAddressMap<string, FixedNumber>("EVM", [
+      [
+        "0x1111111111111111111111111111111111111111",
+        FixedNumber.fromString("100.0"),
+      ],
+    ])
+
+    mockGetAmounts.mockResolvedValueOnce(amountsA)
+    await refreshAmounts(tokens, addressesA, "all")
+    expect(amountsStore.amounts.get(42220)).toBe(amountsA)
+
+    // When switching to Account B, cached amounts must be cleared immediately
+    let resolveB!: (val: unknown) => void
+    const delayedB = new Promise((resolve) => {
+      resolveB = resolve
+    })
+    mockGetAmounts.mockImplementationOnce(() => delayedB)
+
+    const refreshB = refreshAmounts(tokens, addressesB, "all")
+
+    // Before B resolves, old amounts must already be cleared
+    expect(amountsStore.amounts.get(42220)).toBeUndefined()
+
+    resolveB(new NormalizedAddressMap<string, FixedNumber>("EVM"))
+    await refreshB
   })
 })

@@ -41,6 +41,7 @@ const mockTx = (hash: string, timestamp: number): Tx => ({
 describe("transactionHistoryStore", () => {
   beforeEach(() => {
     vi.resetAllMocks()
+    mockGetTransactions.mockResolvedValue([])
     clearActivityHistory()
   })
 
@@ -122,5 +123,57 @@ describe("transactionHistoryStore", () => {
     const currentTxs = activityHistoryStore.perChain.get(42220)
     expect(currentTxs).toEqual([txB])
     expect(currentTxs?.some((tx) => tx.hash === "0xtxA")).toBe(false)
+  })
+
+  it("guards addPropagatingTx against late writes after account switch (B8)", async () => {
+    const accountA = "0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    const accountB = "0xBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+
+    // Account A is active
+    await activityHistoryStore.refreshHistory(makeAddresses(accountA))
+    const tokenA = activityHistoryStore.getCurrentAccountToken()
+
+    // Switch active account to Account B
+    const txB = mockTx("0xtxB", 2000)
+    mockGetTransactions.mockResolvedValueOnce([txB])
+    await activityHistoryStore.refreshHistory(makeAddresses(accountB))
+
+    // Account A's claim/operation finishes late and attempts to insert propagating tx
+    const claimTxA = mockTx("0xclaimA", 1500)
+    activityHistoryStore.addPropagatingTx(claimTxA, tokenA)
+
+    // Account A's transaction must NOT be added to Account B's history
+    const historyB = activityHistoryStore.perChain.get(42220)
+    expect(historyB).toEqual([txB])
+    expect(historyB?.some((tx) => tx.hash === "0xclaimA")).toBe(false)
+  })
+
+  it("allows addPropagatingTx when account has not changed (same session)", async () => {
+    const accountA = "0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+
+    // Account A is active
+    await activityHistoryStore.refreshHistory(makeAddresses(accountA))
+    const tokenA = activityHistoryStore.getCurrentAccountToken()
+
+    // Same session: propagating tx is added
+    const claimTxA = mockTx("0xclaimA", 1500)
+    activityHistoryStore.addPropagatingTx(claimTxA, tokenA)
+
+    const historyA = activityHistoryStore.perChain.get(42220)
+    expect(historyA?.some((tx) => tx.hash === "0xclaimA")).toBe(true)
+  })
+
+  it("records replacement hash in propagating transaction (R1)", async () => {
+    const account = "0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+
+    await activityHistoryStore.refreshHistory(makeAddresses(account))
+    const token = activityHistoryStore.getCurrentAccountToken()
+
+    // Propagating tx with replacement hash from speed-up
+    const replacementTx = mockTx("0xreplacementhash", 1600)
+    activityHistoryStore.addPropagatingTx(replacementTx, token)
+
+    const history = activityHistoryStore.perChain.get(42220)
+    expect(history?.some((tx) => tx.hash === "0xreplacementhash")).toBe(true)
   })
 })
