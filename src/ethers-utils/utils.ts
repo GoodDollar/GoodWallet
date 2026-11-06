@@ -417,3 +417,34 @@ export const parseAmountBytes = (
     signed,
   }).toFormat({ decimals: DEFAULT_DECIMALS, width: WIDTH, signed })
 }
+
+/**
+ * Determines whether a transaction error represents a confirmed terminal failure
+ * (cancelled, replaced with different intent, or reverted on-chain).
+ * Uncertain failures (e.g. RPC timeouts, network errors, or exhausted polling retries)
+ * return false to prevent prematurely dropping pending activity entries.
+ */
+export const isConfirmedTxFailure = (err: unknown): boolean => {
+  if (isError(err, "TRANSACTION_REPLACED")) {
+    return (
+      err.reason === "cancelled" ||
+      err.reason === "replaced" ||
+      err.receipt?.status === 0
+    )
+  }
+  if (isError(err, "CALL_EXCEPTION")) {
+    return true
+  }
+  const errorObj = err as {
+    reason?: string
+    receipt?: { status?: number }
+    status?: number
+  }
+  if (errorObj?.reason === "cancelled" || errorObj?.reason === "replaced") {
+    return true
+  }
+  if (errorObj?.receipt?.status === 0 || errorObj?.status === 0) {
+    return true
+  }
+  return false
+}

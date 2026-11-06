@@ -207,6 +207,39 @@ describe("transactionHistoryStore", () => {
     expect(updated?.some((tx) => tx.hash === "0xinitialhash")).toBe(false)
   })
 
+  it("drops original propagating entry instead of duplicating when replacement is already present", async () => {
+    const account = "0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    initActivityAccount(account)
+    const token = activityHistoryStore.getCurrentAccountToken()
+
+    const initialTx = mockTx("0xinitialhash", 1600)
+    activityHistoryStore.addPropagatingTx(initialTx, token)
+
+    // A background history refresh already discovered and fetched the mined replacement
+    const replacementTx = mockTx("0xspeeduphash", 1605)
+    mockGetTransactions.mockResolvedValueOnce([replacementTx])
+    await activityHistoryStore.refreshHistory(makeAddresses(account))
+
+    const beforeReconcile = activityHistoryStore.perChain.get(42220) || []
+    expect(beforeReconcile.some((tx) => tx.hash === "0xinitialhash")).toBe(true)
+    expect(beforeReconcile.some((tx) => tx.hash === "0xspeeduphash")).toBe(true)
+
+    // Reconcile speed-up when replacement is already in history
+    activityHistoryStore.replacePropagatingTx(
+      42220,
+      "0xinitialhash",
+      "0xspeeduphash",
+      token,
+    )
+
+    const afterReconcile = activityHistoryStore.perChain.get(42220) || []
+    const speedUpMatches = afterReconcile.filter(
+      (tx) => tx.hash.toLowerCase() === "0xspeeduphash",
+    )
+    expect(speedUpMatches.length).toBe(1)
+    expect(afterReconcile.some((tx) => tx.hash === "0xinitialhash")).toBe(false)
+  })
+
   it("removes propagating transaction on cancellation or failure", async () => {
     const account = "0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
     initActivityAccount(account)

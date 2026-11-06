@@ -11,6 +11,7 @@ import {
   estimateGasLimit,
   estimateTypeAndFees,
   isAmountSafe,
+  isConfirmedTxFailure,
   normalizeEvmAddress,
   parseAmount,
   sendTx,
@@ -321,8 +322,14 @@ export const useSubmitTransaction = () => {
             )
           }
         })
-        .catch(() => {
-          activityHistoryStore.removePropagatingTx(chainId, hash, accountToken)
+        .catch((err) => {
+          if (isConfirmedTxFailure(err)) {
+            activityHistoryStore.removePropagatingTx(
+              chainId,
+              hash,
+              accountToken,
+            )
+          }
         })
 
       return { hash, trxMinedPromise }

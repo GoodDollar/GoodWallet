@@ -464,4 +464,45 @@ describe("walletConnectStore - session compatibility and isolation", () => {
     // Stale initializer must NOT publish signerA after logout
     expect(() => getActiveSigner()).toThrow("No active wallet session")
   })
+
+  it("prevents superseded initialization from pruning restored sessions of a newer signer", async () => {
+    let resolveInit!: (wallet: unknown) => void
+    const initDelay = new Promise((resolve) => {
+      resolveInit = resolve
+    })
+
+    const sessionB = {
+      topic: "topic-b",
+      namespaces: {
+        eip155: {
+          accounts: [`eip155:1:${evmAddressB}`],
+          methods: ["eth_sendTransaction", "personal_sign"],
+          events: [],
+        },
+      },
+    }
+
+    const mockWallet = {
+      getActiveSessions: () => ({
+        "topic-b": sessionB,
+      }),
+      disconnectSession: mockDisconnectSession,
+      pair: vi.fn(),
+    }
+    mockWalletKitInit.mockImplementationOnce(() => initDelay)
+
+    // User A starts initialization
+    const p1 = walletConnectState.initializeWalletConnect(signerA)
+    // User B supersedes user A while WalletKit is still initializing
+    const p2 = walletConnectState.initializeWalletConnect(signerB)
+
+    resolveInit(mockWallet)
+    await Promise.all([p1, p2])
+
+    // Signer A was superseded, so it must NOT have pruned signer B's restored session
+    expect(mockDisconnectSession).not.toHaveBeenCalledWith(
+      expect.objectContaining({ topic: "topic-b" }),
+    )
+    expect(getActiveSigner()).toBe(signerB)
+  })
 })

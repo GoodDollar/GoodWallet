@@ -95,23 +95,49 @@ const replacePropagatingTx = (
     return
   }
   const oldLower = oldHash.toLowerCase()
+  const newLower = newHash.toLowerCase()
+
   const internal = internalTxs.get(chainId)
-  if (internal) {
-    internalTxs.set(
-      chainId,
-      internal.map((tx) =>
-        tx.hash.toLowerCase() === oldLower ? { ...tx, hash: newHash } : tx,
-      ),
-    )
-  }
   const perChain = activityHistoryStore.perChain.get(chainId)
-  if (perChain) {
-    activityHistoryStore.perChain.set(
-      chainId,
-      perChain.map((tx) =>
-        tx.hash.toLowerCase() === oldLower ? { ...tx, hash: newHash } : tx,
-      ),
-    )
+
+  const isReplacementPresent =
+    (perChain && perChain.some((tx) => tx.hash.toLowerCase() === newLower)) ||
+    (internal && internal.some((tx) => tx.hash.toLowerCase() === newLower))
+
+  if (isReplacementPresent) {
+    // If the replacement is already present (e.g. discovered by a history refresh
+    // before trxMinedPromise resolved), drop the original propagating entry instead
+    // of renaming it to avoid duplicate entries with the same hash in Activity.
+    if (internal) {
+      internalTxs.set(
+        chainId,
+        internal.filter((tx) => tx.hash.toLowerCase() !== oldLower),
+      )
+    }
+    if (perChain) {
+      activityHistoryStore.perChain.set(
+        chainId,
+        perChain.filter((tx) => tx.hash.toLowerCase() !== oldLower),
+      )
+    }
+  } else {
+    // Replacement is not yet present; map the original hash to the replacement hash.
+    if (internal) {
+      internalTxs.set(
+        chainId,
+        internal.map((tx) =>
+          tx.hash.toLowerCase() === oldLower ? { ...tx, hash: newHash } : tx,
+        ),
+      )
+    }
+    if (perChain) {
+      activityHistoryStore.perChain.set(
+        chainId,
+        perChain.map((tx) =>
+          tx.hash.toLowerCase() === oldLower ? { ...tx, hash: newHash } : tx,
+        ),
+      )
+    }
   }
 }
 

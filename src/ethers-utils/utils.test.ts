@@ -50,7 +50,7 @@ vi.mock("@/gooddollar/methods/divvi", () => ({
 
 // ── Import after mocks ─────────────────────────────────────────────────────
 
-import { sendTx, sendTxWaitForMining } from "./utils"
+import { isConfirmedTxFailure, sendTx, sendTxWaitForMining } from "./utils"
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -660,6 +660,55 @@ describe("ethers-utils", () => {
       expect(txResponse.replaceableTransaction).toHaveBeenCalledWith(
         START_BLOCK,
       )
+    })
+  })
+
+  describe("isConfirmedTxFailure", () => {
+    it("returns true for confirmed cancellation", () => {
+      const err = Object.assign(new Error("transaction cancelled"), {
+        code: "TRANSACTION_REPLACED",
+        reason: "cancelled",
+      })
+      expect(isConfirmedTxFailure(err)).toBe(true)
+    })
+
+    it("returns true for different-intent replacement", () => {
+      const err = Object.assign(new Error("transaction replaced"), {
+        code: "TRANSACTION_REPLACED",
+        reason: "replaced",
+      })
+      expect(isConfirmedTxFailure(err)).toBe(true)
+    })
+
+    it("returns true for reverted replacement transaction (status 0)", () => {
+      const err = Object.assign(new Error("replacement reverted"), {
+        code: "TRANSACTION_REPLACED",
+        reason: "repriced",
+        receipt: { status: 0 },
+      })
+      expect(isConfirmedTxFailure(err)).toBe(true)
+    })
+
+    it("returns true for on-chain revert CALL_EXCEPTION", () => {
+      const err = Object.assign(new Error("execution reverted"), {
+        code: "CALL_EXCEPTION",
+        receipt: { status: 0 },
+      })
+      expect(isConfirmedTxFailure(err)).toBe(true)
+    })
+
+    it("returns false for uncertain errors like timeouts, network errors, or polling retry exhaustion", () => {
+      expect(isConfirmedTxFailure(new Error("timeout"))).toBe(false)
+      expect(
+        isConfirmedTxFailure(
+          new Error("Transaction was not found after 5 retries"),
+        ),
+      ).toBe(false)
+      expect(
+        isConfirmedTxFailure(
+          Object.assign(new Error("network error"), { code: "NETWORK_ERROR" }),
+        ),
+      ).toBe(false)
     })
   })
 })
