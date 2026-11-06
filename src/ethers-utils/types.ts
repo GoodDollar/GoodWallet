@@ -30,6 +30,7 @@ export type BroadcastOptions =
 export type BroadcastResult = {
   txResponse: TransactionResponse
   txReceipt: TransactionReceipt | null
+  originalTxResponse?: TransactionResponse
 }
 
 export type RpcUrls = Record<string, string>

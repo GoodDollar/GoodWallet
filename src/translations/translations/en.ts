@@ -38,6 +38,8 @@ const en: TypedTranslations = {
     existingWalletFailed: "Could not connect your wallet. Please try again",
     existingWalletAccountChanged:
       "Your wallet account changed. Please connect your wallet again",
+    existingWalletDisconnected:
+      "Your wallet disconnected. Please connect your wallet again",
     existingWalletRestoreFailed:
       "We couldn't reconnect your wallet. Please connect your wallet again",
     evmOnlyNotice:

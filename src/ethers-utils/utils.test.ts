@@ -10,6 +10,7 @@ const {
   mockBroadcastTransaction,
   mockGetTransaction,
   mockGetTransactionCount,
+  mockGetBlockNumber,
   mockSubmitReferral,
   mockSetDivviMarked,
 } = vi.hoisted(() => ({
@@ -18,6 +19,7 @@ const {
   mockBroadcastTransaction: vi.fn(),
   mockGetTransaction: vi.fn(),
   mockGetTransactionCount: vi.fn(),
+  mockGetBlockNumber: vi.fn(),
   mockSubmitReferral: vi.fn(),
   mockSetDivviMarked: vi.fn(),
 }))
@@ -36,6 +38,7 @@ vi.mock("./ethersProviders", () => ({
     broadcastTransaction: mockBroadcastTransaction,
     getTransaction: mockGetTransaction,
     getTransactionCount: mockGetTransactionCount,
+    getBlockNumber: mockGetBlockNumber,
   })),
 }))
 
@@ -47,7 +50,7 @@ vi.mock("@/gooddollar/methods/divvi", () => ({
 
 // ── Import after mocks ─────────────────────────────────────────────────────
 
-import { sendTx, sendTxWaitForMining } from "./utils"
+import { isConfirmedTxFailure, sendTx, sendTxWaitForMining } from "./utils"
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -84,10 +87,17 @@ const createType2Options = (
   maxPriorityFeePerGas,
 })
 
-const createTxResponse = (hash = TX_HASH) => ({
-  hash,
-  wait: vi.fn().mockResolvedValue({ hash }),
-})
+const createTxResponse = (hash = TX_HASH) => {
+  const response = {
+    hash,
+    wait: vi.fn().mockResolvedValue({ hash }),
+    replaceableTransaction: vi.fn(),
+  }
+  // By default replaceableTransaction returns a copy of itself so the tracked
+  // path exercises the same wait mock as the untracked path.
+  response.replaceableTransaction.mockReturnValue(response)
+  return response
+}
 
 // ── Tests ───────────────────────────────────────────────────────────────────
 
@@ -107,6 +117,7 @@ describe("ethers-utils", () => {
 
     mockAcquire.mockResolvedValue(undefined)
     mockGetTransactionCount.mockResolvedValue(0)
+    mockGetBlockNumber.mockResolvedValue(100)
     mockBroadcastTransaction.mockResolvedValue(txResponse)
     mockSubmitReferral.mockResolvedValue({
       json: vi.fn().mockResolvedValue({}),
@@ -451,6 +462,253 @@ describe("ethers-utils", () => {
         ),
       ).rejects.toThrow("User rejected")
       expect(mockBroadcastTransaction).not.toHaveBeenCalled()
+    })
+
+    it("resolves with the replacement receipt when the tx is sped up by the external wallet", async () => {
+      // Simulate the external wallet submitting a speed-up: the original hash
+      // is never mined; replaceableTransaction().wait() throws TRANSACTION_REPLACED.
+      const replacementReceipt = { hash: "0xreplacementhash" }
+      const replacedError = Object.assign(
+        new Error("transaction was replaced"),
+        {
+          code: "TRANSACTION_REPLACED",
+          reason: "speedup",
+          receipt: replacementReceipt,
+          replacement: { hash: "0xreplacementhash" },
+        },
+      )
+
+      txResponse.replaceableTransaction.mockReturnValue({
+        ...txResponse,
+        wait: vi.fn().mockRejectedValue(replacedError),
+      })
+      mockGetTransaction.mockResolvedValue(txResponse)
+      request = createRequest({ data: "0xcalldata_DIVVI_SUFFIX" })
+
+      const result = await sendTxWaitForMining(
+        walletSigner as never,
+        DEFAULT_GAS_LIMIT,
+        request,
+        options,
+      )
+
+      // The replacement receipt is surfaced, not an error.
+      expect(result.txReceipt).toEqual(replacementReceipt)
+      // The replacement response (with replacement hash) is returned to callers.
+      expect(result.txResponse.hash).toBe("0xreplacementhash")
+      expect(result.originalTxResponse?.hash).toBe(txResponse.hash)
+      // Divvi tracking uses the replacement hash.
+      expect(mockSubmitReferral).toHaveBeenCalledWith({
+        txHash: "0xreplacementhash",
+        chainId: request.chainId,
+      })
+    })
+
+    it("throws and does not submit a Divvi referral when the tx is cancelled by the external wallet", async () => {
+      // "cancelled" = zero-value self-transfer: the original intent was NOT
+      // executed; waitForMinedStatus must rethrow so callers surface a failure.
+      const cancelReceipt = { hash: "0xcancelhash" }
+      const cancelError = Object.assign(new Error("transaction was replaced"), {
+        code: "TRANSACTION_REPLACED",
+        reason: "cancelled",
+        receipt: cancelReceipt,
+        replacement: { hash: "0xcancelhash" },
+      })
+
+      txResponse.replaceableTransaction.mockReturnValue({
+        ...txResponse,
+        wait: vi.fn().mockRejectedValue(cancelError),
+      })
+      mockGetTransaction.mockResolvedValue(txResponse)
+      request = createRequest({ data: "0xcalldata_DIVVI_SUFFIX" })
+
+      await expect(
+        sendTxWaitForMining(
+          walletSigner as never,
+          DEFAULT_GAS_LIMIT,
+          request,
+          options,
+        ),
+      ).rejects.toThrow("transaction was replaced")
+
+      expect(mockSubmitReferral).not.toHaveBeenCalled()
+    })
+
+    it("throws and does not submit a Divvi referral when the tx is replaced with different intent by the external wallet", async () => {
+      // "replaced" = different calldata/to/value: a different-intent transaction
+      // mined in place of the original; waitForMinedStatus must rethrow.
+      const replaceReceipt = { hash: "0xreplacehash" }
+      const replaceError = Object.assign(
+        new Error("transaction was replaced"),
+        {
+          code: "TRANSACTION_REPLACED",
+          reason: "replaced",
+          receipt: replaceReceipt,
+          replacement: { hash: "0xreplacehash" },
+        },
+      )
+
+      txResponse.replaceableTransaction.mockReturnValue({
+        ...txResponse,
+        wait: vi.fn().mockRejectedValue(replaceError),
+      })
+      mockGetTransaction.mockResolvedValue(txResponse)
+      request = createRequest({ data: "0xcalldata_DIVVI_SUFFIX" })
+
+      await expect(
+        sendTxWaitForMining(
+          walletSigner as never,
+          DEFAULT_GAS_LIMIT,
+          request,
+          options,
+        ),
+      ).rejects.toThrow("transaction was replaced")
+
+      expect(mockSubmitReferral).not.toHaveBeenCalled()
+    })
+
+    it("throws and does not submit a Divvi referral when a repriced replacement tx reverts on-chain (status 0)", async () => {
+      const revertedReceipt = { hash: "0xreplacementhash", status: 0 }
+      const revertedError = Object.assign(
+        new Error("transaction was replaced and reverted"),
+        {
+          code: "TRANSACTION_REPLACED",
+          reason: "repriced",
+          receipt: revertedReceipt,
+          replacement: { hash: "0xreplacementhash" },
+        },
+      )
+
+      txResponse.replaceableTransaction.mockReturnValue({
+        ...txResponse,
+        wait: vi.fn().mockRejectedValue(revertedError),
+      })
+      mockGetTransaction.mockResolvedValue(txResponse)
+      request = createRequest({ data: "0xcalldata_DIVVI_SUFFIX" })
+
+      await expect(
+        sendTxWaitForMining(
+          walletSigner as never,
+          DEFAULT_GAS_LIMIT,
+          request,
+          options,
+        ),
+      ).rejects.toThrow("transaction was replaced and reverted")
+
+      expect(mockSubmitReferral).not.toHaveBeenCalled()
+    })
+
+    it("does not trigger a resend when getTransaction temporarily fails to find the tx", async () => {
+      // Simulate RPC returning null for the first few polls then succeeding.
+      mockGetTransaction
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(null)
+        .mockResolvedValue(txResponse)
+
+      const result = await sendTxWaitForMining(
+        walletSigner as never,
+        DEFAULT_GAS_LIMIT,
+        request,
+        options,
+      )
+
+      // No second submitTransaction call — no resend.
+      expect(walletSigner.submitTransaction).toHaveBeenCalledTimes(1)
+      expect(result.txResponse.hash).toBe(TX_HASH)
+    })
+
+    it("retries when getTransaction encounters transient RPC errors and resolves when it succeeds", async () => {
+      // Simulate RPC throwing transient errors before returning the transaction.
+      mockGetTransaction
+        .mockRejectedValueOnce(new Error("RPC rate limited: 429"))
+        .mockRejectedValueOnce(new Error("Network timeout"))
+        .mockResolvedValue(txResponse)
+
+      const result = await sendTxWaitForMining(
+        walletSigner as never,
+        DEFAULT_GAS_LIMIT,
+        request,
+        options,
+      )
+
+      expect(result.txResponse.hash).toBe(TX_HASH)
+      expect(mockGetTransaction).toHaveBeenCalledTimes(3)
+      expect(walletSigner.submitTransaction).toHaveBeenCalledTimes(1)
+    })
+
+    it("captures the start block before wallet submission so replacement tracking covers the popup window", async () => {
+      const START_BLOCK = 42
+      const callOrder: string[] = []
+      mockGetBlockNumber.mockImplementation(async () => {
+        callOrder.push("getBlockNumber")
+        return START_BLOCK
+      })
+      walletSigner.submitTransaction.mockImplementation(async () => {
+        callOrder.push("submitTransaction")
+        return TX_HASH
+      })
+      mockGetTransaction.mockResolvedValue(txResponse)
+
+      await sendTxWaitForMining(
+        walletSigner as never,
+        DEFAULT_GAS_LIMIT,
+        request,
+        options,
+      )
+
+      expect(callOrder).toEqual(["getBlockNumber", "submitTransaction"])
+      expect(txResponse.replaceableTransaction).toHaveBeenCalledWith(
+        START_BLOCK,
+      )
+    })
+  })
+
+  describe("isConfirmedTxFailure", () => {
+    it("returns true for confirmed cancellation", () => {
+      const err = Object.assign(new Error("transaction cancelled"), {
+        code: "TRANSACTION_REPLACED",
+        reason: "cancelled",
+      })
+      expect(isConfirmedTxFailure(err)).toBe(true)
+    })
+
+    it("returns true for different-intent replacement", () => {
+      const err = Object.assign(new Error("transaction replaced"), {
+        code: "TRANSACTION_REPLACED",
+        reason: "replaced",
+      })
+      expect(isConfirmedTxFailure(err)).toBe(true)
+    })
+
+    it("returns true for reverted replacement transaction (status 0)", () => {
+      const err = Object.assign(new Error("replacement reverted"), {
+        code: "TRANSACTION_REPLACED",
+        reason: "repriced",
+        receipt: { status: 0 },
+      })
+      expect(isConfirmedTxFailure(err)).toBe(true)
+    })
+
+    it("returns true for on-chain revert CALL_EXCEPTION", () => {
+      const err = Object.assign(new Error("execution reverted"), {
+        code: "CALL_EXCEPTION",
+        receipt: { status: 0 },
+      })
+      expect(isConfirmedTxFailure(err)).toBe(true)
+    })
+
+    it("returns false for uncertain errors like timeouts, network errors, or polling retry exhaustion", () => {
+      expect(isConfirmedTxFailure(new Error("timeout"))).toBe(false)
+      expect(
+        isConfirmedTxFailure(
+          new Error("Transaction was not found after 5 retries"),
+        ),
+      ).toBe(false)
+      expect(
+        isConfirmedTxFailure(
+          Object.assign(new Error("network error"), { code: "NETWORK_ERROR" }),
+        ),
+      ).toBe(false)
     })
   })
 })

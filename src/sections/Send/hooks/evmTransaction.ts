@@ -11,6 +11,7 @@ import {
   estimateGasLimit,
   estimateTypeAndFees,
   isAmountSafe,
+  isConfirmedTxFailure,
   normalizeEvmAddress,
   parseAmount,
   sendTx,
@@ -253,6 +254,31 @@ export const useIsTransactionValid = (): boolean => {
   return true
 }
 
+export const handleTrxMinedOutcome = (
+  trxMinedPromise: Promise<unknown>,
+  chainId: number,
+  hash: string,
+  accountToken: number,
+) => {
+  return trxMinedPromise
+    .then((receipt: unknown) => {
+      const rx = receipt as { hash?: string } | null | undefined
+      if (rx?.hash && rx.hash.toLowerCase() !== hash.toLowerCase()) {
+        activityHistoryStore.replacePropagatingTx(
+          chainId,
+          hash,
+          rx.hash,
+          accountToken,
+        )
+      }
+    })
+    .catch((err) => {
+      if (isConfirmedTxFailure(err)) {
+        activityHistoryStore.removePropagatingTx(chainId, hash, accountToken)
+      }
+    })
+}
+
 export const useSubmitTransaction = () => {
   const { signer } = useSessionContext()
 
@@ -283,25 +309,32 @@ export const useSubmitTransaction = () => {
     }
 
     const { address, chainId } = selectedToken
+    const accountToken = activityHistoryStore.getCurrentAccountToken()
     return sendTx(
       signer.EVM,
       gasLimit,
       broadcastRequest,
       broadcastOptions,
     ).then(async ({ hash, trxMinedPromise }) => {
-      addPropagatingTx({
-        hash,
-        chainId: chainId,
-        method: "Sent",
-        txDirection: TxDirection.OUTGOING,
-        from: signer.EVM.address,
-        to: broadcastRequest.to
-          ? broadcastRequest.to.toString().toLowerCase()
-          : "0x0",
-        tokenAddress: address,
-        amount: amountInCrypto,
-        timestamp: new Date().getTime() / 1000,
-      })
+      addPropagatingTx(
+        {
+          hash,
+          chainId: chainId,
+          method: "Sent",
+          txDirection: TxDirection.OUTGOING,
+          from: signer.EVM.address,
+          to: broadcastRequest.to
+            ? broadcastRequest.to.toString().toLowerCase()
+            : "0x0",
+          tokenAddress: address,
+          amount: amountInCrypto,
+          timestamp: new Date().getTime() / 1000,
+        },
+        accountToken,
+      )
+
+      handleTrxMinedOutcome(trxMinedPromise, chainId, hash, accountToken)
+
       return { hash, trxMinedPromise }
     })
   }, [
