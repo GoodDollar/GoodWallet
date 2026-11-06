@@ -25,6 +25,7 @@ import { EIP5792_METHODS } from "../data/EIP5792Data"
 import { SOLANA_SIGNING_METHODS } from "../data/SolanaData"
 import { openWalletConnectDialog } from "../store/walletConnectDialogStore"
 import { getInternalChainId } from "../utils/HelperUtils"
+import { isSessionCompatibleWithSigner } from "../utils/sessionValidation"
 import {
   getEip155Methods,
   getSupportedNamespaces,
@@ -50,14 +51,26 @@ export const setupListeners = (
     const requiredChainIds: string[] = []
     const optionalChainIds: string[] = []
     const methods: string[] = []
-    Object.values(proposal.params.requiredNamespaces).map((namespaces) => {
-      requiredChainIds.push(...(namespaces.chains ?? []))
-      methods.push(...namespaces.methods)
-    })
-    Object.values(proposal.params.optionalNamespaces).map((namespaces) => {
-      optionalChainIds.push(...(namespaces.chains ?? []))
-      methods.push(...namespaces.methods)
-    })
+    Object.entries(proposal.params.requiredNamespaces ?? {}).forEach(
+      ([nsKey, namespaces]) => {
+        const chains = namespaces.chains ? [...namespaces.chains] : []
+        if (nsKey.includes(":") && !chains.includes(nsKey)) {
+          chains.push(nsKey)
+        }
+        requiredChainIds.push(...chains)
+        methods.push(...namespaces.methods)
+      },
+    )
+    Object.entries(proposal.params.optionalNamespaces ?? {}).forEach(
+      ([nsKey, namespaces]) => {
+        const chains = namespaces.chains ? [...namespaces.chains] : []
+        if (nsKey.includes(":") && !chains.includes(nsKey)) {
+          chains.push(nsKey)
+        }
+        optionalChainIds.push(...chains)
+        methods.push(...namespaces.methods)
+      },
+    )
 
     const safeIsChainSupported = (chainId: string) => {
       try {
@@ -238,8 +251,12 @@ export const setupListeners = (
     let responseStatus: "accepted" | "rejected" | "error" = "accepted"
 
     try {
-      const signer = getSigner()
-      const type = getSupportedMethods(signer).get(request.method)
+      const initialSigner = getSigner()
+      const session = walletConnectInstance.getActiveSessions()[topic]
+      if (!session || !isSessionCompatibleWithSigner(session, initialSigner)) {
+        throw new Error(getSdkError("USER_DISCONNECTED").message)
+      }
+      const type = getSupportedMethods(initialSigner).get(request.method)
       if (!type) {
         throw new Error(`The method ${request.method} is not supported`)
       }
@@ -257,6 +274,13 @@ export const setupListeners = (
         )
         return
       }
+
+      // Re-validate session compatibility after user approval in case the session changed
+      const currentSigner = getSigner()
+      if (!isSessionCompatibleWithSigner(session, currentSigner)) {
+        throw new Error(getSdkError("USER_DISCONNECTED").message)
+      }
+
       responseStatus = "accepted"
       switch (type) {
         case "eip5792":
@@ -264,7 +288,7 @@ export const setupListeners = (
           break
         case "eip155":
           response = await approveEIP155Request(
-            new WalletWrapper(signer.EVM),
+            new WalletWrapper(currentSigner.EVM),
             requestEvent,
           )
           break
@@ -275,7 +299,7 @@ export const setupListeners = (
             chainProvider.family === "SOLANA" ||
             chainProvider.family === "SOLANA_DEVNET"
           ) {
-            const svmSigner = signer[chainProvider.family]
+            const svmSigner = currentSigner[chainProvider.family]
             if (svmSigner) {
               response = await approveSolanaRequest(svmSigner, requestEvent)
               break
@@ -285,7 +309,7 @@ export const setupListeners = (
         }
         case "bip122": {
           response = await approveBIP122Request(
-            getSignerForBip122ChainId(signer, chainId),
+            getSignerForBip122ChainId(currentSigner, chainId),
             requestEvent,
           )
           break

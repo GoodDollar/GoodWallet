@@ -10,10 +10,16 @@ import {
 import { EIP155_CHAINS, EIP155_SIGNING_METHODS } from "../data/EIP155Data"
 import { SOLANA_CHAINS, SOLANA_SIGNING_METHODS } from "../data/SolanaData"
 
-// External wallets broadcast themselves, so raw-signing methods are not offered.
+// External wallets broadcast themselves, so eth_signTransaction is not offered.
+// eth_sendRawTransaction is excluded for all signers since approveEIP155Request
+// has no raw-broadcast handler.
+export const UNSUPPORTED_EIP155_METHODS = new Set<string>([
+  EIP155_SIGNING_METHODS.ETH_SEND_RAW_TRANSACTION,
+])
+
 export const RAW_SIGNING_METHODS = new Set<string>([
   EIP155_SIGNING_METHODS.ETH_SIGN_TRANSACTION,
-  EIP155_SIGNING_METHODS.ETH_SEND_RAW_TRANSACTION,
+  ...UNSUPPORTED_EIP155_METHODS,
 ])
 
 export const isExternalWallet = (signer: ISigner) =>
@@ -21,7 +27,9 @@ export const isExternalWallet = (signer: ISigner) =>
 
 export const getEip155Methods = (signer: ISigner) =>
   Object.values(EIP155_SIGNING_METHODS).filter(
-    (method) => !isExternalWallet(signer) || !RAW_SIGNING_METHODS.has(method),
+    (method) =>
+      !UNSUPPORTED_EIP155_METHODS.has(method) &&
+      (!isExternalWallet(signer) || !RAW_SIGNING_METHODS.has(method)),
   )
 
 export type SupportedNamespace = {

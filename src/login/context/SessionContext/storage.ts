@@ -9,7 +9,10 @@ import {
 } from "@/login/reown"
 import type { Addresses, ISigner, ISignerSession } from "@/login/types"
 import { resetWalletConnectDialogs } from "@/sections/WalletConnect/store/walletConnectDialogStore"
-import { clearActivityHistory } from "@/stores/transactionHistoryStore"
+import {
+  clearActivityHistory,
+  initActivityAccount,
+} from "@/stores/transactionHistoryStore"
 
 const SIGNER_SESSION_KEY = "SIGNER_SESSION"
 
@@ -98,6 +101,7 @@ export const setSession = (session: ISignerSession | null) => {
     }
     sessionState.addresses = addressMap
     sessionState.reconnectReason = undefined
+    initActivityAccount(session.signer.EVM?.address)
   } else {
     sessionState.addresses = undefined
     // Clear cached history when a session ends so the next account starts fresh.

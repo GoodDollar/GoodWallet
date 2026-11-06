@@ -100,6 +100,7 @@ export const XRPDialogDetails = ({
       return
     }
 
+    const accountToken = activityHistoryStore.getCurrentAccountToken()
     const submitTransactionCallback = async () => {
       const signed = await signer.sign(trx)
       const res = await chainProvider.broadcastTransaction(signed)
@@ -115,17 +116,20 @@ export const XRPDialogDetails = ({
         )
       }
 
-      addPropagatingTx({
-        hash: signed.hash,
-        chainId: selectedToken.chainId,
-        method: "Sent",
-        from: signer.address,
-        to: toAddress,
-        tokenAddress: selectedToken.address,
-        amount: amountInCrypto,
-        timestamp: Date.now() / 1000,
-        txDirection: TxDirection.OUTGOING,
-      })
+      addPropagatingTx(
+        {
+          hash: signed.hash,
+          chainId: selectedToken.chainId,
+          method: "Sent",
+          from: signer.address,
+          to: toAddress,
+          tokenAddress: selectedToken.address,
+          amount: amountInCrypto,
+          timestamp: Date.now() / 1000,
+          txDirection: TxDirection.OUTGOING,
+        },
+        accountToken,
+      )
     }
 
     setIsValid(true)

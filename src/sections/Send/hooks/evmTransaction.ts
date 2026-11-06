@@ -306,6 +306,25 @@ export const useSubmitTransaction = () => {
         },
         accountToken,
       )
+
+      trxMinedPromise
+        .then((receipt) => {
+          if (
+            receipt?.hash &&
+            receipt.hash.toLowerCase() !== hash.toLowerCase()
+          ) {
+            activityHistoryStore.replacePropagatingTx(
+              chainId,
+              hash,
+              receipt.hash,
+              accountToken,
+            )
+          }
+        })
+        .catch(() => {
+          activityHistoryStore.removePropagatingTx(chainId, hash, accountToken)
+        })
+
       return { hash, trxMinedPromise }
     })
   }, [

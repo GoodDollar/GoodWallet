@@ -9,10 +9,10 @@ import { config } from "@/config"
 import type { ISigner } from "@/login"
 import { getWCUri } from "@/utils/reownAppKitWrapper"
 
-import { BIP122_TESTNET_CAIP2 } from "../data/BIP122Data"
-import { SOLANA_DEVNET } from "../data/SolanaData"
 import { setupListeners } from "../requests/RequestHandler"
-import { getSupportedNamespaces } from "../utils/supportedNamespaces"
+import { isSessionCompatibleWithSigner } from "../utils/sessionValidation"
+
+export { isSessionCompatibleWithSigner }
 
 export const INITIALIZE_WALLET_CONNECT_KEY = "INITIALIZE_WALLET_CONNECT"
 
@@ -28,77 +28,6 @@ let activeSigner: ISigner | undefined
 export const getActiveSigner = () => {
   if (!activeSigner) throw new Error("No active wallet session")
   return activeSigner
-}
-
-export const isSessionCompatibleWithSigner = (
-  session: SessionTypes.Struct,
-  signer: ISigner,
-): boolean => {
-  const namespaces = session.namespaces || {}
-  const supported = getSupportedNamespaces(signer)
-
-  for (const [nsKey, data] of Object.entries(namespaces)) {
-    const baseNs = nsKey.includes(":") ? nsKey.split(":")[0] : nsKey
-    const supportedNs = supported[nsKey] ?? supported[baseNs]
-    if (!supportedNs) {
-      return false
-    }
-
-    const supportedMethods = new Set(supportedNs.methods)
-    for (const method of data.methods || []) {
-      if (!supportedMethods.has(method)) {
-        return false
-      }
-    }
-
-    if (baseNs === "eip155") {
-      const evmAddress = signer.EVM?.address?.toLowerCase()
-      if (!evmAddress) return false
-      const supportedChains = new Set(supportedNs.chains)
-      for (const account of data.accounts || []) {
-        const parts = account.split(":")
-        const address = parts.pop()?.toLowerCase()
-        const chainId = parts.join(":")
-        if (address && address !== evmAddress) {
-          return false
-        }
-        if (chainId && !supportedChains.has(chainId)) {
-          return false
-        }
-      }
-    } else if (baseNs === "solana") {
-      if (!signer.SOLANA && !signer.SOLANA_DEVNET) return false
-      for (const account of data.accounts || []) {
-        const parts = account.split(":")
-        const address = parts.pop()
-        const chainId = parts.join(":")
-        const expectedAddress =
-          chainId === SOLANA_DEVNET
-            ? (signer.SOLANA_DEVNET?.address ?? signer.SOLANA?.address)
-            : (signer.SOLANA?.address ?? signer.SOLANA_DEVNET?.address)
-        if (!expectedAddress || address !== expectedAddress) {
-          return false
-        }
-      }
-    } else if (baseNs === "bip122") {
-      if (!signer.BTC && !signer.BTC_TESTNET) return false
-      for (const account of data.accounts || []) {
-        const parts = account.split(":")
-        const address = parts.pop()
-        const chainId = parts.join(":")
-        const expectedAddress =
-          chainId === BIP122_TESTNET_CAIP2
-            ? (signer.BTC_TESTNET?.address ?? signer.BTC?.address)
-            : (signer.BTC?.address ?? signer.BTC_TESTNET?.address)
-        if (!expectedAddress || address !== expectedAddress) {
-          return false
-        }
-      }
-    } else {
-      return false
-    }
-  }
-  return true
 }
 
 export const disconnectIncompatibleSessions = async (
@@ -121,48 +50,78 @@ export const disconnectIncompatibleSessions = async (
   }
 }
 
+let walletKitInitPromise: Promise<WalletKit> | undefined
+let initGeneration = 0
+
+export const _resetWalletConnectForTesting = () => {
+  walletKitInitPromise = undefined
+  initGeneration = 0
+  activeSigner = undefined
+}
+
 const initializeWalletConnect = async (signer: ISigner) => {
   if (!config.walletConnectEnabled) {
     return
   }
+  const generation = ++initGeneration
   activeSigner = undefined
-  let wallet: WalletKit | undefined
+
   if (!walletConnectState.walletConnectInstance) {
-    walletConnectState.walletConnectInstance = "initializing"
-    if (typeof window !== "undefined") {
-      sessionStorage.setItem(INITIALIZE_WALLET_CONNECT_KEY, "true")
-    }
-    const core = new Core({
-      projectId: config.walletConnectProjectId,
-    })
+    walletKitInitPromise = undefined
+  }
 
-    const { name, description, icons } = manifest()
-    if (!name || !icons || !description) {
-      throw new Error(
-        "manifest is missing required fields for WalletConnect metadata",
-      )
-    }
-    const url = window.location.origin
-    const iconUrls = icons.map((icon) => `${url}${icon.src}`)
-    const metadata = {
-      name,
-      description,
-      icons: iconUrls,
-      url,
-    }
-    wallet = await WalletKit.init({
-      core,
-      metadata,
-    })
-    setupListeners(getActiveSigner, wallet, refreshSessions)
-    const wcUri = getWCUri()
-
-    if (wcUri) {
-      wallet.pair({ uri: wcUri })
-    }
-    walletConnectState.walletConnectInstance = ref(wallet)
-  } else if (walletConnectState.walletConnectInstance !== "initializing") {
+  let wallet: WalletKit | undefined
+  if (
+    walletConnectState.walletConnectInstance &&
+    walletConnectState.walletConnectInstance !== "initializing"
+  ) {
     wallet = walletConnectState.walletConnectInstance
+  } else {
+    if (!walletKitInitPromise) {
+      walletConnectState.walletConnectInstance = "initializing"
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem(INITIALIZE_WALLET_CONNECT_KEY, "true")
+      }
+      walletKitInitPromise = (async () => {
+        const core = new Core({
+          projectId: config.walletConnectProjectId,
+        })
+
+        const { name, description, icons } = manifest()
+        if (!name || !icons || !description) {
+          throw new Error(
+            "manifest is missing required fields for WalletConnect metadata",
+          )
+        }
+        const url = window.location.origin
+        const iconUrls = icons.map((icon) => `${url}${icon.src}`)
+        const metadata = {
+          name,
+          description,
+          icons: iconUrls,
+          url,
+        }
+        const instance = await WalletKit.init({
+          core,
+          metadata,
+        })
+        setupListeners(getActiveSigner, instance, refreshSessions)
+        const wcUri = getWCUri()
+
+        if (wcUri) {
+          instance.pair({ uri: wcUri })
+        }
+        walletConnectState.walletConnectInstance = ref(instance)
+        return instance
+      })()
+    }
+    try {
+      wallet = await walletKitInitPromise
+    } catch (e) {
+      walletKitInitPromise = undefined
+      walletConnectState.walletConnectInstance = undefined
+      throw e
+    }
   }
 
   // Restored sessions must not silently rebind to a new signer:
@@ -170,8 +129,12 @@ const initializeWalletConnect = async (signer: ISigner) => {
   if (wallet) {
     await disconnectIncompatibleSessions(wallet, signer)
   }
-  activeSigner = signer
-  refreshSessions()
+
+  // Guard signer publication: do not publish if superseded or disconnected.
+  if (generation === initGeneration) {
+    activeSigner = signer
+    refreshSessions()
+  }
 }
 
 const refreshSessions = () => {
@@ -193,6 +156,7 @@ export const walletConnectState = proxy<WalletConnectState>({
 })
 
 export const disconnectAllWalletConnectSessions = async () => {
+  initGeneration++
   activeSigner = undefined
   const wallet = walletConnectState.walletConnectInstance
   if (!wallet || wallet === "initializing") return

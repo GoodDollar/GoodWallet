@@ -37,7 +37,10 @@ import type { ISigner } from "@/login/types"
 
 import { BIP122_MAINNET_CAIP2, BIP122_TESTNET_CAIP2 } from "../data/BIP122Data"
 import { SOLANA_DEVNET, SOLANA_MAINNET } from "../data/SolanaData"
+import { getSupportedNamespaces } from "../utils/supportedNamespaces"
 import {
+  _resetWalletConnectForTesting,
+  disconnectAllWalletConnectSessions,
   disconnectIncompatibleSessions,
   getActiveSigner,
   isSessionCompatibleWithSigner,
@@ -91,6 +94,7 @@ describe("walletConnectStore - session compatibility and isolation", () => {
       setItem: vi.fn(),
       getItem: vi.fn(),
     })
+    _resetWalletConnectForTesting()
     walletConnectState.walletConnectInstance = undefined
     walletConnectState.sessions = []
   })
@@ -380,5 +384,84 @@ describe("walletConnectStore - session compatibility and isolation", () => {
     expect(
       isSessionCompatibleWithSigner(unsupportedChainSession, signerA),
     ).toBe(false)
+  })
+
+  it("excludes eth_sendRawTransaction from supported EIP155 methods for all signers", () => {
+    const socialSigner = {
+      EVM: {
+        address: evmAddressA,
+      },
+    } as unknown as ISigner
+
+    const externalSigner = {
+      EVM: {
+        address: evmAddressA,
+        submitTransaction: vi.fn(),
+      },
+    } as unknown as ISigner
+
+    const socialMethods = getSupportedNamespaces(socialSigner).eip155.methods
+    const externalMethods =
+      getSupportedNamespaces(externalSigner).eip155.methods
+
+    expect(socialMethods).not.toContain("eth_sendRawTransaction")
+    expect(externalMethods).not.toContain("eth_sendRawTransaction")
+    expect(externalMethods).not.toContain("eth_signTransaction")
+    expect(socialMethods).toContain("eth_sendTransaction")
+    expect(externalMethods).toContain("eth_sendTransaction")
+  })
+
+  it("shares WalletKit initialization across overlapping initializeWalletConnect calls", async () => {
+    let resolveInit!: (wallet: unknown) => void
+    const initDelay = new Promise((resolve) => {
+      resolveInit = resolve
+    })
+
+    const mockWallet = {
+      getActiveSessions: () => ({}),
+      disconnectSession: mockDisconnectSession,
+      pair: vi.fn(),
+    }
+    mockWalletKitInit.mockImplementationOnce(() => initDelay)
+
+    // Call 1 begins initializing
+    const p1 = walletConnectState.initializeWalletConnect(signerA)
+    // Call 2 arrives while instance is initializing
+    const p2 = walletConnectState.initializeWalletConnect(signerB)
+
+    // WalletKit.init should only be called ONCE
+    expect(mockWalletKitInit).toHaveBeenCalledTimes(1)
+
+    resolveInit(mockWallet)
+    await Promise.all([p1, p2])
+
+    // SignerB was the latest caller, so activeSigner should be signerB
+    expect(getActiveSigner()).toBe(signerB)
+  })
+
+  it("does not publish signer if initialization was superseded or logged out", async () => {
+    let resolveInit!: (wallet: unknown) => void
+    const initDelay = new Promise((resolve) => {
+      resolveInit = resolve
+    })
+
+    const mockWallet = {
+      getActiveSessions: () => ({}),
+      disconnectSession: mockDisconnectSession,
+      pair: vi.fn(),
+    }
+    mockWalletKitInit.mockImplementationOnce(() => initDelay)
+
+    // User A starts initialization
+    const p1 = walletConnectState.initializeWalletConnect(signerA)
+
+    // User logs out before initialization completes
+    await disconnectAllWalletConnectSessions()
+
+    resolveInit(mockWallet)
+    await p1
+
+    // Stale initializer must NOT publish signerA after logout
+    expect(() => getActiveSigner()).toThrow("No active wallet session")
   })
 })

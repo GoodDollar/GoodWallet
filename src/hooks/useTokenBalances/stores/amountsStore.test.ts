@@ -92,10 +92,12 @@ describe("amountsStore - late async response guard", () => {
     })
 
     // Account A triggers refresh; its provider call hangs
+    sessionState.addresses = addressesA
     mockGetAmounts.mockImplementationOnce(() => delayedPromiseA)
     const refreshPromiseA = refreshAmounts(tokens, addressesA, "all")
 
     // Account B logs in and triggers refresh, resolving immediately
+    sessionState.addresses = addressesB
     mockGetAmounts.mockResolvedValueOnce(amountsB)
     await refreshAmounts(tokens, addressesB, "all")
 
@@ -139,9 +141,11 @@ describe("amountsStore - late async response guard", () => {
       resolveA = resolve
     })
 
+    sessionState.addresses = addressesA
     mockGetAmounts.mockImplementationOnce(() => delayedPromiseA)
     const refreshPromiseA = refreshAmounts(tokens, addressesA, 42220)
 
+    sessionState.addresses = addressesB
     mockGetAmounts.mockResolvedValueOnce(amountsB)
     await refreshAmounts(tokens, addressesB, 42220)
 
@@ -157,6 +161,7 @@ describe("amountsStore - late async response guard", () => {
   it("allows concurrent refreshes on different chains to both land without dropping each other", async () => {
     const account = "0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
     const addresses = makeAddresses(account)
+    sessionState.addresses = addresses
     const tokens = makeTokens([42220, 122])
 
     const amountsCelo = new NormalizedAddressMap<string, FixedNumber>("EVM", [
@@ -268,10 +273,12 @@ describe("amountsStore - late async response guard", () => {
     })
 
     // Account A starts refresh and hangs
+    sessionState.addresses = addressesA
     mockGetAmounts.mockImplementationOnce(() => delayedA)
     const refreshA = refreshAmounts(tokens, addressesA, "all")
 
     // Account B logs in while A is in flight; B's refresh also starts and hangs
+    sessionState.addresses = addressesB
     mockGetAmounts.mockImplementationOnce(() => delayedB)
     const refreshB = refreshAmounts(tokens, addressesB, "all")
 
@@ -306,11 +313,13 @@ describe("amountsStore - late async response guard", () => {
       ],
     ])
 
+    sessionState.addresses = addressesA
     mockGetAmounts.mockResolvedValueOnce(amountsA)
     await refreshAmounts(tokens, addressesA, "all")
     expect(amountsStore.amounts.get(42220)).toBe(amountsA)
 
     // When switching to Account B, cached amounts must be cleared immediately
+    sessionState.addresses = addressesB
     let resolveB!: (val: unknown) => void
     const delayedB = new Promise((resolve) => {
       resolveB = resolve
@@ -324,5 +333,21 @@ describe("amountsStore - late async response guard", () => {
 
     resolveB(new NormalizedAddressMap<string, FixedNumber>("EVM"))
     await refreshB
+  })
+
+  it("ignores refresh callbacks from ended sessions (when session has ended / logged out)", async () => {
+    const accountA = "0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    const tokens = makeTokens([42220])
+    const addressesA = makeAddresses(accountA)
+
+    // User is logged out (ended session)
+    sessionState.addresses = undefined
+
+    // A late claim or mutation callback fires with addressesA
+    await refreshAmounts(tokens, addressesA, 42220)
+
+    // No RPC call should be made and no amounts stored
+    expect(mockGetAmounts).not.toHaveBeenCalled()
+    expect(amountsStore.amounts.get(42220)).toBeUndefined()
   })
 })

@@ -19,6 +19,17 @@ let lastRefreshAllTimestamp = 0
 export const getCurrentAccountToken = () => currentAccountToken
 
 /**
+ * Initializes the active account and token when a session begins.
+ * If the account matches the currently active account, existing history is kept.
+ */
+export const initActivityAccount = (account: string | undefined) => {
+  if (account !== activeAccount) {
+    clearActivityHistory()
+    activeAccount = account
+  }
+}
+
+/**
  * Clears all cached history and resets the refresh timer.
  * Must be called whenever the active account changes so stale data from a
  * previous session cannot appear under a new account.
@@ -35,7 +46,14 @@ type ActivityHistoryStore = {
   perChain: Map<number, Tx[]>
   isLoading: boolean
   refreshHistory: (addresses: Addresses | undefined) => Promise<void>
-  addPropagatingTx: (tx: Tx, token?: number) => void
+  addPropagatingTx: (tx: Tx, token: number) => void
+  replacePropagatingTx: (
+    chainId: number,
+    oldHash: string,
+    newHash: string,
+    token: number,
+  ) => void
+  removePropagatingTx: (chainId: number, hash: string, token: number) => void
   getCurrentAccountToken: () => number
 }
 
@@ -47,8 +65,8 @@ const combineTxs = (a: Tx[], b: Tx[]) => {
   return combined.sort((tx1, tx2) => tx2.timestamp - tx1.timestamp)
 }
 
-const addPropagatingTx = (tx: Tx, token?: number) => {
-  if (token !== undefined && token !== currentAccountToken) {
+const addPropagatingTx = (tx: Tx, token: number) => {
+  if (token !== currentAccountToken) {
     return
   }
   const internalTxsForChain = internalTxs.get(tx.chainId) || []
@@ -65,6 +83,57 @@ const addPropagatingTx = (tx: Tx, token?: number) => {
     externalTxsForChain,
   )
   activityHistoryStore.perChain.set(tx.chainId, combinedTxsForChain)
+}
+
+const replacePropagatingTx = (
+  chainId: number,
+  oldHash: string,
+  newHash: string,
+  token: number,
+) => {
+  if (token !== currentAccountToken) {
+    return
+  }
+  const oldLower = oldHash.toLowerCase()
+  const internal = internalTxs.get(chainId)
+  if (internal) {
+    internalTxs.set(
+      chainId,
+      internal.map((tx) =>
+        tx.hash.toLowerCase() === oldLower ? { ...tx, hash: newHash } : tx,
+      ),
+    )
+  }
+  const perChain = activityHistoryStore.perChain.get(chainId)
+  if (perChain) {
+    activityHistoryStore.perChain.set(
+      chainId,
+      perChain.map((tx) =>
+        tx.hash.toLowerCase() === oldLower ? { ...tx, hash: newHash } : tx,
+      ),
+    )
+  }
+}
+
+const removePropagatingTx = (chainId: number, hash: string, token: number) => {
+  if (token !== currentAccountToken) {
+    return
+  }
+  const hashLower = hash.toLowerCase()
+  const internal = internalTxs.get(chainId)
+  if (internal) {
+    internalTxs.set(
+      chainId,
+      internal.filter((tx) => tx.hash.toLowerCase() !== hashLower),
+    )
+  }
+  const perChain = activityHistoryStore.perChain.get(chainId)
+  if (perChain) {
+    activityHistoryStore.perChain.set(
+      chainId,
+      perChain.filter((tx) => tx.hash.toLowerCase() !== hashLower),
+    )
+  }
 }
 
 const refreshHistory = async (addresses: Addresses | undefined) => {
@@ -138,5 +207,7 @@ export const activityHistoryStore = proxy<ActivityHistoryStore>({
   isLoading: false,
   refreshHistory: refreshHistory,
   addPropagatingTx: addPropagatingTx,
+  replacePropagatingTx: replacePropagatingTx,
+  removePropagatingTx: removePropagatingTx,
   getCurrentAccountToken: getCurrentAccountToken,
 })

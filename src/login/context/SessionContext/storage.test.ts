@@ -21,6 +21,7 @@ vi.mock("@/sections/WalletConnect/store/walletConnectStore", () => ({
 
 vi.mock("@/stores/transactionHistoryStore", () => ({
   clearActivityHistory: vi.fn(),
+  initActivityAccount: vi.fn(),
 }))
 
 import { sessionState, setSession } from "./storage"

@@ -19,6 +19,7 @@ vi.mock("@/chain/provider/provider", () => ({
 import {
   activityHistoryStore,
   clearActivityHistory,
+  initActivityAccount,
 } from "./transactionHistoryStore"
 
 const makeAddresses = (evmAddress: string): Addresses => {
@@ -78,7 +79,10 @@ describe("transactionHistoryStore", () => {
 
     // Add propagating tx
     const propagatingTx = mockTx("0xpropagating", 1500)
-    activityHistoryStore.addPropagatingTx(propagatingTx)
+    activityHistoryStore.addPropagatingTx(
+      propagatingTx,
+      activityHistoryStore.getCurrentAccountToken(),
+    )
     expect(activityHistoryStore.perChain.get(42220)?.length).toBe(2)
 
     clearActivityHistory()
@@ -175,5 +179,79 @@ describe("transactionHistoryStore", () => {
 
     const history = activityHistoryStore.perChain.get(42220)
     expect(history?.some((tx) => tx.hash === "0xreplacementhash")).toBe(true)
+  })
+
+  it("replaces propagating transaction hash on speed-up and drops stale entries", async () => {
+    const account = "0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    initActivityAccount(account)
+    const token = activityHistoryStore.getCurrentAccountToken()
+
+    const initialTx = mockTx("0xinitialhash", 1600)
+    activityHistoryStore.addPropagatingTx(initialTx, token)
+    expect(
+      activityHistoryStore.perChain
+        .get(42220)
+        ?.some((tx) => tx.hash === "0xinitialhash"),
+    ).toBe(true)
+
+    // Reconcile with replacement hash
+    activityHistoryStore.replacePropagatingTx(
+      42220,
+      "0xinitialhash",
+      "0xspeeduphash",
+      token,
+    )
+
+    const updated = activityHistoryStore.perChain.get(42220)
+    expect(updated?.some((tx) => tx.hash === "0xspeeduphash")).toBe(true)
+    expect(updated?.some((tx) => tx.hash === "0xinitialhash")).toBe(false)
+  })
+
+  it("removes propagating transaction on cancellation or failure", async () => {
+    const account = "0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    initActivityAccount(account)
+    const token = activityHistoryStore.getCurrentAccountToken()
+
+    const initialTx = mockTx("0xcancelledhash", 1600)
+    activityHistoryStore.addPropagatingTx(initialTx, token)
+    expect(
+      activityHistoryStore.perChain
+        .get(42220)
+        ?.some((tx) => tx.hash === "0xcancelledhash"),
+    ).toBe(true)
+
+    activityHistoryStore.removePropagatingTx(42220, "0xcancelledhash", token)
+
+    const updated = activityHistoryStore.perChain.get(42220)
+    expect(updated?.some((tx) => tx.hash === "0xcancelledhash")).toBe(false)
+  })
+
+  it("initializes account token on session start without invalidating same-session operations", async () => {
+    const account = "0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+
+    // Session starts: initActivityAccount called
+    initActivityAccount(account)
+    const initialToken = activityHistoryStore.getCurrentAccountToken()
+
+    // Immediate operation on Crypto tab before Activity tab opened
+    const immediateTx = mockTx("0ximmediate", 1500)
+    activityHistoryStore.addPropagatingTx(immediateTx, initialToken)
+
+    expect(
+      activityHistoryStore.perChain
+        .get(42220)
+        ?.some((tx) => tx.hash === "0ximmediate"),
+    ).toBe(true)
+
+    // Activity tab mounts and calls refreshHistory
+    await activityHistoryStore.refreshHistory(makeAddresses(account))
+
+    // Token must not be invalidated and immediate transaction must not be cleared
+    expect(activityHistoryStore.getCurrentAccountToken()).toBe(initialToken)
+    expect(
+      activityHistoryStore.perChain
+        .get(42220)
+        ?.some((tx) => tx.hash === "0ximmediate"),
+    ).toBe(true)
   })
 })

@@ -68,8 +68,8 @@ export const refreshAmounts = async (
     return
   }
 
-  // Drop stale callbacks closing over a previous account's addresses.
-  if (sessionState.addresses && addresses !== sessionState.addresses) {
+  // Drop stale callbacks closing over a previous account's addresses or an ended session.
+  if (!sessionState.addresses || addresses !== sessionState.addresses) {
     return
   }
 
@@ -145,7 +145,9 @@ subscribeKey(tokensStore, "tokens", (tokens) => {
 })
 
 subscribeKey(sessionState, "addresses", (addresses) => {
-  refreshAmounts(tokensStore.tokens, addresses, "all")
+  if (tokensStore.tokens || !addresses) {
+    refreshAmounts(tokensStore.tokens, addresses, "all")
+  }
 })
 
 setInterval(() => {
