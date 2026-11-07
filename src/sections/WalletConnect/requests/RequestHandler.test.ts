@@ -363,4 +363,53 @@ describe("RequestHandler - Session Proposal", () => {
       }),
     })
   })
+
+  it("rejects session request if session is disconnected while approval dialog is open", async () => {
+    const onSessionRequest = listeners.session_request
+    expect(onSessionRequest).toBeDefined()
+
+    const compatibleSession = {
+      topic: "compatible-topic",
+      namespaces: {
+        eip155: {
+          accounts: ["eip155:1:0x1111111111111111111111111111111111111111"],
+          methods: ["personal_sign"],
+          events: [],
+        },
+      },
+    }
+
+    let activeSessions: Record<string, unknown> = {
+      "compatible-topic": compatibleSession,
+    }
+    mockWalletKit.getActiveSessions = vi.fn(() => activeSessions)
+
+    mockOpenDialog.mockImplementationOnce(async () => {
+      activeSessions = {}
+      return "accepted"
+    })
+
+    const requestEvent = {
+      id: 333,
+      topic: "compatible-topic",
+      params: {
+        request: {
+          method: "personal_sign",
+          params: ["0xhello", "0x1111111111111111111111111111111111111111"],
+        },
+        chainId: "eip155:1",
+      },
+    }
+
+    await onSessionRequest(requestEvent)
+
+    expect(mockRespondSessionRequest).toHaveBeenCalledWith({
+      topic: "compatible-topic",
+      response: expect.objectContaining({
+        error: expect.objectContaining({
+          message: expect.stringContaining("disconnected"),
+        }),
+      }),
+    })
+  })
 })
