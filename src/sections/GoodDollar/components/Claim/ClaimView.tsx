@@ -412,6 +412,7 @@ function ClaimViewContent() {
       .filter((claim) => claim.sufficientGas)
       .forEach(async (claim) => {
         const { amount, chainId, type } = claim
+        const accountToken = activityHistoryStore.getCurrentAccountToken()
 
         const toastId = createToast({
           message:
@@ -467,19 +468,22 @@ function ClaimViewContent() {
                 ? formatUnits(gasUsed, nativeToken.decimals)
                 : undefined
 
-            addPropagatingTx({
-              hash: txResponse.hash,
-              chainId: chainId,
-              method: TYPE_TO_METHOD_MAP[type],
-              //The tx-response received, is for the wallet -> contract invocation :
-              from: txResponse.to ?? "0x0",
-              to: txResponse.from ?? "0x0",
-              tokenAddress,
-              amount: amount.toString(),
-              timestamp: new Date().getTime() / 1000,
-              txDirection: TxDirection.INCOMING,
-              gas,
-            })
+            addPropagatingTx(
+              {
+                hash: txResponse.hash,
+                chainId: chainId,
+                method: TYPE_TO_METHOD_MAP[type],
+                //The tx-response received, is for the wallet -> contract invocation :
+                from: txResponse.to ?? "0x0",
+                to: txResponse.from ?? "0x0",
+                tokenAddress,
+                amount: amount.toString(),
+                timestamp: new Date().getTime() / 1000,
+                txDirection: TxDirection.INCOMING,
+                gas,
+              },
+              accountToken,
+            )
 
             switch (type) {
               case "ubi":

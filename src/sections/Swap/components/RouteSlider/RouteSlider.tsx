@@ -305,6 +305,7 @@ export default function RouteSlider(
   ])
 
   const executeSelectedRoute = async (selectedRoute: Route) => {
+    const initialAccountToken = activityHistoryStore.getCurrentAccountToken()
     const formattedAmount = formatTokenAmount(
       formatUnits(selectedRoute.fromAmount, selectedRoute.fromToken.decimals),
       selectedRoute.fromToken.symbol,
@@ -333,9 +334,20 @@ export default function RouteSlider(
         throw new Error(`LiFi not initialised`)
       }
       const { executeRoute } = await import("@lifi/sdk")
+      if (
+        activityHistoryStore.getCurrentAccountToken() !== initialAccountToken
+      ) {
+        throw new Error("Session changed before route execution")
+      }
       const routeExtendedPromise = executeRoute(lifiClient, selectedRoute, {
         //This is always called, before signing the transactions
         updateTransactionRequestHook: async (tx) => {
+          if (
+            activityHistoryStore.getCurrentAccountToken() !==
+            initialAccountToken
+          ) {
+            throw new Error("Session changed during route execution")
+          }
           if (!tx.chainId) {
             return tx
           }
@@ -429,7 +441,7 @@ export default function RouteSlider(
       if (allStepsSucceeded) {
         const propagatingTxs = getPropagatingTxs(routeExtended)
         for (const tx of propagatingTxs) {
-          addPropagatingTx(tx)
+          addPropagatingTx(tx, initialAccountToken)
         }
 
         captureEvent({

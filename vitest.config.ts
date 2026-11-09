@@ -14,9 +14,9 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
       "@/config": path.resolve(__dirname, "./config"),
       "@/configServerless": path.resolve(__dirname, "./configServerless"),
+      "@": path.resolve(__dirname, "./src"),
       translations: path.resolve(__dirname, "./src/translations"),
       "ethers-utils": path.resolve(__dirname, "./src/ethers-utils"),
       "ethers-utils/*": path.resolve(__dirname, "./src/ethers-utils"),

@@ -10,6 +10,7 @@ export type LoginTranslations = {
   existingWalletCancelled: string
   existingWalletFailed: string
   existingWalletAccountChanged: string
+  existingWalletDisconnected: string
   existingWalletRestoreFailed: string
   evmOnlyNotice: string
   legalText: {
