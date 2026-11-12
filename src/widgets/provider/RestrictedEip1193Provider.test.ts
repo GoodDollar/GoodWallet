@@ -178,6 +178,28 @@ describe("RestrictedEip1193Provider", () => {
     })
   })
 
+  it("submits approved transactions through external wallets instead of raw broadcast", async () => {
+    const submitTransaction = vi.fn(async () => "0xwallethash")
+    const { provider, rpcRequest, requestWalletApproval } = createProvider({
+      signer: { ...signer, submitTransaction },
+    })
+    await expect(
+      provider.request({
+        method: "eth_sendTransaction",
+        params: [{ from: address, chainId: 1, to: address, value: BigInt(1) }],
+      }),
+    ).resolves.toBe("0xwallethash")
+    expect(requestWalletApproval).toHaveBeenCalled()
+    expect(submitTransaction).toHaveBeenCalledWith(
+      expect.objectContaining({ from: address, to: address }),
+    )
+    expect(signer.signTransaction).not.toHaveBeenCalled()
+    expect(rpcRequest).not.toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ method: "eth_sendRawTransaction" }),
+    )
+  })
+
   it("keeps signing disabled until the Wallet explicitly approves it", async () => {
     const { provider } = createProvider({ requestWalletApproval: undefined })
     await expect(

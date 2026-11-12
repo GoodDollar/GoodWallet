@@ -10,7 +10,7 @@ import {
 
 import { AnalyticsEventTypes } from "@/analytics/types"
 import { captureEvent } from "@/analytics/useAnalytics"
-import { AVAILABLE_CHAINS, AVAILABLE_CHAINS_IDS } from "@/chain/chains"
+import { AVAILABLE_CHAINS } from "@/chain/chains"
 import { getChainProvider } from "@/chain/provider/provider"
 import type { ISigner } from "@/login/types"
 import { getCloseAfterWCAction } from "@/utils/reownAppKitWrapper"
@@ -32,64 +32,81 @@ import { approveEIP155Request } from "./EIP155RequestHandlerUtil"
 import { approveEIP5792Request } from "./EIP5792RequestHandlerUtil"
 import { approveSolanaRequest } from "./SolanaRequestHandlerUtil"
 
+// External wallets broadcast themselves, so raw-signing methods are not offered.
+const RAW_SIGNING_METHODS = new Set<string>([
+  EIP155_SIGNING_METHODS.ETH_SIGN_TRANSACTION,
+  EIP155_SIGNING_METHODS.ETH_SEND_RAW_TRANSACTION,
+])
+
+const isExternalWallet = (signer: ISigner) => !!signer.EVM.submitTransaction
+
+const getEip155Methods = (signer: ISigner) =>
+  Object.values(EIP155_SIGNING_METHODS).filter(
+    (method) => !isExternalWallet(signer) || !RAW_SIGNING_METHODS.has(method),
+  )
+
+type SupportedNamespace = {
+  chains: string[]
+  methods: string[]
+  events: string[]
+  accounts: string[]
+}
+
 const getSupportedNamespaces = (signer: ISigner) => {
-  const solanaChains: string[] = []
-  const solanaAccounts: string[] = []
-
-  for (const [internalChainId, walletConnectChainId] of SOLANA_CHAINS) {
-    solanaChains.push(walletConnectChainId)
-    const chain = AVAILABLE_CHAINS.get(internalChainId)
-    if (!chain) {
-      throw new Error(
-        `Chain with id ${internalChainId} not found in AVAILABLE_CHAINS`,
-      )
-    }
-    const address = signer[chain.family]?.address
-    if (!address) {
-      throw new Error(`Address for chain ${chain.name} not found in addresses`)
-    }
-    solanaAccounts.push(`${walletConnectChainId}:${address}`)
-  }
-
-  const bitcoinAccounts: string[] = []
-  bitcoinAccounts.push(`${BIP122_MAINNET_CAIP2}:${signer.BTC.address}`)
-  if (signer.BTC_TESTNET) {
-    bitcoinAccounts.push(
-      `${BIP122_TESTNET_CAIP2}:${signer.BTC_TESTNET.address}`,
-    )
-  }
-
-  return {
+  const namespaces: Record<string, SupportedNamespace> = {
     eip155: {
       chains: EIP155_CHAINS,
-      methods: Object.values(EIP155_SIGNING_METHODS),
+      methods: getEip155Methods(signer),
       events: ["accountsChanged", "chainChanged"],
       accounts: EIP155_CHAINS.map((chain) => `${chain}:${signer.EVM.address}`),
     },
-    solana: {
+  }
+
+  const solanaChains: string[] = []
+  const solanaAccounts: string[] = []
+  for (const [internalChainId, walletConnectChainId] of SOLANA_CHAINS) {
+    const chain = AVAILABLE_CHAINS.get(internalChainId)
+    const address = chain && signer[chain.family]?.address
+    if (!address) continue
+    solanaChains.push(walletConnectChainId)
+    solanaAccounts.push(`${walletConnectChainId}:${address}`)
+  }
+  if (solanaAccounts.length > 0) {
+    namespaces.solana = {
       chains: solanaChains,
       methods: Object.values(SOLANA_SIGNING_METHODS),
       events: [],
       accounts: solanaAccounts,
-    },
-    bip122: {
+    }
+  }
+
+  if (signer.BTC) {
+    const bitcoinAccounts = [`${BIP122_MAINNET_CAIP2}:${signer.BTC.address}`]
+    if (signer.BTC_TESTNET) {
+      bitcoinAccounts.push(
+        `${BIP122_TESTNET_CAIP2}:${signer.BTC_TESTNET.address}`,
+      )
+    }
+    namespaces.bip122 = {
       chains: Array.from(BIP122_CHAINS.values()),
       methods: Object.values(BIP122_SIGNING_METHODS),
       events: [],
       accounts: bitcoinAccounts,
-    },
+    }
   }
+
+  return namespaces
 }
 
 export const setupListeners = (
-  signer: ISigner,
+  getSigner: () => ISigner,
   walletConnectInstance: WalletKit,
   refreshSessions: () => void,
 ) => {
-  const evmWalletWrapper = new WalletWrapper(signer.EVM)
   const onSessionProposal = async (
     proposal: SignClientTypes.EventArguments["session_proposal"],
   ) => {
+    const signer = getSigner()
     const requiredChainIds: string[] = []
     const optionalChainIds: string[] = []
     const methods: string[] = []
@@ -105,7 +122,8 @@ export const setupListeners = (
     const safeIsChainSupported = (chainId: string) => {
       try {
         const internalChainId = getInternalChainId(chainId)
-        return AVAILABLE_CHAINS_IDS.includes(internalChainId)
+        const family = AVAILABLE_CHAINS.get(internalChainId)?.family
+        return !!family && !!signer[family]
       } catch {
         return false
       }
@@ -118,12 +136,15 @@ export const setupListeners = (
     )
 
     if (nonSupportedChains.length > 0 || supportedChains.length === 0) {
+      const walletNote = isExternalWallet(signer)
+        ? "Connected wallets support EVM networks only. "
+        : ""
       openWalletConnectDialog({
         type: "error",
         errorText:
           supportedChains.length === 0
-            ? `No supported chain found in request`
-            : `Chains not supported: ${nonSupportedChains}`,
+            ? `${walletNote}No supported chain found in request`
+            : `${walletNote}Chains not supported: ${nonSupportedChains}`,
         acceptBtnText: "Ok",
       })
       captureEvent({
@@ -188,21 +209,26 @@ export const setupListeners = (
     closeWindowAfterWCRequestFullfilled()
   }
 
-  const supportedMethods = new Map<
-    string,
-    "eip155" | "solana" | "bip122" | "eip5792"
-  >()
-  for (const method of Object.values(EIP155_SIGNING_METHODS)) {
-    supportedMethods.set(method, "eip155")
-  }
-  for (const method of Object.values(SOLANA_SIGNING_METHODS)) {
-    supportedMethods.set(method, "solana")
-  }
-  for (const method of Object.values(BIP122_SIGNING_METHODS)) {
-    supportedMethods.set(method, "bip122")
-  }
-  for (const method of Object.values(EIP5792_METHODS)) {
-    supportedMethods.set(method, "eip5792")
+  const getSupportedMethods = (signer: ISigner) => {
+    const supportedMethods = new Map<
+      string,
+      "eip155" | "solana" | "bip122" | "eip5792"
+    >()
+    for (const method of getEip155Methods(signer)) {
+      supportedMethods.set(method, "eip155")
+    }
+    for (const method of Object.values(SOLANA_SIGNING_METHODS)) {
+      supportedMethods.set(method, "solana")
+    }
+    for (const method of Object.values(BIP122_SIGNING_METHODS)) {
+      supportedMethods.set(method, "bip122")
+    }
+    if (!isExternalWallet(signer)) {
+      for (const method of Object.values(EIP5792_METHODS)) {
+        supportedMethods.set(method, "eip5792")
+      }
+    }
+    return supportedMethods
   }
 
   const onSessionRequest = async (
@@ -215,7 +241,8 @@ export const setupListeners = (
     let responseStatus: "accepted" | "rejected" | "error" = "accepted"
 
     try {
-      const type = supportedMethods.get(request.method)
+      const signer = getSigner()
+      const type = getSupportedMethods(signer).get(request.method)
       if (!type) {
         throw new Error(`The method ${request.method} is not supported`)
       }
@@ -239,7 +266,10 @@ export const setupListeners = (
           response = await approveEIP5792Request(requestEvent)
           break
         case "eip155":
-          response = await approveEIP155Request(evmWalletWrapper, requestEvent)
+          response = await approveEIP155Request(
+            new WalletWrapper(signer.EVM),
+            requestEvent,
+          )
           break
         case "solana": {
           const internalChainId = getInternalChainId(chainId)
@@ -258,7 +288,7 @@ export const setupListeners = (
         }
         case "bip122": {
           response = await approveBIP122Request(
-            getSignerForBip122ChainId(chainId),
+            getSignerForBip122ChainId(signer, chainId),
             requestEvent,
           )
           break
@@ -292,10 +322,13 @@ export const setupListeners = (
     }
   }
 
-  const getSignerForBip122ChainId = (chainId: string) => {
+  const getSignerForBip122ChainId = (signer: ISigner, chainId: string) => {
     switch (chainId) {
       case BIP122_MAINNET_CAIP2:
-        return signer.BTC
+        if (signer.BTC) {
+          return signer.BTC
+        }
+        throw new Error("BTC signer not available")
       case BIP122_TESTNET_CAIP2:
         if (signer.BTC_TESTNET) {
           return signer.BTC_TESTNET
@@ -309,10 +342,11 @@ export const setupListeners = (
   const onSessionAuthenticate = async (
     authRequest: SignClientTypes.EventArguments["session_authenticate"],
   ) => {
+    const evmWalletWrapper = new WalletWrapper(getSigner().EVM)
     const authPayload = populateAuthPayload({
       authPayload: authRequest?.params?.authPayload,
       chains: EIP155_CHAINS,
-      methods: Object.values(EIP155_SIGNING_METHODS),
+      methods: getEip155Methods(getSigner()),
     })
 
     const address = evmWalletWrapper.address
