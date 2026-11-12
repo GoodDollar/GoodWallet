@@ -214,7 +214,7 @@ const testFixtureWidget = defineWidget({
 const superfluidCampaignWidget = defineWidget({
   widgetId: "goodwidget.superfluid-campaign",
   packageName: "@goodwidget/superfluid-campaign-widget",
-  packageVersion: "0.1.8",
+  packageVersion: "0.1.9",
   routeSlug: "superfluid-campaign",
   displayName: "Superfluid Rewards",
   description: "Earn SUP rewards through GoodDollar and ecosystem actions",
