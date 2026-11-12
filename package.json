@@ -1,6 +1,6 @@
 {
   "name": "goodwallet",
-  "version": "2.1.4",
+  "version": "2.1.5",
   "private": true,
   "scripts": {
     "dev": " mkdir -p data && drizzle-kit push && next dev --turbo -p 3000",
@@ -29,8 +29,8 @@
     "@goodwidget/embed": "0.1.4",
     "@goodwidget/goodreserve-widget": "0.1.7",
     "@goodwidget/streaming-widget": "0.1.1",
-    "@goodwidget/superfluid-campaign-widget": "0.1.8",
-    "@goodwidget/ui": "0.1.7",
+    "@goodwidget/superfluid-campaign-widget": "0.2.0",
+    "@goodwidget/ui": "0.1.8",
     "@hcaptcha/react-hcaptcha": "^2.0.2",
     "@json-rpc-tools/utils": "^1.7.6",
     "@lifi/sdk": "^4.1.0",

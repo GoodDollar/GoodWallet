@@ -1057,19 +1057,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@goodwidget/superfluid-campaign-widget@npm:0.1.8":
-  version: 0.1.8
-  resolution: "@goodwidget/superfluid-campaign-widget@npm:0.1.8"
+"@goodwidget/superfluid-campaign-widget@npm:0.2.0":
+  version: 0.2.0
+  resolution: "@goodwidget/superfluid-campaign-widget@npm:0.2.0"
   dependencies:
     "@goodwidget/citizen-claim-widget": "npm:0.2.1"
     "@goodwidget/core": "npm:0.1.5"
     "@goodwidget/embed": "npm:0.1.4"
-    "@goodwidget/ui": "npm:0.1.7"
+    "@goodwidget/ui": "npm:0.1.8"
     viem: "npm:^2.0.0"
   peerDependencies:
     react: ">=18.0.0"
     react-dom: ">=18.0.0"
-  checksum: 10c0/7d59dc73132b8eccc32cdd7ca62d6b5fe858c2d6cd26013bb2dd07d3efabcb9b37ed09183c7d8cdd6e3a24935e49a23a5b27c27dba964e4f07d79ff75d3b3cc6
+  checksum: 10c0/ea045a86496441dc2ba20cd89355ad60fdbfc49d9f76ffd89c30d489727c1135630d87ba51164a31999cd2d99c0fcfa0126cbf385ace9e04c27f4f3965578eb4
   languageName: node
   linkType: hard
 
@@ -1170,6 +1170,31 @@ __metadata:
     react-native-svg:
       optional: true
   checksum: 10c0/305874ed893cfbd5f87be867499127bd2738c9c6945e39587f176c80612198e4fc965e796d5d97ca8884a83e127744fbbc71faaa0ca2fbb0df0c0ac05ff308f5
+  languageName: node
+  linkType: hard
+
+"@goodwidget/ui@npm:0.1.8":
+  version: 0.1.8
+  resolution: "@goodwidget/ui@npm:0.1.8"
+  dependencies:
+    "@tamagui/animations-react-native": "npm:^1.121.0"
+    "@tamagui/core": "npm:1.121.0"
+    "@tamagui/lucide-icons": "npm:1.121.0"
+    "@tamagui/themes": "npm:1.121.0"
+    tamagui: "npm:1.121.0"
+  peerDependencies:
+    "@react-native-clipboard/clipboard": ">=1.14.0"
+    react: ">=18.0.0"
+    react-native: ">=0.76.0"
+    react-native-svg: ">=12"
+  peerDependenciesMeta:
+    "@react-native-clipboard/clipboard":
+      optional: true
+    react-native:
+      optional: true
+    react-native-svg:
+      optional: true
+  checksum: 10c0/5f9705c7f685decf7d60683ba12753b98f6dc576a463d1182297d15384d01dc6fe5130dd3f5742aabdb9e3a4aba9008b1a1574412bcaee6a50cad23f4b420c72
   languageName: node
   linkType: hard
 
@@ -10135,8 +10160,8 @@ __metadata:
     "@goodwidget/embed": "npm:0.1.4"
     "@goodwidget/goodreserve-widget": "npm:0.1.7"
     "@goodwidget/streaming-widget": "npm:0.1.1"
-    "@goodwidget/superfluid-campaign-widget": "npm:0.1.8"
-    "@goodwidget/ui": "npm:0.1.7"
+    "@goodwidget/superfluid-campaign-widget": "npm:0.2.0"
+    "@goodwidget/ui": "npm:0.1.8"
     "@hcaptcha/react-hcaptcha": "npm:^2.0.2"
     "@json-rpc-tools/utils": "npm:^1.7.6"
     "@lifi/sdk": "npm:^4.1.0"

@@ -157,7 +157,7 @@ describe("widget registry", () => {
     expect(superfluid).toMatchObject({
       widgetId: "goodwidget.superfluid-campaign",
       packageName: "@goodwidget/superfluid-campaign-widget",
-      packageVersion: "0.1.8",
+      packageVersion: "0.2.0",
       routeSlug: "superfluid-campaign",
       entry: { tagName: "gw-superfluid-campaign" },
       providerPolicy: {
