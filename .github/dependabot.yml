@@ -50,5 +50,10 @@ updates:
           - "@amplitude/*"
           - "@sentry/nextjs"      
 
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+
     
 
