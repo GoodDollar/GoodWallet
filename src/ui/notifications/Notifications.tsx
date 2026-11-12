@@ -30,7 +30,12 @@ export const Notifications = () => {
             <Icon name="BsCheckCircleFill" color="main" />
           )}
           {notification.status === "error" && (
-            <Icon name="BsExclamationCircleFill" color="red" />
+            // Multi-line notices pair the larger status icon with the big X button
+            <Icon
+              name="BsExclamationCircleFill"
+              color="red"
+              size={notification.content ? "big" : undefined}
+            />
           )}
 
           <div className={styles.notificationMessage}>

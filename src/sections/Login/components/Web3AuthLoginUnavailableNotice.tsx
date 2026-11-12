@@ -27,7 +27,7 @@ function ExternalLink({
 // Plain DOM text (no `translate="no"`) so browser translation applies like the rest of the wallet.
 export function Web3AuthLoginUnavailableNotice(): ReactElement {
   return (
-    <div className="flex flex-col gap-2 text-left">
+    <div className="flex flex-col gap-2 text-left text-sm">
       <strong>Login temporarily unavailable</strong>
       <p>
         Our login provider, Web3Auth, has paused its service after a security
