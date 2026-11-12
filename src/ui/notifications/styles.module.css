@@ -54,6 +54,18 @@
   animation: exiting 0.5s forwards;
 }
 
+/* Multi-line notice: auto height, icon pinned to the top, no max-height clipping */
+.notificationItemRich {
+  height: auto;
+  align-items: flex-start;
+  padding: 10px;
+  animation: enteringRich 0.5s forwards;
+}
+
+.notificationItemRich.notificationItemExiting {
+  animation: exitingRich 0.5s forwards;
+}
+
 @keyframes progressing {
   0% {
     width: 0%;
@@ -90,5 +102,23 @@
     max-height: 0px;
     padding: 0px;
     margin-bottom: 0px;
+  }
+}
+
+@keyframes enteringRich {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes exitingRich {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
   }
 }

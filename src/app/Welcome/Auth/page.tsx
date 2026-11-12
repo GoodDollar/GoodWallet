@@ -10,6 +10,7 @@ import { LoadingSpinner } from "@/components/Snippet/LoadingSpinner"
 import { config } from "@/config"
 import { useEffectOnce } from "@/hooks/utils"
 import { useTorusLogin } from "@/login"
+import { Web3AuthLoginUnavailableNotice } from "@/sections/Login/components/Web3AuthLoginUnavailableNotice"
 
 export default function Page() {
   const router = useRouter()
@@ -28,10 +29,10 @@ export default function Page() {
         captureEvent({
           type: AnalyticsEventTypes.TorusLoginFailed,
         })
+        // Persistent notice (no auto-close) while Web3Auth is paused; revert to restore the original toast
         createToast({
-          message: `Failed to login. Please try again.`,
+          content: <Web3AuthLoginUnavailableNotice />,
           status: "error",
-          autoClose: true,
         })
       })
       .finally(goToHome)
