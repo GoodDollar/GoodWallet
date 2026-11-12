@@ -1,5 +1,6 @@
 "use client"
 
+import type { ReactElement } from "react"
 import { Button, Icon } from "ui"
 
 import styles from "./styles.module.css"
@@ -17,6 +18,8 @@ export const Notifications = () => {
           className={[
             styles.notificationItem,
             notification.closing && styles.notificationItemExiting,
+            // Rich content grows with its text instead of the fixed single-line height
+            notification.content && styles.notificationItemRich,
           ].join(" ")}
         >
           {notification.status === "pending" && (
@@ -30,9 +33,11 @@ export const Notifications = () => {
             <Icon name="BsExclamationCircleFill" color="red" />
           )}
 
-          <span className={styles.notificationMessage}>
-            {notification.message}
-          </span>
+          <div className={styles.notificationMessage}>
+            {/* valtio snapshots type the ref'd element as readonly; it is the original element */}
+            {(notification.content as ReactElement | undefined) ??
+              notification.message}
+          </div>
 
           {notification.status !== "pending" ? (
             <Button

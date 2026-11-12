@@ -1,8 +1,11 @@
-import { proxy } from "valtio"
+import type { ReactElement } from "react"
+import { proxy, ref } from "valtio"
 
 type Notification = {
   id: string
   message?: string
+  // Rich content (title, paragraphs, links) rendered instead of `message`
+  content?: ReactElement
   status?: "pending" | "success" | "error"
   autoClose?: boolean
   closing?: boolean
@@ -11,10 +14,15 @@ type Notification = {
 export const notificationStore = proxy<Record<string, Notification>>({})
 
 export const createNotification = (
-  args: Pick<Notification, "message" | "status" | "autoClose">,
+  args: Pick<Notification, "message" | "content" | "status" | "autoClose">,
 ) => {
   const id = Math.random().toString(36).substring(2, 9)
-  notificationStore[id] = { id, ...args }
+  notificationStore[id] = {
+    id,
+    ...args,
+    // `ref` keeps the React element out of valtio's deep proxying
+    content: args.content ? ref(args.content) : undefined,
+  }
   if (args.autoClose) setAutoClose(id)
   return id
 }
