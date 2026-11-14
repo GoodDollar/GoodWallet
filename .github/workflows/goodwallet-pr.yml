@@ -28,6 +28,10 @@ jobs:
       - name: Run install
         run: yarn install --immutable
 
+      - name: Validate exact GoodWidget dependencies
+        # Widgets execute in-process, so PRs must pin the bytes reviewers audit.
+        run: yarn widget-deps:check
+
       - name: Run Biome Check
         uses: borales/actions-yarn@v5
         with:
