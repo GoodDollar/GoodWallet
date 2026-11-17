@@ -1,16 +1,8 @@
 import { useCallback } from "react"
-import type {
-  AggregateLoginParams,
-  SingleLoginParams,
-} from "@toruslabs/customauth"
+import type { CustomAuthLoginParams } from "@toruslabs/customauth"
 
 import { getPrivateKeySession } from "../adapters/privatekey"
-import {
-  getTorusSession,
-  type TorusNetwork,
-  torusAggregateLogin,
-  torusLogin,
-} from "../torus"
+import { getTorusSession, type TorusNetwork, torusLogin } from "../torus"
 import type { ISignerSession } from "../types"
 import { useSessionContext } from "./context"
 
@@ -32,20 +24,10 @@ export const usePKeyLogin = (
 export const useTriggerTorusLogin = (
   network: TorusNetwork,
   web3authClientId: string,
-  args: SingleLoginParams,
+  args: CustomAuthLoginParams,
 ) =>
   useCallback(
     () => torusLogin(network, web3authClientId, args),
-    [network, web3authClientId, args],
-  )
-
-export const useTriggerTorusAggregateLogin = (
-  network: TorusNetwork,
-  web3authClientId: string,
-  args: AggregateLoginParams,
-) =>
-  useCallback(
-    () => torusAggregateLogin(network, web3authClientId, args),
     [network, web3authClientId, args],
   )
 

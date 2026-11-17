@@ -5,12 +5,7 @@ import { Button } from "ui"
 
 import { localeKey, useTranslation } from "translations"
 import { config } from "@/config"
-import {
-  Captcha,
-  usePKeyLogin,
-  useTriggerTorusAggregateLogin,
-  useTriggerTorusLogin,
-} from "@/login"
+import { Captcha, usePKeyLogin, useTriggerTorusLogin } from "@/login"
 
 const { env, torus } = config
 const { network, web3AuthClientId, providers, captchaKey } = torus
@@ -23,7 +18,7 @@ export const GoogleLoginButton: FC<{ isDefault?: boolean }> = ({
   isDefault,
 }) => {
   const { locale, translations } = useTranslation()
-  const onTriggerLogin = useTriggerTorusAggregateLogin(
+  const onTriggerLogin = useTriggerTorusLogin(
     network,
     web3AuthClientId,
     providers.google,
