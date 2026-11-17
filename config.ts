@@ -148,31 +148,28 @@ const torus: TorusConfig = {
   captchaKey: process.env.NEXT_PUBLIC_WEB3AUTH_AUTH0_CAPTCHA_KEY as string,
   providers: {
     google: {
-      aggregateVerifierType: "single_id_verifier" as const,
-      verifierIdentifier: process.env
+      groupedAuthConnectionId: process.env
         .NEXT_PUBLIC_WEB3AUTH_GOOGLE_VERIFIER as string,
-      subVerifierDetailsArray: [
-        {
-          clientId: process.env.NEXT_PUBLIC_WEB3AUTH_GOOGLE_CLIENTID as string,
-          typeOfLogin: "google" as const,
-          verifier: process.env
-            .NEXT_PUBLIC_WEB3AUTH_GOOGLE_SUBVERIFIER as string,
-        },
-      ],
+      clientId: process.env.NEXT_PUBLIC_WEB3AUTH_GOOGLE_CLIENTID as string,
+      authConnection: "google",
+      authConnectionId: process.env
+        .NEXT_PUBLIC_WEB3AUTH_GOOGLE_SUBVERIFIER as string,
     },
     facebook: {
       clientId: process.env.NEXT_PUBLIC_WEB3AUTH_FACEBOOK_CLIENTID as string,
-      verifier: process.env.NEXT_PUBLIC_WEB3AUTH_FACEBOOK_VERIFIER as string,
-      typeOfLogin: "facebook" as const,
+      authConnectionId: process.env
+        .NEXT_PUBLIC_WEB3AUTH_FACEBOOK_VERIFIER as string,
+      authConnection: "facebook",
     },
     pwdless: {
-      verifier: process.env.NEXT_PUBLIC_WEB3AUTH_AUTH0_VERIFIER as string,
+      authConnectionId: process.env
+        .NEXT_PUBLIC_WEB3AUTH_AUTH0_VERIFIER as string,
       clientId: process.env.NEXT_PUBLIC_WEB3AUTH_AUTH0_CLIENTID as string,
-      typeOfLogin: "jwt" as const,
+      authConnection: "custom",
       jwtParams: {
         connection: "",
         domain: process.env.NEXT_PUBLIC_WEB3AUTH_AUTH0_DOMAIN as string,
-        verifierIdField: "name",
+        userIdField: "name",
       },
     },
   },

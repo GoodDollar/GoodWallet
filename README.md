@@ -120,6 +120,34 @@ You need Node.js 22+ and Corepack or Yarn. The repository pins Yarn 4.17.0.
 Other useful commands: `yarn build`, `yarn start`, `yarn test`, and
 `yarn biome:verify:all`.
 
+### Web3Auth / CustomAuth v22
+
+CustomAuth 22.3.3 requires Node.js 22+ (CI uses Node.js 24) and the
+`@babel/runtime` peer dependency. Its optional Sentry peer supports the existing
+Sentry v10 installation.
+
+All providers use `triggerLogin` with `authConnection` and `authConnectionId`.
+Google keeps its existing aggregate verifier as `groupedAuthConnectionId` and
+its sub-verifier as `authConnectionId`; keep both existing environment values.
+Facebook keeps its existing verifier. Auth0 passwordless uses the `custom`
+connection with `jwtParams.userIdField: "name"` (formerly `verifierIdField`),
+preserving the identity used to recover existing wallets. No Web3Auth
+environment-variable names need changing.
+
+Redirect login still returns to `<origin>/Welcome/Auth` with `skipSw: true`,
+so the v22.1 service-worker and redirect-HTML updates do not apply. Keep that
+callback URL allowed in the OAuth provider configuration and the app origin
+allowed in Web3Auth. Redirects initiated before deploying the upgrade should be
+restarted: v22 changed how pending login parameters are stored.
+
+Wallet derivation still uses `finalKeyData.privKey`, with the SDK's existing
+secp256k1 and `enableOneKey: false` defaults. The legacy
+`NEXT_PUBLIC_WEB3AUTH_COREKIT_ENABLED` setting remains unused; this upgrade does
+not switch existing users to a different key. Before production rollout,
+complete Google, Facebook, and Auth0 logins with existing test accounts and
+confirm their wallet addresses are unchanged. Unit tests cannot verify provider
+dashboard settings or live key recovery.
+
 ### Testing an unreleased package
 
 The normal setup installs published packages. To test an unreleased widget or

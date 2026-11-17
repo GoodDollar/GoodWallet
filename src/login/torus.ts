@@ -1,10 +1,6 @@
 import {
-  type AggregateLoginParams,
   CustomAuth,
-  type RedirectResult,
-  type SingleLoginParams,
-  TORUS_METHOD,
-  type TorusAggregateLoginResponse,
+  type CustomAuthLoginParams,
   type TorusLoginResponse,
 } from "@toruslabs/customauth"
 
@@ -19,30 +15,20 @@ export type TorusConfig = {
   useCoreKitKey: boolean
   captchaKey: string
   providers: {
-    google: AggregateLoginParams
-    facebook: SingleLoginParams
-    pwdless: SingleLoginParams
+    google: CustomAuthLoginParams
+    facebook: CustomAuthLoginParams
+    pwdless: CustomAuthLoginParams
   }
 }
 
 export const torusLogin = async (
   network: TorusNetwork,
   web3AuthClientId: string,
-  args: SingleLoginParams,
+  args: CustomAuthLoginParams,
 ) => {
   const torus = await initTorus(network, web3AuthClientId)
 
   await torus.triggerLogin(args)
-}
-
-export const torusAggregateLogin = async (
-  network: TorusNetwork,
-  web3AuthClientId: string,
-  args: AggregateLoginParams,
-) => {
-  const torus = await initTorus(network, web3AuthClientId)
-
-  await torus.triggerAggregateLogin(args)
 }
 
 export const getTorusSession = async (
@@ -60,17 +46,18 @@ export const getTorusSession = async (
     throw new Error(loginDetails.error)
   }
 
-  const userInfo = getUserInfo(loginDetails)
-  const result = loginDetails.result as
-    | TorusLoginResponse
-    | TorusAggregateLoginResponse
-  if (result?.finalKeyData?.privKey === undefined) {
-    throw new Error("no privateKey from " + userInfo.typeOfLogin)
+  const result = loginDetails.result as TorusLoginResponse | undefined
+  const userInfo = result?.userInfo
+  if (!userInfo) {
+    throw new Error("No user info in Torus login result")
+  }
+  if (!result?.finalKeyData?.privKey) {
+    throw new Error("no privateKey from " + userInfo.authConnection)
   }
   return getPrivateKeySession(
     result.finalKeyData.privKey,
     "torus",
-    userInfo.typeOfLogin,
+    userInfo.authConnection === "custom" ? "jwt" : userInfo.authConnection,
     userInfo.name,
     userInfo.profileImage,
   )
@@ -88,19 +75,4 @@ const initTorus = async (network: TorusNetwork, web3AuthClientId: string) => {
   await torus.init({ skipSw: true })
 
   return torus
-}
-
-const getUserInfo = (loginDetails: RedirectResult) => {
-  const { method, result } = loginDetails
-
-  switch (method) {
-    case TORUS_METHOD.TRIGGER_LOGIN:
-      return (result as TorusLoginResponse).userInfo
-
-    case TORUS_METHOD.TRIGGER_AGGREGATE_LOGIN:
-      return (result as TorusAggregateLoginResponse).userInfo[0]
-
-    default:
-      throw new Error(`Unsupported Login Method ${method}`)
-  }
 }
