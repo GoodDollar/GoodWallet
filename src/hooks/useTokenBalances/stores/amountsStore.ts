@@ -3,6 +3,7 @@ import { imap } from "itertools"
 import { proxy } from "valtio"
 import { proxyMap, subscribeKey } from "valtio/utils"
 
+import { isChainAvailableForAddresses } from "@/chain/chains"
 import { getChainProvider } from "@/chain/provider/provider"
 import { sessionState } from "@/login/context/SessionContext/storage"
 import type { Addresses } from "@/login/types"
@@ -60,12 +61,15 @@ export const refreshAmounts = async (
     if (chainId === "all") {
       const promises = imap(
         tokens.entries(),
-        async ([chainId, tokensOfChain]) =>
-          getAmountsForChain(tokensOfChain, addresses, chainId).then(
-            (amounts) => {
-              amountsStore.amounts.set(chainId, amounts)
-            },
-          ),
+        async ([chainId, tokensOfChain]) => {
+          if (!isChainAvailableForAddresses(chainId, addresses)) return
+          const amounts = await getAmountsForChain(
+            tokensOfChain,
+            addresses,
+            chainId,
+          )
+          amountsStore.amounts.set(chainId, amounts)
+        },
       )
       const r = await Promise.allSettled(promises)
       //Log errors, if any
@@ -74,7 +78,7 @@ export const refreshAmounts = async (
       )
     } else {
       const tokensOfChain = tokens.get(chainId)
-      if (tokensOfChain) {
+      if (tokensOfChain && isChainAvailableForAddresses(chainId, addresses)) {
         const amountsForChain = await getAmountsForChain(
           tokensOfChain,
           addresses,

@@ -32,6 +32,15 @@ const da: TypedTranslations = {
     google: "Fortsæt ved Google",
     facebook: "Fortsæt ved Facebook",
     pwdless: "Fortsæt via SMS-kode",
+    existingWallet: "Forbind wallet",
+    existingWalletCancelled: "Forbindelsen til din wallet blev annulleret",
+    existingWalletFailed: "Kunne ikke forbinde din wallet. Prøv igen",
+    existingWalletAccountChanged:
+      "Din wallet-konto er ændret. Forbind din wallet igen",
+    existingWalletRestoreFailed:
+      "Vi kunne ikke genoprette forbindelsen til din wallet. Forbind din wallet igen",
+    evmOnlyNotice:
+      "Forbundne wallets understøtter kun EVM-netværk. Bitcoin, Dogecoin, Solana og XRP er ikke tilgængelige.",
     legalText: {
       preText: "Ved at logge ind og fortsætte, accepterer du vores",
       terms: "Vilkår for brug",

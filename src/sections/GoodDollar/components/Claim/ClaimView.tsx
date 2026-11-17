@@ -552,12 +552,11 @@ function ClaimViewContent() {
           if (!signer) {
             throw new Error("No signer provided")
           }
-          if (!userName) {
-            throw new Error("No userName provided")
-          }
+
           const link = await generateGoodIDLink(
             signer.EVM,
-            userName,
+            // Connected-wallet sessions only have an address, not a name.
+            type === "REOWN" ? "" : (userName ?? ""),
             invitedChainId,
           )
           window.open(link, "_self")

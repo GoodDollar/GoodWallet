@@ -1,5 +1,5 @@
 import type * as bitcoin from "bitcoinjs-lib"
-import type { Signer } from "ethers/providers"
+import type { Signer, TransactionRequest } from "ethers/providers"
 import type { KeyPairSigner, Transaction as SolanaTransaction } from "gill"
 import type { Transaction } from "xrpl"
 
@@ -13,7 +13,10 @@ export type EVMSigner = Pick<
   Signer,
   "signTransaction" | "signMessage" | "signTypedData"
 > &
-  Address
+  Address & {
+    // Set for external wallets that broadcast themselves; returns the tx hash.
+    submitTransaction?: (tx: TransactionRequest) => Promise<string>
+  }
 
 export type BTCSigner = {
   signPsbt: (psbt: bitcoin.Psbt) => Promise<string>
@@ -40,10 +43,10 @@ export type XRPSigner = {
 export type ISigner = {
   EVM: EVMSigner
 
-  BTC: BTCSigner
+  BTC?: BTCSigner
   BTC_TESTNET?: BTCSigner
 
-  DOGE: BTCSigner
+  DOGE?: BTCSigner
   DOGE_TESTNET?: BTCSigner
 
   SOLANA?: SVMSigner
@@ -61,7 +64,7 @@ export type ISignerSession = {
   authProvider?: string
   userName?: string
   profileImage?: string
-} & (IBrowserSession | IPrivateKeySession)
+} & (IBrowserSession | IPrivateKeySession | IReownSession)
 
 type IBrowserSession = {
   type: "BROWSER"
@@ -70,4 +73,9 @@ type IBrowserSession = {
 type IPrivateKeySession = {
   type: "PRIVATE_KEY"
   masterSeed: string
+}
+
+type IReownSession = {
+  type: "REOWN"
+  address: string
 }

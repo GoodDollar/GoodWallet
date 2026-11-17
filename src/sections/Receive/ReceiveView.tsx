@@ -6,21 +6,18 @@ import { Box, Button, Drawer, Icon, Text } from "ui"
 import { useTranslation } from "translations"
 import {
   AVAILABLE_CHAINS,
-  AVAILABLE_CHAINS_IDS,
+  getAvailableChainIds,
   getChainName,
 } from "@/chain/chains"
 import { setBottomSheetProps } from "@/components/Snippet/BottomSheet/bottomSheetStore"
 import { ChainIcon } from "@/components/Typo/ChainIcon"
 import { truncateString } from "@/components/Utils/format"
 import { useSessionContext } from "@/login"
+import { canShare } from "@/utils/share"
 
 import { ChainSelectorSliderRow } from "../Home/components/ActivityHistory/ChainSelectorSliderRow"
 import { QRCodeWithLogo } from "./components/QRCodeWithLogo"
 import styles from "./ReceiveView.module.css"
-
-const chainIds = AVAILABLE_CHAINS_IDS
-
-import { canShare } from "@/utils/share"
 
 export default function ReceiveView() {
   const { translations } = useTranslation()
@@ -28,9 +25,11 @@ export default function ReceiveView() {
   setBottomSheetProps({ title: receiveTranslations.title })
   const [isBottomSliderOpen, setIsBottomSliderOpen] = useState(false)
 
-  const { addresses } = useSessionContext()
+  const { addresses, type } = useSessionContext()
+  const chainIds = getAvailableChainIds(addresses)
 
-  const [currentChain, setCurrentChain] = useState(chainIds[0])
+  const [selectedChain, setCurrentChain] = useState<number>()
+  const currentChain = selectedChain ?? chainIds[0]
   const chain = AVAILABLE_CHAINS.get(currentChain)
   const currentSignerAddress = chain && addresses?.get(chain.family)
 
@@ -62,6 +61,11 @@ export default function ReceiveView() {
         />
 
         <Text style="16-400">{receiveTranslations.scan}</Text>
+        {type === "REOWN" && (
+          <Text style="14-400" color="text-secondary">
+            {translations.login.evmOnlyNotice}
+          </Text>
+        )}
       </Box>
 
       <Box elevation="high">

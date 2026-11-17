@@ -372,6 +372,12 @@ export class RestrictedEip1193Provider {
       approvalParams,
       context,
     )
+    if (context.signer.submitTransaction) {
+      return await context.signer.submitTransaction({
+        ...populatedRequest,
+        from: context.account,
+      })
+    }
     const rawTransaction =
       await context.signer.signTransaction(populatedRequest)
     this.#assertSigningContext(context)

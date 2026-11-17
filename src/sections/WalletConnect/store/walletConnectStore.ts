@@ -1,6 +1,7 @@
 import WalletKit from "@reown/walletkit"
 import { Core } from "@walletconnect/core"
 import type { SessionTypes } from "@walletconnect/types"
+import { getSdkError } from "@walletconnect/utils"
 import { proxy, ref } from "valtio"
 
 import manifest from "@/app/manifest"
@@ -19,10 +20,18 @@ type WalletConnectState = {
   refreshSessions: () => void
 }
 
+// Listeners resolve the signer per request so a reconnected session is used.
+let activeSigner: ISigner | undefined
+const getActiveSigner = () => {
+  if (!activeSigner) throw new Error("No active wallet session")
+  return activeSigner
+}
+
 const initializeWalletConnect = async (signer: ISigner) => {
   if (!config.walletConnectEnabled) {
     return
   }
+  activeSigner = signer
   if (!walletConnectState.walletConnectInstance) {
     walletConnectState.walletConnectInstance = "initializing"
     if (typeof window !== "undefined") {
@@ -50,7 +59,7 @@ const initializeWalletConnect = async (signer: ISigner) => {
       core,
       metadata,
     })
-    setupListeners(signer, wallet, refreshSessions)
+    setupListeners(getActiveSigner, wallet, refreshSessions)
     const wcUri = getWCUri()
 
     if (wcUri) {
@@ -78,3 +87,17 @@ export const walletConnectState = proxy<WalletConnectState>({
   initializeWalletConnect,
   refreshSessions,
 })
+
+export const disconnectAllWalletConnectSessions = async () => {
+  const wallet = walletConnectState.walletConnectInstance
+  if (!wallet || wallet === "initializing") return
+  await Promise.allSettled(
+    Object.values(wallet.getActiveSessions()).map((session) =>
+      wallet.disconnectSession({
+        topic: session.topic,
+        reason: getSdkError("USER_DISCONNECTED"),
+      }),
+    ),
+  )
+  refreshSessions()
+}

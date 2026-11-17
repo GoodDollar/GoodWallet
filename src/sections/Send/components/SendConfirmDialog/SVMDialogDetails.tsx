@@ -57,7 +57,8 @@ export const SVMDialogDetails = ({
           const signers = sessionSnap.signer
           const signer = signers[chainProvider.family]
           if (!signer) {
-            throw new Error("Signer not found")
+            // e.g. connected EVM-only wallets; leave the form invalid.
+            return
           }
 
           const createTransaction = async () => {
