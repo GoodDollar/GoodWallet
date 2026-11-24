@@ -233,14 +233,20 @@ const superfluidCampaignWidget = defineWidget({
     requiredMethods: WIDGET_PROVIDER_METHOD_LIST,
   },
   elementProps: {
+    // Tracked ubi.gd links for the in-wallet widget (utm_source=wallet). The
+    // Invite card is disabled for Season 7, so its link is registered but not opened.
     actionLinks: {
-      "flow-state-vote": "https://ubi.gd/4yVEYY5",
-      "flow-state-funding": "https://ubi.gd/3RNaK8Y",
-      "gardens-donation": "https://ubi.gd/4xpmldD",
-      "gardens-funding": "https://ubi.gd/457CB6R",
-      "invite-users": "https://ubi.gd/4q8oQyw",
-      "claim-ubi": "https://ubi.gd/4fGkU4r",
+      "claim-ubi": "https://ubi.gd/3UuQxWV",
+      "invite-users": "https://ubi.gd/4j8IOXN",
+      "flow-state-vote": "https://ubi.gd/4j9NDiC",
+      "flow-state-funding": "https://ubi.gd/4AV2oNx",
+      "gardens-donation": "https://ubi.gd/4zzqRrj",
+      "gardens-funding": "https://ubi.gd/4C02hl6",
+      "ai-credits-purchase": "https://ubi.gd/4sRkCwz",
+      "ai-credits-subscription": "https://ubi.gd/4Ap8chU",
     },
+    // Tracked link opened by the widget header's "Claim SUP rewards" button.
+    claimRewardsUrl: "https://ubi.gd/4sR6vY1",
   },
 })
 
