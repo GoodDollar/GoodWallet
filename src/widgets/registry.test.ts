@@ -184,6 +184,7 @@ describe("widget registry", () => {
       expect(aiCredits).toBeDefined()
       expect(aiCredits?.routeSlug).toBe("ai-credits")
       expect(aiCredits?.packageName).toBe("@goodwidget/ai-credits-widget")
+      expect(aiCredits?.packageVersion).toBe("0.1.15")
     })
 
     it("passes registry validation (createWidgetRegistry does not throw)", () => {
