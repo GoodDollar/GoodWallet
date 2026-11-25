@@ -1,0 +1,86 @@
+name: Intake GoodWidget release
+
+on:
+  repository_dispatch:
+    types: [goodwidget-released]
+  workflow_dispatch:
+    inputs:
+      payload:
+        description: Validated GoodWidget release envelope JSON
+        required: true
+        type: string
+      action:
+        description: Replay action
+        required: true
+        type: choice
+        default: validate
+        options:
+          - validate
+          - issue
+          - agent-task
+      confirm_agent_task:
+        description: I confirm this may create a Copilot task and draft PR
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+# Serialize the validation/task handoff so two deliveries cannot race past the
+# idempotency search before its durable tracking issue exists.
+concurrency:
+  group: goodwidget-integration
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: Validate sender, descriptor, and npm release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+          cache: yarn
+      - run: corepack enable && yarn install --immutable
+      - name: Validate exact GoodWidget dependencies
+        run: yarn widget-deps:check
+      - name: Validate release envelope and npm integrity
+        env:
+          GOODWIDGET_DISPATCH_ACTOR: ${{ vars.GOODWIDGET_DISPATCH_ACTOR }}
+        run: yarn node scripts/widget-release/process-event.mjs validate
+
+  integrate:
+    name: Create reviewed integration task
+    needs: validate
+    # Repository dispatch is inert until maintainers explicitly enable the
+    # feature flag; manual agent-task replay also requires confirmation.
+    if: >-
+      (github.event_name == 'repository_dispatch' &&
+       vars.ENABLE_GOODWIDGET_AGENT_TASKS == 'true') ||
+      (github.event_name == 'workflow_dispatch' &&
+       (inputs.action == 'issue' ||
+        (inputs.action == 'agent-task' && inputs.confirm_agent_task)))
+    runs-on: ubuntu-latest
+    # This protected environment gates the PAT used by the preview Agent Tasks
+    # API and keeps it out of pull-request workflows.
+    environment: widget-integration
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+          cache: yarn
+      - run: corepack enable && yarn install --immutable
+      - name: Process release
+        env:
+          ACTION_MODE: ${{ github.event_name == 'repository_dispatch' && 'agent-task' || inputs.action }}
+          GOODWIDGET_DISPATCH_ACTOR: ${{ vars.GOODWIDGET_DISPATCH_ACTOR }}
+          GITHUB_TOKEN: ${{ github.token }}
+          COPILOT_AGENT_TASK_PAT: ${{ secrets.COPILOT_AGENT_TASK_PAT }}
+        run: yarn node scripts/widget-release/process-event.mjs "$ACTION_MODE"
