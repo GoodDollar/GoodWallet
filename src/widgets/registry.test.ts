@@ -176,6 +176,25 @@ describe("widget registry", () => {
     }
   })
 
+  it("uses the wallet tracking links for every Superfluid campaign action", () => {
+    const superfluid = WIDGETS.find(
+      (widget) => widget.widgetId === "goodwidget.superfluid-campaign",
+    )
+    expect(superfluid?.elementProps).toEqual({
+      actionLinks: {
+        "claim-ubi": "https://ubi.gd/3UuQxWV",
+        "invite-users": "https://ubi.gd/4j8IOXN",
+        "flow-state-vote": "https://ubi.gd/4j9NDiC",
+        "flow-state-funding": "https://ubi.gd/4AV2oNx",
+        "gardens-donation": "https://ubi.gd/4zzqRrj",
+        "gardens-funding": "https://ubi.gd/4C02hl6",
+        "ai-credits-purchase": "https://ubi.gd/4sRkCwz",
+        "ai-credits-subscription": "https://ubi.gd/4Ap8chU",
+      },
+      claimRewardsUrl: "https://ubi.gd/4sR6vY1",
+    })
+  })
+
   describe("AI Credits widget", () => {
     it("is present in the live WIDGETS array with the correct widgetId", () => {
       const aiCredits = WIDGETS.find(
