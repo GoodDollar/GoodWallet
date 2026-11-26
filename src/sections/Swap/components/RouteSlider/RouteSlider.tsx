@@ -342,6 +342,12 @@ export default function RouteSlider(
       const routeExtendedPromise = executeRoute(lifiClient, selectedRoute, {
         //This is always called, before signing the transactions
         updateTransactionRequestHook: async (tx) => {
+          if (
+            activityHistoryStore.getCurrentAccountToken() !==
+            initialAccountToken
+          ) {
+            throw new Error("Session changed during route execution")
+          }
           if (!tx.chainId) {
             return tx
           }

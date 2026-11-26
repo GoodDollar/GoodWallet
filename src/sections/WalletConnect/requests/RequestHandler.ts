@@ -275,9 +275,13 @@ export const setupListeners = (
         return
       }
 
-      // Re-validate session compatibility after user approval in case the session changed
+      // The topic may have been disconnected or pruned while approval was open.
       const currentSigner = getSigner()
-      if (!isSessionCompatibleWithSigner(session, currentSigner)) {
+      const currentSession = walletConnectInstance.getActiveSessions()[topic]
+      if (
+        !currentSession ||
+        !isSessionCompatibleWithSigner(currentSession, currentSigner)
+      ) {
         throw new Error(getSdkError("USER_DISCONNECTED").message)
       }
 

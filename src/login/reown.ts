@@ -327,17 +327,30 @@ export const getReownSession = async (
   }
 }
 
-// EIP-1193 provider of the connected wallet, switched to chainId when given.
+// The wallet RPCs LiFi can use to sign or broadcast, including approvals,
+// permits, batches, and viem's wallet_sendTransaction fallback.
+const swapSigningMethods = new Set([
+  "eth_sendTransaction",
+  "wallet_sendTransaction",
+  "wallet_sendCalls",
+  "eth_signTypedData_v4",
+  "personal_sign",
+])
+
+// Return a chain-bound provider for LiFi. Acquiring a client does not reserve
+// the wallet until submission; each signing RPC must switch again under lock.
 export const getReownEip1193Provider = async (
   address: string,
-  chainId?: number,
+  chainId: number | undefined,
+  assertSessionActive: () => void,
+  chainRequest: (
+    chainId: number,
+    args: Parameters<Eip1193Provider["request"]>[0],
+  ) => Promise<unknown>,
 ) => {
   const appKit = await getAppKit()
-  // Hold the lock so a concurrent submitTransaction cannot switch chains while
-  // this call is resolving.
-  await chainOpLock.acquire(CHAIN_OP_LOCK_KEY)
-  try {
-    await ensureChain(appKit, chainId)
+  const getProvider = () => {
+    assertSessionActive()
     if (!isSameAddress(appKit.getAddress("eip155"), address)) {
       throw new Error("Connected wallet account changed. Please reconnect.")
     }
@@ -345,10 +358,46 @@ export const getReownEip1193Provider = async (
     if (!provider) {
       throw new Error("Connected provider not available")
     }
-    return { provider, chainId: Number(appKit.getChainId()) }
+    return provider
+  }
+
+  let targetChainId: number
+  await chainOpLock.acquire(CHAIN_OP_LOCK_KEY)
+  try {
+    assertSessionActive()
+    await ensureChain(appKit, chainId)
+    getProvider()
+    targetChainId = Number(appKit.getChainId())
   } finally {
     chainOpLock.release(CHAIN_OP_LOCK_KEY)
   }
+
+  const provider: Eip1193Provider = {
+    async request(args) {
+      if (swapSigningMethods.has(args.method)) {
+        await chainOpLock.acquire(CHAIN_OP_LOCK_KEY)
+        try {
+          assertSessionActive()
+          await ensureChain(appKit, targetChainId)
+          return await getProvider().request(args)
+        } finally {
+          chainOpLock.release(CHAIN_OP_LOCK_KEY)
+        }
+      }
+      switch (args.method) {
+        case "eth_chainId":
+          return `0x${targetChainId.toString(16)}`
+        case "eth_accounts":
+        case "wallet_getCapabilities":
+        case "wallet_getCallsStatus":
+          return await getProvider().request(args)
+        default:
+          // Chain reads go to the intended RPC even if the wallet has moved.
+          return await chainRequest(targetChainId, args)
+      }
+    },
+  }
+  return { provider, chainId: targetChainId }
 }
 
 // Calls onChange when the wallet switches account or disconnects.

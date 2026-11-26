@@ -68,14 +68,24 @@ const getLifiRpcUrls = () => {
 
 // External wallets sign and broadcast through their own provider.
 const getExternalWalletClient = async (signer: EVMSigner, chainId?: number) => {
+  const assertSessionActive = () => {
+    if (sessionState.session?.signer.EVM !== signer) {
+      throw new Error("Session changed during swap execution")
+    }
+  }
   const { provider, chainId: activeChainId } = await getReownEip1193Provider(
     signer.address,
     chainId,
+    assertSessionActive,
+    (id, args) =>
+      http(config.rpcUrls[id])({
+        chain: chains.find((chain) => chain.id === id),
+      }).request(args),
   )
   return createWalletClient({
     account: signer.address as Hex,
     chain: chains.find((chain) => chain.id === activeChainId),
-    transport: custom(provider),
+    transport: custom(provider, { retryCount: 0 }),
   })
 }
 

@@ -1,3 +1,5 @@
+import { createWalletClient, custom } from "viem"
+import { celo } from "viem/chains"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 const {
@@ -60,7 +62,11 @@ vi.mock("@/config", () => ({
   },
 }))
 
-import { getReownSession, watchReownAccount } from "./reown"
+import {
+  getReownEip1193Provider,
+  getReownSession,
+  watchReownAccount,
+} from "./reown"
 
 describe("reown - coordinated switching and account monitoring", () => {
   const address = "0x1111111111111111111111111111111111111111"
@@ -148,6 +154,84 @@ describe("reown - coordinated switching and account monitoring", () => {
   })
 
   describe("coordinated network switching", () => {
+    it("queues a LiFi wallet send behind a chain switch and keeps the chain until submission finishes", async () => {
+      const switchStarted = Promise.withResolvers<void>()
+      const finishSwitch = Promise.withResolvers<void>()
+      const swapStarted = Promise.withResolvers<void>()
+      const finishSwap = Promise.withResolvers<void>()
+      const executionOrder: string[] = []
+      let activeChain = celo.id as number
+      mockGetChainId.mockImplementation(() => activeChain)
+      mockSwitchNetwork.mockImplementation(async ({ id }) => {
+        executionOrder.push(`switch_started:${id}`)
+        if (executionOrder.length === 1) {
+          switchStarted.resolve()
+          await finishSwitch.promise
+        }
+        activeChain = id
+        executionOrder.push(`switch_finished:${id}`)
+      })
+      const walletRequest = vi.fn(async () => {
+        executionOrder.push(`swap_started:${activeChain}`)
+        swapStarted.resolve()
+        await finishSwap.promise
+        executionOrder.push(`swap_finished:${activeChain}`)
+        return "0xswaphash"
+      })
+      mockGetProvider.mockReturnValue({ request: walletRequest })
+      const session = await getReownSession("direct", "existing_wallet", {
+        interactive: false,
+      })
+      const { BrowserProvider } = await import("ethers")
+      vi.spyOn(BrowserProvider.prototype, "getSigner").mockResolvedValue({
+        signTypedData: vi.fn(async () => {
+          executionOrder.push(`sign:${activeChain}`)
+          return "0xsignature"
+        }),
+      } as never)
+
+      const { provider } = await getReownEip1193Provider(
+        address,
+        celo.id,
+        vi.fn(),
+        vi.fn(),
+      )
+      const swapClient = createWalletClient({
+        account: address,
+        chain: celo,
+        transport: custom(provider),
+      })
+      const signer = session.signer.EVM
+      const firstSign = signer.signTypedData({ chainId: 122 }, {}, {})
+      await switchStarted.promise
+      const swap = swapClient.sendTransaction({ to: address, value: BigInt(1) })
+
+      // Let viem reach the RPC request while the first switch is still pending.
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      expect(walletRequest).not.toHaveBeenCalled()
+      finishSwitch.resolve()
+      await swapStarted.promise
+      const nextSign = signer.signTypedData({ chainId: 122 }, {}, {})
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      expect(activeChain).toBe(celo.id)
+      finishSwap.resolve()
+
+      await expect(swap).resolves.toBe("0xswaphash")
+      await Promise.all([firstSign, nextSign])
+      expect(executionOrder).toEqual([
+        "switch_started:122",
+        "switch_finished:122",
+        "sign:122",
+        "switch_started:42220",
+        "switch_finished:42220",
+        "swap_started:42220",
+        "swap_finished:42220",
+        "switch_started:122",
+        "switch_finished:122",
+        "sign:122",
+      ])
+    })
+
     it("releases the queue when a chain switch fails so subsequent operations can proceed", async () => {
       const session = await getReownSession("direct", "existing_wallet", {
         interactive: false,

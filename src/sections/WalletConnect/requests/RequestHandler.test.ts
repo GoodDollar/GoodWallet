@@ -38,10 +38,6 @@ vi.mock("./BIP122RequestHandlerUtil", () => ({
   approveBIP122Request: vi.fn(),
 }))
 
-vi.mock("./EIP155RequestHandlerUtil", () => ({
-  approveEIP155Request: vi.fn(),
-}))
-
 vi.mock("./EIP5792RequestHandlerUtil", () => ({
   approveEIP5792Request: vi.fn(),
 }))
@@ -356,6 +352,105 @@ describe("RequestHandler - Session Proposal", () => {
     // Since active signer changed to 0x2222... during approval, post-dialog check fails
     expect(mockRespondSessionRequest).toHaveBeenCalledWith({
       topic: "compatible-topic",
+      response: expect.objectContaining({
+        error: expect.objectContaining({
+          message: expect.stringContaining("disconnected"),
+        }),
+      }),
+    })
+  })
+
+  const signingMethods = [
+    "personal_sign",
+    "eth_signTypedData",
+    "eth_signTypedData_v3",
+    "eth_signTypedData_v4",
+  ]
+
+  const signingRequest = (method: string, address: string) => {
+    const topic = "signing-topic"
+    mockWalletKit.getActiveSessions.mockReturnValue({
+      [topic]: {
+        topic,
+        namespaces: {
+          eip155: {
+            accounts: [`eip155:1:${mockSigner.EVM.address}`],
+            methods: [method],
+            events: [],
+          },
+        },
+      },
+    })
+    const typedData = JSON.stringify({ domain: {}, types: {}, message: {} })
+    return {
+      id: 333,
+      topic,
+      params: {
+        chainId: "eip155:1",
+        request: {
+          method,
+          params:
+            method === "personal_sign"
+              ? ["0x6869", address]
+              : [address, typedData],
+        },
+      },
+    }
+  }
+
+  it.each(
+    signingMethods,
+  )("rejects %s for an address other than the connected account", async (method) => {
+    const request = signingRequest(
+      method,
+      "0x2222222222222222222222222222222222222222",
+    )
+    mockOpenDialog.mockResolvedValueOnce("accepted")
+
+    await listeners.session_request(request)
+
+    expect(mockSigner.EVM.signMessage).not.toHaveBeenCalled()
+    expect(mockSigner.EVM.signTypedData).not.toHaveBeenCalled()
+    expect(mockRespondSessionRequest).toHaveBeenCalledWith({
+      topic: request.topic,
+      response: expect.objectContaining({
+        error: expect.objectContaining({
+          message:
+            "Signing request address does not match the connected account",
+        }),
+      }),
+    })
+  })
+
+  it.each(
+    signingMethods,
+  )("accepts %s for the connected account regardless of address casing", async (method) => {
+    mockSigner.EVM.address = "0x5aAeb6053F3E94C9b9A09f33669435E7Ef1bEAeD"
+    const request = signingRequest(method, mockSigner.EVM.address.toLowerCase())
+    mockOpenDialog.mockResolvedValueOnce("accepted")
+    vi.mocked(mockSigner.EVM.signMessage).mockResolvedValue("0xsignature")
+    vi.mocked(mockSigner.EVM.signTypedData).mockResolvedValue("0xsignature")
+
+    await listeners.session_request(request)
+
+    expect(mockRespondSessionRequest).toHaveBeenCalledWith({
+      topic: request.topic,
+      response: expect.objectContaining({ result: "0xsignature" }),
+    })
+  })
+
+  it("rejects a request if its topic disappears while approval is open, even with the same signer", async () => {
+    const request = signingRequest("personal_sign", mockSigner.EVM.address)
+    mockOpenDialog.mockImplementationOnce(async () => {
+      mockWalletKit.getActiveSessions.mockReturnValue({})
+      return "accepted"
+    })
+
+    await listeners.session_request(request)
+
+    expect(mockSigner.EVM.signMessage).not.toHaveBeenCalled()
+    expect(mockRespondSessionRequest).toHaveBeenCalledWith({
+      topic: request.topic,
       response: expect.objectContaining({
         error: expect.objectContaining({
           message: expect.stringContaining("disconnected"),

@@ -38,7 +38,7 @@ const da: TypedTranslations = {
     existingWalletAccountChanged:
       "Din wallet-konto er ændret. Forbind din wallet igen",
     existingWalletDisconnected:
-      "Din wallet blev afbrudt. Forbind venligst din wallet igen",
+      "Din wallet blev afbrudt. Forbind din wallet igen",
     existingWalletRestoreFailed:
       "Vi kunne ikke genoprette forbindelsen til din wallet. Forbind din wallet igen",
     evmOnlyNotice:

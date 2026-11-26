@@ -1,5 +1,5 @@
 import React from "react"
-import type { Route } from "@lifi/sdk"
+import type { ExecutionOptions, Route } from "@lifi/sdk"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 const mockCaptureEvent = vi.fn()
@@ -136,7 +136,8 @@ vi.mock("../../lifiStore", () => ({
 }))
 
 vi.mock("@lifi/sdk", () => {
-  onImportStarted?.()
+  if (!onImportStarted) return { executeRoute: mockExecuteRoute }
+  onImportStarted()
   return new Promise<Record<string, unknown>>((resolve) => {
     resolveImport = resolve
   })
@@ -308,5 +309,36 @@ describe("RouteSlider - account token capture guard (B15/R2)", () => {
     expect(mockExecuteRoute).toHaveBeenCalled()
     // Propagating tx is recorded with Account A's initial token
     expect(mockAddPropagatingTx).toHaveBeenCalledWith(expect.anything(), 1)
+  })
+
+  it("rejects a later transaction request after logout during execution", async () => {
+    const tx = { requestType: "approve" } as const
+    let laterRequestError: unknown
+    mockExecuteRoute.mockImplementationOnce(
+      async (_client, _route, options: ExecutionOptions) => {
+        const updateRequest = options.updateTransactionRequestHook
+        if (!updateRequest)
+          throw new Error("Expected a transaction request hook")
+        await updateRequest(tx)
+        currentAccountToken++
+        return await updateRequest(tx).catch((error) => {
+          laterRequestError = error
+          throw error
+        })
+      },
+    )
+    const element = RouteSlider()
+    const button = React.Children.toArray(element.props.children).find(
+      (child) =>
+        React.isValidElement(child) &&
+        typeof (child.props as Record<string, unknown>)?.onClick === "function",
+    ) as React.ReactElement<{ onClick: () => Promise<void> }>
+
+    await button.props.onClick()
+
+    expect(laterRequestError).toEqual(
+      new Error("Session changed during route execution"),
+    )
+    expect(mockAddPropagatingTx).not.toHaveBeenCalled()
   })
 })
