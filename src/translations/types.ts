@@ -200,6 +200,7 @@ export type InstallAppTranslations = {
 }
 
 export type SendTranslations = {
+  submittedUnconfirmed: string
   amount: string
   availableFunds: string
   cancelBtnLabel: string

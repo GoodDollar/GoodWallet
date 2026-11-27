@@ -4,6 +4,15 @@ import { type Tx, TxDirection } from "@/hooks/useLedger/types"
 import type { Addresses, ISigner } from "@/login"
 
 const mockGetTransactions = vi.fn()
+const mockGetTransaction = vi.fn()
+const mockGetTransactionReceipt = vi.fn()
+
+vi.mock("@/ethers-utils/ethersProviders", () => ({
+  getEthersProvider: () => ({
+    getTransaction: mockGetTransaction,
+    getTransactionReceipt: mockGetTransactionReceipt,
+  }),
+}))
 
 vi.mock("@/chain/chains", () => ({
   getAvailableChainIds: vi.fn(() => [42220]),
@@ -238,6 +247,79 @@ describe("transactionHistoryStore", () => {
     )
     expect(speedUpMatches.length).toBe(1)
     expect(afterReconcile.some((tx) => tx.hash === "0xinitialhash")).toBe(false)
+  })
+
+  it.each([
+    { scenario: "verified replacement", remove: true },
+    { scenario: "unrelated mined transaction with a different nonce" },
+    { scenario: "mined transaction with a different sender" },
+    { scenario: "original never visible, replacement mined" },
+    { scenario: "matching nonce without a mined receipt" },
+  ])("reconciles only with proof: $scenario", async ({ scenario, remove }) => {
+    const account = "0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    initActivityAccount(account)
+    const original = {
+      ...mockTx("0xoriginal", 1600),
+      status: "submitted-unconfirmed" as const,
+    }
+    // Identical indexed transfer details do not prove it replaced the original.
+    const candidate = mockTx("0xcandidate", 1605)
+    activityHistoryStore.addPropagatingTx(
+      original,
+      activityHistoryStore.getCurrentAccountToken(),
+    )
+    mockGetTransactions.mockResolvedValue([candidate])
+    mockGetTransaction.mockImplementation(async (hash: string) => {
+      const isOriginal = hash === original.hash
+      if (
+        isOriginal &&
+        scenario === "original never visible, replacement mined"
+      ) {
+        return null
+      }
+      return {
+        hash,
+        chainId: BigInt(42220),
+        from:
+          !isOriginal &&
+          scenario === "mined transaction with a different sender"
+            ? "0xBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+            : isOriginal
+              ? account.toLowerCase()
+              : account,
+        nonce:
+          !isOriginal &&
+          scenario === "unrelated mined transaction with a different nonce"
+            ? 8
+            : 7,
+      }
+    })
+    mockGetTransactionReceipt.mockResolvedValue(
+      scenario === "matching nonce without a mined receipt"
+        ? null
+        : { hash: candidate.hash, blockNumber: 12, status: 1 },
+    )
+
+    await activityHistoryStore.refreshHistory(makeAddresses(account))
+
+    expect(activityHistoryStore.perChain.get(42220)).toEqual(
+      remove ? [candidate] : [candidate, original],
+    )
+    expect(mockGetTransaction).toHaveBeenCalledWith(original.hash)
+
+    if (remove) {
+      // A later refresh without the indexed row must not resurrect the original.
+      mockGetTransactions.mockResolvedValue([])
+      const now = vi
+        .spyOn(Date, "now")
+        .mockReturnValue(Date.now() + 11 * 60_000)
+      try {
+        await activityHistoryStore.refreshHistory(makeAddresses(account))
+        expect(activityHistoryStore.perChain.get(42220)).toEqual([])
+      } finally {
+        now.mockRestore()
+      }
+    }
   })
 
   it("removes propagating transaction on cancellation or failure", async () => {

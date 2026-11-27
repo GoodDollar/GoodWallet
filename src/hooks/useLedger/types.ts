@@ -13,5 +13,6 @@ export type Tx = {
   gas?: string
   tokenAddress: string
   method?: string
+  status?: "submitted-unconfirmed"
   txDirection: TxDirection
 }

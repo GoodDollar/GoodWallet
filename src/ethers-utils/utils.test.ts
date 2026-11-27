@@ -90,6 +90,9 @@ const createType2Options = (
 const createTxResponse = (hash = TX_HASH) => {
   const response = {
     hash,
+    from: "0xSender",
+    chainId: BigInt(1),
+    nonce: 0,
     wait: vi.fn().mockResolvedValue({ hash }),
     replaceableTransaction: vi.fn(),
   }
@@ -427,6 +430,49 @@ describe("ethers-utils", () => {
       expect(submitted).not.toHaveProperty("nonce")
       expect(submitted).not.toHaveProperty("gasPrice")
       expect(submitted).not.toHaveProperty("maxFeePerGas")
+    })
+
+    it("keeps the wallet hash unconfirmed when lookup expires without resubmitting", async () => {
+      vi.useFakeTimers()
+      try {
+        mockGetTransaction.mockResolvedValue(null)
+        const result = await sendTx(
+          walletSigner,
+          DEFAULT_GAS_LIMIT,
+          request,
+          options,
+        )
+        expect(result.hash).toBe(TX_HASH)
+        const outcome = expect(result.trxMinedPromise).rejects.toMatchObject({
+          name: "UnconfirmedTransactionError",
+          hash: TX_HASH,
+        })
+        await Promise.all([vi.runAllTimersAsync(), outcome])
+        expect(walletSigner.submitTransaction).toHaveBeenCalledOnce()
+        expect(mockGetTransactionCount).not.toHaveBeenCalled()
+        expect(mockBroadcastTransaction).not.toHaveBeenCalled()
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it("treats a post-submission RPC error without a revert receipt as unconfirmed", async () => {
+      const rpcError = Object.assign(
+        new Error("RPC did not return a receipt"),
+        {
+          code: "CALL_EXCEPTION",
+        },
+      )
+      txResponse.wait.mockRejectedValue(rpcError)
+      await expect(
+        sendTxWaitForMining(walletSigner, DEFAULT_GAS_LIMIT, request, options),
+      ).rejects.toMatchObject({
+        name: "UnconfirmedTransactionError",
+        hash: TX_HASH,
+        cause: rpcError,
+      })
+      expect(walletSigner.submitTransaction).toHaveBeenCalledOnce()
+      expect(mockBroadcastTransaction).not.toHaveBeenCalled()
     })
 
     it("sendTxWaitForMining returns the response and receipt and keeps divvi tracking", async () => {

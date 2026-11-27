@@ -1,4 +1,5 @@
 import { useCallback } from "react"
+import type { TransactionReceipt } from "ethers/providers"
 import { parseUnits } from "ethers/utils"
 import type { SWRConfiguration, SWRResponse } from "swr"
 import { default as useSWRImmutable } from "swr/immutable"
@@ -255,22 +256,27 @@ export const useIsTransactionValid = (): boolean => {
 }
 
 export const handleTrxMinedOutcome = (
-  trxMinedPromise: Promise<unknown>,
+  trxMinedPromise: Promise<TransactionReceipt | null>,
   chainId: number,
   hash: string,
   accountToken: number,
 ) => {
   return trxMinedPromise
-    .then((receipt: unknown) => {
-      const rx = receipt as { hash?: string } | null | undefined
-      if (rx?.hash && rx.hash.toLowerCase() !== hash.toLowerCase()) {
+    .then((receipt) => {
+      if (!receipt) return
+      if (receipt.hash.toLowerCase() !== hash.toLowerCase()) {
         activityHistoryStore.replacePropagatingTx(
           chainId,
           hash,
-          rx.hash,
+          receipt.hash,
           accountToken,
         )
       }
+      activityHistoryStore.confirmPropagatingTx(
+        chainId,
+        receipt.hash,
+        accountToken,
+      )
     })
     .catch((err) => {
       if (isConfirmedTxFailure(err)) {
@@ -319,6 +325,9 @@ export const useSubmitTransaction = () => {
       addPropagatingTx(
         {
           hash,
+          status: signer.EVM.submitTransaction
+            ? "submitted-unconfirmed"
+            : undefined,
           chainId: chainId,
           method: "Sent",
           txDirection: TxDirection.OUTGOING,

@@ -178,6 +178,7 @@ const da: TypedTranslations = {
     sendFailure: "Afsendelse mislykkedes",
     sending: "Sender",
     sendSuccess: "Afsendelse succesfuld",
+    submittedUnconfirmed: "Indsendt · Ikke bekræftet",
     title: "Send",
     to: "Til",
     toPlaceholder: {

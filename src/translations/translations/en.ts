@@ -177,6 +177,7 @@ const en: TypedTranslations = {
     sendFailure: "Failed to send",
     sending: "Sending",
     sendSuccess: "Succesfully sent",
+    submittedUnconfirmed: "Submitted · Unconfirmed",
     title: "Send",
     to: "To",
     toPlaceholder: {

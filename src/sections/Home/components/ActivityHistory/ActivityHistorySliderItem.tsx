@@ -66,6 +66,9 @@ export const SliderItem: React.FC<ActivityHistoryItem> = (sliderItem) => {
   return (
     <>
       <SliderRow label="Type">{truncateString(sliderItem.label, 20)}</SliderRow>
+      {sliderItem.statusLabel && (
+        <SliderRow label="Status">{sliderItem.statusLabel}</SliderRow>
+      )}
       <SliderRow label="Date">
         <TwoElementStacked
           el1={sliderItem.timeStamp.toLocaleDateString()}

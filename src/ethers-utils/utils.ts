@@ -56,23 +56,40 @@ const replacementFeeMultipler = BigInt(2)
 const SUBMITTED_TX_POLL_MS = 1500
 const SUBMITTED_TX_MAX_ATTEMPTS = 40
 
+export class UnconfirmedTransactionError extends Error {
+  constructor(
+    readonly hash: string,
+    cause?: unknown,
+  ) {
+    super(`Transaction ${hash} was submitted but is unconfirmed`, { cause })
+    this.name = "UnconfirmedTransactionError"
+  }
+}
+
 const getSubmittedTransaction = async (
   provider: AbstractProvider,
   hash: string,
-  startBlock: number,
-): Promise<{ txResponse: TransactionResponse; startBlock: number }> => {
+  from: string,
+  chainId: number,
+): Promise<TransactionResponse> => {
+  let lastError: unknown
   for (let attempt = 0; attempt < SUBMITTED_TX_MAX_ATTEMPTS; attempt++) {
     try {
       const txResponse = await provider.getTransaction(hash)
-      if (txResponse) return { txResponse, startBlock }
-    } catch (err) {
-      if (attempt === SUBMITTED_TX_MAX_ATTEMPTS - 1) {
-        throw err
-      }
+      if (
+        txResponse?.hash.toLowerCase() === hash.toLowerCase() &&
+        txResponse.from.toLowerCase() === from.toLowerCase() &&
+        txResponse.chainId === BigInt(chainId) &&
+        Number.isSafeInteger(txResponse.nonce) &&
+        txResponse.nonce >= 0
+      )
+        return txResponse
+    } catch (error) {
+      lastError = error
     }
     await new Promise((resolve) => setTimeout(resolve, SUBMITTED_TX_POLL_MS))
   }
-  throw new Error(`Transaction ${hash} was not found on chain`)
+  throw new UnconfirmedTransactionError(hash, lastError)
 }
 
 // The wallet picks nonce and fees and broadcasts once; we only track the hash.
@@ -91,10 +108,34 @@ const submitWithWallet = async (
     from: signer.address,
     gasLimit,
   })
-  // getSubmittedTransaction resolves with both the response and the block at
-  // which we started watching; both are needed for replacement tracking.
-  const txInfo = getSubmittedTransaction(provider, hash, startBlock)
-  return { hash, txInfo }
+  return { hash, provider, startBlock }
+}
+
+const waitForWalletOutcome = async (
+  { hash, provider, startBlock }: Awaited<ReturnType<typeof submitWithWallet>>,
+  broadcastRequest: BroadcastRequest,
+  signer: EVMSigner,
+) => {
+  const txResponse = await getSubmittedTransaction(
+    provider,
+    hash,
+    signer.address,
+    broadcastRequest.chainId,
+  )
+  try {
+    const outcome = await waitForMinedStatus(
+      txResponse,
+      startBlock,
+      broadcastRequest,
+      signer,
+    )
+    if (outcome.txReceipt)
+      return { ...outcome, txResponse, txReceipt: outcome.txReceipt }
+  } catch (error) {
+    if (isConfirmedTxFailure(error)) throw error
+    throw new UnconfirmedTransactionError(hash, error)
+  }
+  throw new UnconfirmedTransactionError(hash)
 }
 
 export const sendTx = async (
@@ -108,22 +149,18 @@ export const sendTx = async (
   trxMinedPromise: Promise<TransactionReceipt | null>
 }> => {
   if (signer.submitTransaction) {
-    const { hash, txInfo } = await submitWithWallet(
+    const submitted = await submitWithWallet(
       signer.submitTransaction,
       signer,
       gasLimit,
       broadcastRequest,
     )
-    const trxMinedPromise = txInfo.then(async ({ txResponse, startBlock }) => {
-      const { txReceipt } = await waitForMinedStatus(
-        txResponse,
-        startBlock,
-        broadcastRequest,
-        signer,
-      )
-      return txReceipt
-    })
-    return { hash, trxMinedPromise }
+    const trxMinedPromise = waitForWalletOutcome(
+      submitted,
+      broadcastRequest,
+      signer,
+    ).then(({ txReceipt }) => txReceipt)
+    return { hash: submitted.hash, trxMinedPromise }
   }
 
   const from = signer.address
@@ -167,13 +204,8 @@ export const sendTxWaitForMining = async (
       gasLimit,
       broadcastRequest,
     )
-    const { txResponse, startBlock } = await submitted.txInfo
-    const { txReceipt, replacementTxResponse } = await waitForMinedStatus(
-      txResponse,
-      startBlock,
-      broadcastRequest,
-      signer,
-    )
+    const { txResponse, txReceipt, replacementTxResponse } =
+      await waitForWalletOutcome(submitted, broadcastRequest, signer)
     const effectiveResponse = replacementTxResponse ?? txResponse
     return {
       txResponse: effectiveResponse,
@@ -433,7 +465,7 @@ export const isConfirmedTxFailure = (err: unknown): boolean => {
     )
   }
   if (isError(err, "CALL_EXCEPTION")) {
-    return true
+    return err.receipt?.status === 0
   }
   const errorObj = err as {
     reason?: string

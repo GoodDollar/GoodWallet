@@ -30,6 +30,7 @@ vi.mock("@/stores/transactionHistoryStore", () => ({
   activityHistoryStore: {
     replacePropagatingTx: vi.fn(),
     removePropagatingTx: vi.fn(),
+    confirmPropagatingTx: vi.fn(),
   },
 }))
 
@@ -82,7 +83,9 @@ describe("handleTrxMinedOutcome", () => {
   })
 
   it("replaces propagating entry when trxMinedPromise resolves with a speed-up receipt", async () => {
-    const replacementReceipt = { hash: "0xspeeduphash" }
+    const replacementReceipt = {
+      hash: "0xspeeduphash",
+    } as import("ethers/providers").TransactionReceipt
     const trxMinedPromise = Promise.resolve(replacementReceipt)
 
     await handleTrxMinedOutcome(
@@ -95,6 +98,11 @@ describe("handleTrxMinedOutcome", () => {
     expect(activityHistoryStore.replacePropagatingTx).toHaveBeenCalledWith(
       chainId,
       initialHash,
+      "0xspeeduphash",
+      accountToken,
+    )
+    expect(activityHistoryStore.confirmPropagatingTx).toHaveBeenCalledWith(
+      chainId,
       "0xspeeduphash",
       accountToken,
     )

@@ -3,6 +3,7 @@ import { proxyMap } from "valtio/utils"
 
 import { getAvailableChainIds } from "@/chain/chains"
 import { getChainProvider } from "@/chain/provider/provider"
+import { getEthersProvider } from "@/ethers-utils/ethersProviders"
 import type { Tx } from "@/hooks/useLedger/types"
 import type { Addresses } from "@/login"
 
@@ -54,6 +55,7 @@ type ActivityHistoryStore = {
     token: number,
   ) => void
   removePropagatingTx: (chainId: number, hash: string, token: number) => void
+  confirmPropagatingTx: (chainId: number, hash: string, token: number) => void
   getCurrentAccountToken: () => number
 }
 
@@ -168,6 +170,85 @@ const removePropagatingTx = (chainId: number, hash: string, token: number) => {
   }
 }
 
+const confirmPropagatingTx = (chainId: number, hash: string, token: number) => {
+  if (token !== currentAccountToken) return
+  const markConfirmed = (tx: Tx) =>
+    tx.status && tx.hash.toLowerCase() === hash.toLowerCase()
+      ? { ...tx, status: undefined }
+      : tx
+  const internal = internalTxs.get(chainId)
+  if (internal) internalTxs.set(chainId, internal.map(markConfirmed))
+  const displayed = activityHistoryStore.perChain.get(chainId)
+  if (displayed) {
+    activityHistoryStore.perChain.set(chainId, displayed.map(markConfirmed))
+  }
+}
+
+const findReplacedHashes = async (
+  chainId: number,
+  address: string,
+  pending: Tx[],
+  history: Tx[],
+  isCurrent: () => boolean,
+) => {
+  const replaced = new Set<string>()
+  if (!pending.length || !history.length) return replaced
+
+  // Indexer rows may represent token transfers or internal calls, so use only
+  // their hashes. Sender and nonce must come from the actual EVM transactions.
+  const rpc = getEthersProvider(chainId)
+  const sender = address.toLowerCase()
+  const lookupNonce = async (hash: string) => {
+    const tx = await rpc.getTransaction(hash).catch(() => null)
+    if (
+      tx?.hash.toLowerCase() === hash.toLowerCase() &&
+      tx.chainId === BigInt(chainId) &&
+      tx.from.toLowerCase() === sender &&
+      Number.isSafeInteger(tx.nonce) &&
+      tx.nonce >= 0
+    ) {
+      return tx.nonce
+    }
+  }
+  const originalsByNonce = new Map<number, string[]>()
+  await Promise.all(
+    pending.map(async ({ hash }) => {
+      const nonce = await lookupNonce(hash)
+      if (nonce === undefined) return
+      const originals = originalsByNonce.get(nonce) ?? []
+      originals.push(hash.toLowerCase())
+      originalsByNonce.set(nonce, originals)
+    }),
+  )
+
+  // Bound RPC fan-out; this is opportunistic reconciliation, not a block scan.
+  const candidates = [
+    ...new Set(history.map((tx) => tx.hash.toLowerCase())),
+  ].slice(0, 50)
+  for (
+    let i = 0;
+    i < candidates.length && originalsByNonce.size && isCurrent();
+    i += 5
+  ) {
+    await Promise.all(
+      candidates.slice(i, i + 5).map(async (hash) => {
+        const nonce = await lookupNonce(hash)
+        if (nonce === undefined || !isCurrent()) return
+        const originals = originalsByNonce.get(nonce)
+        if (!originals) return
+        const receipt = await rpc.getTransactionReceipt(hash).catch(() => null)
+        if (receipt?.hash.toLowerCase() === hash && receipt.blockNumber > 0) {
+          for (const original of originals) {
+            if (original !== hash) replaced.add(original)
+          }
+          originalsByNonce.delete(nonce)
+        }
+      }),
+    )
+  }
+  return replaced
+}
+
 const refreshHistory = async (addresses: Addresses | undefined) => {
   const now = Date.now()
 
@@ -221,8 +302,36 @@ const refreshHistorySingleChain = async (
 
   // Guard against late async writes: if the account changed or history was
   // cleared while the query was in flight, discard the stale response.
-  if (token !== currentAccountToken || activeAccount !== addresses.get("EVM")) {
-    return
+  const isCurrent = () =>
+    token === currentAccountToken && activeAccount === addresses.get("EVM")
+  if (!isCurrent()) return
+
+  const internal = internalTxs.get(chainId) ?? []
+  if (provider.family === "EVM" && internal.some((tx) => tx.status)) {
+    const indexed = new Set(
+      externalTxsForChain.map((tx) => tx.hash.toLowerCase()),
+    )
+    const pending = internal.filter(
+      (tx) =>
+        tx.status === "submitted-unconfirmed" &&
+        !indexed.has(tx.hash.toLowerCase()),
+    )
+    const replaced = await findReplacedHashes(
+      chainId,
+      address,
+      pending,
+      externalTxsForChain,
+      isCurrent,
+    ).catch(() => new Set<string>())
+    if (!isCurrent()) return
+    // Do not infer success of the original intent. Keep the mined history row.
+    internalTxs.set(
+      chainId,
+      (internalTxs.get(chainId) ?? []).filter((tx) => {
+        const hash = tx.hash.toLowerCase()
+        return !tx.status || (!replaced.has(hash) && !indexed.has(hash))
+      }),
+    )
   }
 
   const internalTxsForChain = internalTxs.get(chainId) || []
@@ -241,5 +350,6 @@ export const activityHistoryStore = proxy<ActivityHistoryStore>({
   addPropagatingTx: addPropagatingTx,
   replacePropagatingTx: replacePropagatingTx,
   removePropagatingTx: removePropagatingTx,
+  confirmPropagatingTx,
   getCurrentAccountToken: getCurrentAccountToken,
 })
