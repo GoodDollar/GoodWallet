@@ -92,22 +92,26 @@ export const BTCDialogDetails = ({
                 )
               setTotalFee(bytesRequired * feePerByteSats)
 
+              const accountToken = activityHistoryStore.getCurrentAccountToken()
               const signAndBroadcast = () =>
                 signer
                   .signPsbt(psbt)
                   .then(chainProvider.broadcastTransaction)
                   .then((txId) =>
-                    addPropagatingTx({
-                      hash: txId,
-                      chainId: selectedToken.chainId,
-                      method: "Sent",
-                      from: signer.address,
-                      to: toAddress,
-                      tokenAddress: selectedToken.address,
-                      amount: amountInCrypto,
-                      timestamp: new Date().getTime() / 1000,
-                      txDirection: TxDirection.OUTGOING,
-                    }),
+                    addPropagatingTx(
+                      {
+                        hash: txId,
+                        chainId: selectedToken.chainId,
+                        method: "Sent",
+                        from: signer.address,
+                        to: toAddress,
+                        tokenAddress: selectedToken.address,
+                        amount: amountInCrypto,
+                        timestamp: new Date().getTime() / 1000,
+                        txDirection: TxDirection.OUTGOING,
+                      },
+                      accountToken,
+                    ),
                   )
               setSubmitTransaction(signAndBroadcast)
               setIsValid(true)

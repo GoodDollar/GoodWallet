@@ -30,7 +30,11 @@ export async function approveEIP155Request(
   switch (request.method) {
     case EIP155_SIGNING_METHODS.PERSONAL_SIGN:
       try {
-        const message = getSignParamsMessage(request.params, "bytes")
+        const message = getSignParamsMessage(
+          request.params,
+          "bytes",
+          wallet.address,
+        )
         const signedMessage = await wallet.signMessage(message)
         return formatJsonRpcResult(id, signedMessage)
       } catch (error) {
@@ -53,7 +57,7 @@ export async function approveEIP155Request(
           domain,
           types,
           message: data,
-        } = getSignTypedDataParamsData(request.params)
+        } = getSignTypedDataParamsData(request.params, wallet.address)
 
         // https://github.com/ethers-io/ethers.js/issues/687#issuecomment-714069471
         delete types.EIP712Domain

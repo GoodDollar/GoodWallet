@@ -44,32 +44,64 @@ async function getAmountsForChain(
   return provider.getAmounts(chainId, tokensOfChain, address)
 }
 
+// Session epoch bumped on account/address change to drop late async responses
+// from previous accounts. Per-chain versions ensure concurrent refreshes on
+// different chains do not invalidate each other.
+let sessionEpoch = 0
+let lastAddresses: Addresses | undefined
+const chainVersions = new Map<number, number>()
+let inFlightRequests = 0
+
 export const refreshAmounts = async (
   tokens: Tokens | undefined,
   addresses: Addresses | undefined,
   chainId: number | "all",
 ) => {
   if (!tokens || !addresses) {
+    sessionEpoch++
+    chainVersions.clear()
+    lastAddresses = undefined
     amountsStore.amounts.clear()
+    inFlightRequests = 0
     amountsStore.isLoading = true
+    amountsStore.isValidating = false
     return
   }
 
+  // Drop stale callbacks closing over a previous account's addresses or an ended session.
+  if (!sessionState.addresses || addresses !== sessionState.addresses) {
+    return
+  }
+
+  if (lastAddresses !== addresses) {
+    sessionEpoch++
+    chainVersions.clear()
+    lastAddresses = addresses
+    amountsStore.amounts.clear()
+    inFlightRequests = 0
+  }
+
+  const currentEpoch = sessionEpoch
+  inFlightRequests++
+  amountsStore.isValidating = true
+
   try {
-    amountsStore.isValidating = true
     if (chainId === "all") {
-      const promises = imap(
-        tokens.entries(),
-        async ([chainId, tokensOfChain]) => {
-          if (!isChainAvailableForAddresses(chainId, addresses)) return
-          const amounts = await getAmountsForChain(
-            tokensOfChain,
-            addresses,
-            chainId,
-          )
-          amountsStore.amounts.set(chainId, amounts)
-        },
-      )
+      const promises = imap(tokens.entries(), async ([cId, tokensOfChain]) => {
+        if (!isChainAvailableForAddresses(cId, addresses)) return
+        const version = (chainVersions.get(cId) ?? 0) + 1
+        chainVersions.set(cId, version)
+
+        const amounts = await getAmountsForChain(tokensOfChain, addresses, cId)
+        // Drop late response if account changed or this chain was refreshed again.
+        if (
+          currentEpoch !== sessionEpoch ||
+          version !== chainVersions.get(cId)
+        ) {
+          return
+        }
+        amountsStore.amounts.set(cId, amounts)
+      })
       const r = await Promise.allSettled(promises)
       //Log errors, if any
       r.filter((p) => p.status === "rejected").forEach((p) =>
@@ -78,17 +110,33 @@ export const refreshAmounts = async (
     } else {
       const tokensOfChain = tokens.get(chainId)
       if (tokensOfChain && isChainAvailableForAddresses(chainId, addresses)) {
+        const version = (chainVersions.get(chainId) ?? 0) + 1
+        chainVersions.set(chainId, version)
+
         const amountsForChain = await getAmountsForChain(
           tokensOfChain,
           addresses,
           chainId,
         )
+        // Drop late response if account changed or this chain was refreshed again.
+        if (
+          currentEpoch !== sessionEpoch ||
+          version !== chainVersions.get(chainId)
+        ) {
+          return
+        }
         amountsStore.amounts.set(chainId, amountsForChain)
       }
     }
   } finally {
-    amountsStore.isLoading = false
-    amountsStore.isValidating = false
+    if (currentEpoch === sessionEpoch) {
+      inFlightRequests--
+      if (inFlightRequests <= 0) {
+        inFlightRequests = 0
+        amountsStore.isLoading = false
+        amountsStore.isValidating = false
+      }
+    }
   }
 }
 refreshAmounts(tokensStore.tokens, sessionState.addresses, "all")
@@ -97,7 +145,9 @@ subscribeKey(tokensStore, "tokens", (tokens) => {
 })
 
 subscribeKey(sessionState, "addresses", (addresses) => {
-  refreshAmounts(tokensStore.tokens, addresses, "all")
+  if (tokensStore.tokens || !addresses) {
+    refreshAmounts(tokensStore.tokens, addresses, "all")
+  }
 })
 
 setInterval(() => {

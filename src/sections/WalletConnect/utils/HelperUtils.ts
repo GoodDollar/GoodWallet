@@ -10,16 +10,45 @@ import {
 import { BIP122_MAINNET_CAIP2, BIP122_TESTNET_CAIP2 } from "../data/BIP122Data"
 import { SOLANA_DEVNET, SOLANA_MAINNET } from "../data/SolanaData"
 
-/**
- * Gets message from various signing request methods by filtering out
- * a value that is not an address (thus is a message).
- * If it is a hex string, it gets converted to utf8 string
- */
+const isSigningAddress = (value: unknown): value is string =>
+  typeof value === "string" && isAddress(value, { strict: false })
+
+function getSigningPayload<T>(
+  params: T[],
+  accountIndex: 0 | 1,
+  expectedAddress?: string,
+) {
+  if (!Array.isArray(params)) {
+    throw new Error("Invalid signing request parameters")
+  }
+  // Prefer the RPC's documented parameter order, while supporting the legacy
+  // reversed order when only that slot contains an address.
+  const index = isSigningAddress(params[accountIndex])
+    ? accountIndex
+    : 1 - accountIndex
+  const address = params[index]
+  if (
+    expectedAddress !== undefined &&
+    (!isSigningAddress(address) ||
+      address.toLowerCase() !== expectedAddress.toLowerCase())
+  ) {
+    throw new Error(
+      "Signing request address does not match the connected account",
+    )
+  }
+  const payload = params[1 - index]
+  if (expectedAddress !== undefined && payload == null) {
+    throw new Error("Missing signing request payload")
+  }
+  return payload
+}
+
 export function getSignParamsMessage(
   params: string[],
   output: "string" | "bytes" = "string",
+  expectedAddress?: string,
 ) {
-  const message = params.filter((p) => !isAddress(p))[0]
+  const message = getSigningPayload(params, 1, expectedAddress) ?? ""
   if (isHex(message)) {
     return fromHex(message, output)
   }
@@ -29,13 +58,11 @@ export function getSignParamsMessage(
   return message
 }
 
-/**
- * Gets data from various signTypedData request methods by filtering out
- * a value that is not an address (thus is data).
- * If data is a string convert it to object
- */
-export function getSignTypedDataParamsData(params: string[]) {
-  const data = params.filter((p) => !isAddress(p))[0]
+export function getSignTypedDataParamsData(
+  params: string[],
+  expectedAddress?: string,
+) {
+  const data = getSigningPayload(params, 0, expectedAddress)
 
   if (typeof data === "string") {
     return JSON.parse(data)

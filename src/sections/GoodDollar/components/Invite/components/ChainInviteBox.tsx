@@ -11,7 +11,12 @@ import { captureEvent } from "@/analytics/useAnalytics"
 import { getChainName } from "@/chain/chains"
 import { getChainIcon } from "@/components/Typo/ChainIcon"
 import { formatTokenAmount } from "@/components/Utils/tokenFormat"
-import { type EncodedMethod, estimateTypeAndFees, sendTx } from "@/ethers-utils"
+import {
+  type EncodedMethod,
+  estimateTypeAndFees,
+  sendTx,
+  UnconfirmedTransactionError,
+} from "@/ethers-utils"
 import { refreshInviteStore, type User } from "@/gooddollar/stores/inviteStore"
 import { getTx } from "@/gooddollar/stores/utils"
 import { sessionState } from "@/login/context/SessionContext/storage"
@@ -60,7 +65,13 @@ export default function ChainInviteBox(props: {
         callData,
       )
       const broadcastOptions = await estimateTypeAndFees(chainId)
-      await sendTx(signer, gasLimit, broadCastRequest, broadcastOptions)
+      const { trxMinedPromise } = await sendTx(
+        signer,
+        gasLimit,
+        broadCastRequest,
+        broadcastOptions,
+      )
+      await trxMinedPromise
 
       captureEvent({
         type: AnalyticsEventTypes.GoodDollarInviteJoinSucceeded,
@@ -74,6 +85,13 @@ export default function ChainInviteBox(props: {
         message: `Joined Successfully on ${chainName}`,
       })
     } catch (error) {
+      if (error instanceof UnconfirmedTransactionError) {
+        createNotification({
+          message: `${translations.send.submittedUnconfirmed}: ${error.hash}`,
+          autoClose: true,
+        })
+        return
+      }
       console.error(error)
       createNotification({
         status: "error",

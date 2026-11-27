@@ -9,6 +9,7 @@ import {
   encodeMethodCall,
   getEthersProvider,
   sendTxWaitForMining,
+  UnconfirmedTransactionError,
   ZERO_ADDRESS,
 } from "@/ethers-utils"
 import type { EVMSigner, SessionType } from "@/login/types"
@@ -105,7 +106,9 @@ const _topWallet = async (
         true,
       )
       return "topped_via_contract"
-    } catch {
+    } catch (error) {
+      // A wallet broadcast may still mine; do not issue a fallback top-up.
+      if (error instanceof UnconfirmedTransactionError) return "skipped"
       const result = await topWalletViaAPI(chainId, signer)
       return Number(result.ok) > 0 ? "topped_via_api" : "error"
     }

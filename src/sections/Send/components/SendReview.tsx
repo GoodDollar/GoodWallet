@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { Button, createToast, updateToast } from "ui"
 
-import { normalizeEvmAddress } from "ethers-utils"
+import { normalizeEvmAddress, UnconfirmedTransactionError } from "ethers-utils"
 import { AnalyticsEventTypes } from "@/analytics/types"
 import { captureEvent } from "@/analytics/useAnalytics"
 import { getChainProvider } from "@/chain/provider/provider"
@@ -113,6 +113,17 @@ export function SendReview() {
         resetFormData()
       })
       .catch((error) => {
+        if (error instanceof UnconfirmedTransactionError) {
+          updateToast({
+            id: toastId,
+            message: sendTranslations.submittedUnconfirmed,
+            status: undefined,
+            autoClose: true,
+          })
+          gotoHome()
+          resetFormData()
+          return
+        }
         captureEvent({
           type: AnalyticsEventTypes.SendFailed,
           chainId: selectedToken.chainId,

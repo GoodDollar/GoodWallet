@@ -28,7 +28,7 @@ import {
 import { config } from "@/config"
 import { sessionState } from "@/login/context/SessionContext/storage"
 import { getReownEip1193Provider } from "@/login/reown"
-import type { EVMSigner, ISigner } from "@/login/types"
+import type { EVMSigner, ISignerSession } from "@/login/types"
 
 import { bitcoinAdapter } from "./adapters/bitcoinWalletAdapter"
 import { createSolanaWallet } from "./adapters/solanaWalletAdapter"
@@ -68,14 +68,24 @@ const getLifiRpcUrls = () => {
 
 // External wallets sign and broadcast through their own provider.
 const getExternalWalletClient = async (signer: EVMSigner, chainId?: number) => {
+  const assertSessionActive = () => {
+    if (sessionState.session?.signer.EVM !== signer) {
+      throw new Error("Session changed during swap execution")
+    }
+  }
   const { provider, chainId: activeChainId } = await getReownEip1193Provider(
     signer.address,
     chainId,
+    assertSessionActive,
+    (id, args) =>
+      http(config.rpcUrls[id])({
+        chain: chains.find((chain) => chain.id === id),
+      }).request(args),
   )
   return createWalletClient({
     account: signer.address as Hex,
     chain: chains.find((chain) => chain.id === activeChainId),
-    transport: custom(provider),
+    transport: custom(provider, { retryCount: 0 }),
   })
 }
 
@@ -105,13 +115,18 @@ const getEvmProviderOptions = (signer: EVMSigner) => {
   }
 }
 
-const initializeLifi = async (signer: ISigner | undefined) => {
-  if (!signer) {
-    lifiState.isInitialized = false
-    lifiState.client = null
-    lifiState.error = null
-    return
-  }
+let initialization = 0
+const initializeLifi = async (session: ISignerSession | null) => {
+  const generation = ++initialization
+  const isCurrent = () =>
+    generation === initialization && sessionState.session === session
+
+  lifiState.isInitialized = false
+  lifiState.client = null
+  lifiState.error = null
+  if (!session) return
+
+  const { signer } = session
   try {
     // Dynamically import LiFi SDK to reduce initial bundle size
     const [
@@ -125,6 +140,7 @@ const initializeLifi = async (signer: ISigner | undefined) => {
       import("@lifi/sdk-provider-solana"),
       import("@lifi/sdk-provider-bitcoin"),
     ])
+    if (!isCurrent()) return
 
     const providers: SDKProvider[] = [
       EthereumProvider(getEvmProviderOptions(signer.EVM)),
@@ -156,8 +172,10 @@ const initializeLifi = async (signer: ISigner | undefined) => {
         try {
           await connector.connect()
         } catch (error) {
+          if (!isCurrent()) return
           console.error("Failed to connect Bitcoin connector:", error)
         }
+        if (!isCurrent()) return
       }
 
       providers.push(
@@ -175,6 +193,7 @@ const initializeLifi = async (signer: ISigner | undefined) => {
       rpcUrls: getLifiRpcUrls(),
       providers,
     })
+    if (!isCurrent()) return
 
     // ref() prevents valtio from proxying the client (which would break
     // identity checks and mutation of internal SDK state).
@@ -182,6 +201,7 @@ const initializeLifi = async (signer: ISigner | undefined) => {
     lifiState.isInitialized = true
     lifiState.error = null
   } catch (error) {
+    if (!isCurrent()) return
     lifiState.client = null
     lifiState.isInitialized = false
     lifiState.error = error instanceof Error ? error.message : "Unknown error"
@@ -189,7 +209,5 @@ const initializeLifi = async (signer: ISigner | undefined) => {
   }
 }
 
-initializeLifi(sessionState.session?.signer)
-subscribeKey(sessionState, "session", (session) =>
-  initializeLifi(session?.signer),
-)
+initializeLifi(sessionState.session)
+subscribeKey(sessionState, "session", initializeLifi, true)

@@ -81,6 +81,7 @@ export const ActivityHistory = () => {
         })
         .filter(
           (tx) =>
+            tx.status === "submitted-unconfirmed" ||
             tokens?.getBy({
               chainId: tx.chainId,
               address: tx.tokenAddress,
@@ -101,6 +102,10 @@ export const ActivityHistory = () => {
             label:
               tx.method ??
               (tx.txDirection === TxDirection.INCOMING ? "Received" : "Sent"),
+            statusLabel:
+              tx.status === "submitted-unconfirmed"
+                ? translations.send.submittedUnconfirmed
+                : undefined,
             name: token?.name ?? "",
             from: tx.from,
             to: tx.to,
@@ -117,7 +122,7 @@ export const ActivityHistory = () => {
           }
         })
     },
-    [tokens, prices, selectedChainId],
+    [tokens, prices, selectedChainId, translations.send.submittedUnconfirmed],
   )
 
   const normalizedTransactions = useMemo(() => {

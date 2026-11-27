@@ -12,6 +12,7 @@ import {
   type BroadcastResult,
   estimateTypeAndFees,
   sendTxWaitForMining,
+  UnconfirmedTransactionError,
 } from "ethers-utils"
 import { generateGoodIDLink, syncWhitelist } from "gooddollar"
 import { getG$ContractAddress } from "gooddollar/contracts/pool"
@@ -406,12 +407,14 @@ function ClaimViewContent() {
   const addPropagatingTx = useSnapshot(activityHistoryStore).addPropagatingTx
 
   const onClaim = () => {
+    if (!evmAddress) return
     const ongoingClaims = new Map<ChainId, Promise<void>>()
 
     eligibleClaimsWithGasInfo
       .filter((claim) => claim.sufficientGas)
       .forEach(async (claim) => {
         const { amount, chainId, type } = claim
+        const accountToken = activityHistoryStore.getCurrentAccountToken()
 
         const toastId = createToast({
           message:
@@ -467,19 +470,22 @@ function ClaimViewContent() {
                 ? formatUnits(gasUsed, nativeToken.decimals)
                 : undefined
 
-            addPropagatingTx({
-              hash: txResponse.hash,
-              chainId: chainId,
-              method: TYPE_TO_METHOD_MAP[type],
-              //The tx-response received, is for the wallet -> contract invocation :
-              from: txResponse.to ?? "0x0",
-              to: txResponse.from ?? "0x0",
-              tokenAddress,
-              amount: amount.toString(),
-              timestamp: new Date().getTime() / 1000,
-              txDirection: TxDirection.INCOMING,
-              gas,
-            })
+            addPropagatingTx(
+              {
+                hash: txResponse.hash,
+                chainId: chainId,
+                method: TYPE_TO_METHOD_MAP[type],
+                //The tx-response received, is for the wallet -> contract invocation :
+                from: txResponse.to ?? "0x0",
+                to: txResponse.from ?? "0x0",
+                tokenAddress,
+                amount: amount.toString(),
+                timestamp: new Date().getTime() / 1000,
+                txDirection: TxDirection.INCOMING,
+                gas,
+              },
+              accountToken,
+            )
 
             switch (type) {
               case "ubi":
@@ -508,6 +514,31 @@ function ClaimViewContent() {
             mutateBalances(chainId)
           })
           .catch((e: Error) => {
+            if (e instanceof UnconfirmedTransactionError) {
+              const tokenAddress = getG$ContractAddress(chainId, "GoodDollar")
+              addPropagatingTx(
+                {
+                  hash: e.hash,
+                  chainId,
+                  status: "submitted-unconfirmed",
+                  method: TYPE_TO_METHOD_MAP[type],
+                  from: tokenAddress,
+                  to: evmAddress,
+                  tokenAddress,
+                  amount: amount.toString(),
+                  timestamp: Date.now() / 1000,
+                  txDirection: TxDirection.INCOMING,
+                },
+                accountToken,
+              )
+              updateToast({
+                id: toastId,
+                message: translations.send.submittedUnconfirmed,
+                status: undefined,
+                autoClose: true,
+              })
+              return
+            }
             captureEvent({
               type: AnalyticsEventTypes.GoodDollarClaimFailed,
               subType: type,

@@ -131,7 +131,9 @@ export default function LoginDefault() {
               <p role="status" className="text-center">
                 {reconnectReason === "accountChanged"
                   ? loginTranslations.existingWalletAccountChanged
-                  : loginTranslations.existingWalletRestoreFailed}
+                  : reconnectReason === "disconnected"
+                    ? loginTranslations.existingWalletDisconnected
+                    : loginTranslations.existingWalletRestoreFailed}
               </p>
             )}
 

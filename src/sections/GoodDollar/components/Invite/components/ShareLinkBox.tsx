@@ -10,6 +10,7 @@ import {
   type EncodedMethod,
   estimateTypeAndFees,
   sendTxWaitForMining,
+  UnconfirmedTransactionError,
 } from "@/ethers-utils"
 import { refreshInviteStore, type User } from "@/gooddollar/stores/inviteStore"
 import { getTx } from "@/gooddollar/stores/utils"
@@ -72,6 +73,13 @@ export default function ShareLinkBox(props: {
         message: "Joined Successfully",
       })
     } catch (error) {
+      if (error instanceof UnconfirmedTransactionError) {
+        createToast({
+          message: `${translations.send.submittedUnconfirmed}: ${error.hash}`,
+          autoClose: true,
+        })
+        return
+      }
       console.error(error)
       createToast({
         status: "error",

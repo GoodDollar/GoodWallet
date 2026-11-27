@@ -112,6 +112,7 @@ export const SVMDialogDetails = ({
             const computeUnits = await chainProvider.getComputeUnits(tx)
             setComputeUnits(computeUnits)
 
+            const accountToken = activityHistoryStore.getCurrentAccountToken()
             const signAndBroadcastTransaction = async () => {
               const [signatures] = await signer.signTransactions([tx])
               const signedTx = Object.freeze({
@@ -122,17 +123,20 @@ export const SVMDialogDetails = ({
               const signature =
                 await chainProvider.broadcastTransaction(signedTx)
 
-              addPropagatingTx({
-                hash: signature,
-                chainId: selectedToken.chainId,
-                method: "Sent",
-                from: signer.address,
-                to: toAddress,
-                tokenAddress: selectedToken.address,
-                amount: amountInCrypto,
-                timestamp: Date.now() / 1000,
-                txDirection: TxDirection.OUTGOING,
-              })
+              addPropagatingTx(
+                {
+                  hash: signature,
+                  chainId: selectedToken.chainId,
+                  method: "Sent",
+                  from: signer.address,
+                  to: toAddress,
+                  tokenAddress: selectedToken.address,
+                  amount: amountInCrypto,
+                  timestamp: Date.now() / 1000,
+                  txDirection: TxDirection.OUTGOING,
+                },
+                accountToken,
+              )
             }
             setIsValid(true)
             setSubmitTransaction(signAndBroadcastTransaction)

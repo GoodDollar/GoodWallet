@@ -25,6 +25,69 @@ describe("WalletWrapper.sendTransactionHash", () => {
     expect(signer.signTransaction).not.toHaveBeenCalled()
   })
 
+  it("defaults from to the connected address when the dApp omits it", async () => {
+    const submitTransaction = vi.fn(async () => "0xwallethash")
+    const signer = { ...createSigner(), submitTransaction }
+    // tx has no `from` field.
+    const txNoFrom = { to: address, value: BigInt(1), chainId: 1 }
+
+    await new WalletWrapper(signer).sendTransactionHash(txNoFrom)
+
+    expect(submitTransaction).toHaveBeenCalledWith({
+      ...txNoFrom,
+      from: address,
+    })
+  })
+
+  it("rejects when the dApp supplies a from that differs from the connected account", async () => {
+    const submitTransaction = vi.fn(async () => "0xwallethash")
+    const signer = { ...createSigner(), submitTransaction }
+    const differentAddress = "0x2222222222222222222222222222222222222222"
+    const txWithWrongFrom = { ...tx, from: differentAddress }
+
+    await expect(
+      new WalletWrapper(signer).sendTransactionHash(txWithWrongFrom),
+    ).rejects.toThrow(/does not match connected account/)
+    expect(submitTransaction).not.toHaveBeenCalled()
+  })
+
+  it("accepts when the dApp supplies a from equal to the connected address", async () => {
+    const submitTransaction = vi.fn(async () => "0xwallethash")
+    const signer = { ...createSigner(), submitTransaction }
+    const txWithMatchingFrom = { ...tx, from: address }
+
+    await expect(
+      new WalletWrapper(signer).sendTransactionHash(txWithMatchingFrom),
+    ).resolves.toBe("0xwallethash")
+  })
+
+  it("accepts when the dApp supplies a from that differs only in EIP-55 casing", async () => {
+    const checksummedAddress = "0x5aAeb6053F3E94C9b9A09f33669435E7Ef1bEAeD"
+    const lowerCaseFrom = checksummedAddress.toLowerCase()
+    const submitTransaction = vi.fn(async () => "0xwallethash")
+    const signer = {
+      address: checksummedAddress,
+      signMessage: vi.fn(),
+      signTypedData: vi.fn(),
+      signTransaction: vi.fn(async () => "0xraw"),
+      submitTransaction,
+    }
+    const txWithLowerFrom = {
+      to: checksummedAddress,
+      from: lowerCaseFrom,
+      value: BigInt(1),
+      chainId: 1,
+    }
+
+    await expect(
+      new WalletWrapper(signer).sendTransactionHash(txWithLowerFrom),
+    ).resolves.toBe("0xwallethash")
+    expect(submitTransaction).toHaveBeenCalledWith({
+      ...txWithLowerFrom,
+      from: checksummedAddress,
+    })
+  })
+
   it("signs and broadcasts locally for local-key signers", async () => {
     const signer = createSigner()
     const wrapper = new WalletWrapper(signer, {} as Provider)

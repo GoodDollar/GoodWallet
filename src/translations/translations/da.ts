@@ -37,6 +37,8 @@ const da: TypedTranslations = {
     existingWalletFailed: "Kunne ikke forbinde din wallet. Prøv igen",
     existingWalletAccountChanged:
       "Din wallet-konto er ændret. Forbind din wallet igen",
+    existingWalletDisconnected:
+      "Din wallet blev afbrudt. Forbind din wallet igen",
     existingWalletRestoreFailed:
       "Vi kunne ikke genoprette forbindelsen til din wallet. Forbind din wallet igen",
     evmOnlyNotice:
@@ -48,17 +50,17 @@ const da: TypedTranslations = {
       privacy: "Privatlivspolitik",
     },
     dialog: {
-      title: "Velkommen til New GoodWallet",
+      title: "Velkommen til den nye GoodWallet",
       body: "Hvis du bruger en tidligere version af GoodWallet, skal du sørge for at logge ind med den samme godkendelsesudbyder, markeret med blå, og legitimationsoplysninger for at hente din eksisterende konto.",
       acceptBtnText: "OK",
     },
   },
   home: {
     pwaConfirmAlert: "En ny version er tilgængelig, opdater?",
-    fund: "Fund",
+    fund: "Tilføj midler",
     send: "Send",
     receive: "Modtag",
-    swap: "Swap",
+    swap: "Byt",
     claim: "Gør krav på",
     walletConnect: "WalletConnect",
     deposit: "Indbetal",
@@ -87,7 +89,7 @@ const da: TypedTranslations = {
       `Der blev gjort krav på ${amount} G$ på ${chain}`,
     claimFailed: (chain: string) =>
       `Der opstod en fejl ved gøre krav på på ${chain}`,
-    whitelistRequired: "Whitelisting påkrævet",
+    whitelistRequired: "Ansigtsverificering påkrævet",
     faceVerificationRequired:
       "Før du kan begynde at gøre krav på GoodDollars skal der opsættes godkendelse via ansigtsgenkendelse.",
     verify: "Godkend",
@@ -176,6 +178,7 @@ const da: TypedTranslations = {
     sendFailure: "Afsendelse mislykkedes",
     sending: "Sender",
     sendSuccess: "Afsendelse succesfuld",
+    submittedUnconfirmed: "Indsendt · Ikke bekræftet",
     title: "Send",
     to: "Til",
     toPlaceholder: {
@@ -217,7 +220,7 @@ const da: TypedTranslations = {
     joined: "Tilmeldt",
     pending: "Afventer",
     whitelistRequired:
-      "Du skal være whitelisted og gøre krav på G$ for at få et invitationslink.",
+      "Du skal gennemføre ansigtsverificering og gøre krav på G$ for at få et invitationslink.",
     joinToGetInviteLink:
       "Tilmeld dig venligst GoodDollar fællesskabet for at få dit invitationslink",
   },
@@ -243,11 +246,11 @@ const da: TypedTranslations = {
       price: "Pris",
     },
     firstTimeDialog: {
-      title: "Hvordan fungerer swaps",
-      body: "Du kan swappe over 10.000 tokens på tværs af flere blockchains.\nSørg for, at du har nok gas på den valgte blockchain.\nNogle swaps kan tage et par minutter at gennemføre.",
+      title: "Sådan bytter du krypto",
+      body: "Du kan bytte over 10.000 tokens på tværs af flere blockchains.\nSørg for, at du har nok gas på den valgte kæde.\nNogle handler kan tage et par minutter at gennemføre.",
       acceptBtn: "Jeg forstår",
     },
-    title: "Swap",
+    title: "Byt",
     searchPlaceholder: "Søg token",
     selectBoxFromHeader: "Fra",
     selectBoxFromPlaceholder: "Vælg en oprindelig token",
@@ -281,8 +284,8 @@ const da: TypedTranslations = {
     errors: {
       originEqualsTarget: "Til og fra tokens er de samme",
       invalidAmount: "Ugyldigt beløb",
-      originChainNotSupported: "fra-chain ikke understøttet",
-      targetChainNotSupported: "til-chain ikke understøttet",
+      originChainNotSupported: "Kæden, du bytter fra, understøttes ikke",
+      targetChainNotSupported: "Kæden, du bytter til, understøttes ikke",
       insufficientBalanceForGas: {
         title: "Utilstrækkelig balance til Gas",
         text: "Du har ikke nok gas til at gennemføre transaktionen. Du skal have mindst:",
@@ -324,12 +327,12 @@ const da: TypedTranslations = {
       {
         title: "Velkommen til din nye og forbedrede GoodWallet!",
         description:
-          "GoodWallet er din gateway til verden af kryptovalutaer. Du kan nemt tjekke tusindvis af dem og sende og modtage krypto med et par klik.",
+          "Med GoodWallet kan du nemt komme i gang med krypto. Du kan gå på opdagelse blandt tusindvis af kryptovalutaer og sende og modtage krypto med et par klik.",
       },
       {
-        title: "Byt krypto over valutaer og netværk",
+        title: "Byt krypto på tværs af valutaer og netværk",
         description:
-          'Brug "Byt" knappen på startskærmen for at bytte og bro valutaer inden for eller på tværs af netværk!',
+          'Brug knappen "Byt" på startskærmen til nemt at bytte krypto eller flytte krypto mellem netværk!',
       },
       {
         title: "Et-klik GoodDollar krav",

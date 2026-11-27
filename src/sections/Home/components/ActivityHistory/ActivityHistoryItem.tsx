@@ -13,6 +13,7 @@ export type ActivityHistoryItem = {
   amount: string
   direction: "incoming" | "outgoing"
   label: string
+  statusLabel?: string
   timeStamp: Date
   from: string
   to: string
@@ -60,6 +61,7 @@ export const ActivityHistoryItem = ({
     symbol,
     name,
     label,
+    statusLabel,
     timeStamp,
     amount,
     incoming,
@@ -78,7 +80,9 @@ export const ActivityHistoryItem = ({
         />
         <div className="flex flex-col">
           <span className="text-base font-semibold">{name}</span>
-          <h6 className="text-[#999]">{truncateString(label, 10)}</h6>
+          <h6 className="text-[#999]">
+            {statusLabel ?? truncateString(label, 10)}
+          </h6>
         </div>
       </div>
       {/* right side */}
